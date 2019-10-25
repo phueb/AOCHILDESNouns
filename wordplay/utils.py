@@ -1,5 +1,4 @@
 import pandas as pd
-import random
 import numpy as np
 from scipy.signal import lfilter
 from cytoolz import itertoolz
@@ -14,17 +13,6 @@ def smooth(l, strength):
 
 def roll_mean(l, size):
     result = pd.DataFrame(l).rolling(size).mean().values.flatten()
-    return result
-
-
-def get_term_id_windows(self, term, roll_left=False, num_samples=64):
-    locations = random.sample(self.term_unordered_locs_dict[term], num_samples)
-    if not roll_left:  # includes term in window
-        result = [self.train_terms.token_ids[loc - self.params.window_size + 1: loc + 1]
-                  for loc in locations if loc > self.params.window_size]
-    else:
-        result = [self.train_terms.token_ids[loc - self.params.window_size + 0: loc + 0]
-                  for loc in locations if loc > self.params.window_size]
     return result
 
 
@@ -45,5 +33,20 @@ def get_sliding_windows(window_size, tokens):
         raise TypeError('This function was changed by PH in May 2019 because'
                         'previously used sklearn Countvectorizer uses stopwords'
                         ' and removes punctuation')
-    ngrams = list(itertoolz.sliding_window(window_size, tokens))
-    return ngrams
+    res = list(itertoolz.sliding_window(window_size, tokens))
+    return res
+
+
+def reorder_parts_from_midpoint(parts: np.ndarray
+                                ) -> np.ndarray:
+    """
+    deterministically reorder partitions such that the first partitions
+    are guaranteed to be mid-partitions
+    """
+    # roll such that both matrices start at midpoints, and then get every other row
+    a = np.roll(parts, len(parts) // 2, axis=0)[::-2]
+    b = np.roll(parts, len(parts) // 2, axis=0)[::+2]
+    # interleave rows of a and b
+    res = np.hstack((a, b)).reshape(parts.shape)
+    assert len(res) == len(parts)
+    return res

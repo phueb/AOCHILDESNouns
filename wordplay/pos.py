@@ -1,3 +1,7 @@
+import spacy
+
+nlp = spacy.load('en_core_web_sm')
+
 pos2tags = {'verb': ['BES', 'HVS', 'MD', 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ'],
             'noun': ['NN', 'NNS', 'WP'],
             'adverb': ['EX', 'RB', 'RBR', 'RBS', 'WRB'],
@@ -10,3 +14,7 @@ pos2tags = {'verb': ['BES', 'HVS', 'MD', 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ'
             'punctuation': [',', ':', '.', "''", 'HYPH', 'LS', 'NFP'],
             'adjective': ['AFX', 'JJ', 'JJR', 'JJS', 'PDT', 'PRP$', 'WDT', 'WP$'],
             'special': []}
+
+
+def get_pos_words(vocab, pos):
+    raise NotImplementedError  # TODO use spacy to filter words in vocab
