@@ -7,8 +7,8 @@ from childeshub.hub import Hub
 WINDOW_SIZES = [2, 3, 4, 5, 6]
 
 hub = Hub(mode='sem')
-windows_mat1 = hub.make_windows_mat(hub.reordered_partitions[0], hub.num_windows_in_part)
-windows_mat2 = hub.make_windows_mat(hub.reordered_partitions[1], hub.num_windows_in_part)
+windows_mat1 = hub.make_windows_mat(hub.reordered_parts[0], hub.num_windows_in_part)
+windows_mat2 = hub.make_windows_mat(hub.reordered_parts[1], hub.num_windows_in_part)
 
 
 def calc_y(w_mat, w_size, uniq):

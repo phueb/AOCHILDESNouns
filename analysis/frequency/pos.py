@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import attr
+from scipy import stats
 
 from preppy.legacy import TrainPrep
 from categoryeval.probestore import ProbeStore
@@ -31,8 +32,6 @@ docs = load_docs(CORPUS_NAME,
 params = PrepParams(num_parts=NUM_PARTS, reverse=REVERSE)
 prep = TrainPrep(docs, **attr.asdict(params))
 
-probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
-
 # /////////////////////////////////////////////////////////////////
 
 POS_LIST = ['noun']
@@ -60,4 +59,15 @@ for pos in POS_LIST or sorted(pos2tags.keys()):
     ax.plot(x, y_fitted, '-')
     y_rolled = roll_mean(y, 20)
     ax.plot(x, y_rolled, '-')
+    plt.show()
+
+    # fig
+    _, ax = plt.subplots(dpi=192)
+    plt.title('')
+    ax.set_ylabel(f'Z-scored Num {pos}s')
+    ax.set_xlabel('Partition')
+    # plot
+    ax.axhline(y=0, color='grey')
+    x = np.arange(params.num_parts)
+    ax.plot(x, stats.zscore(y), '-', alpha=1.0)
     plt.show()

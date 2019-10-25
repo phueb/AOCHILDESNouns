@@ -24,7 +24,7 @@ corpus_name = ['mobydick', 'childes-20180319'][CORPUS_ID]
 hub = Hub(mode=HUB_MODE, num_types=NUM_TYPES, corpus_name=corpus_name, num_parts=NUM_PARTS)
 
 
-for part_id, part in enumerate(hub.reordered_partitions):
+for part_id, part in enumerate(hub.reordered_parts):
     # make freq_mat
     num_splits = hub.num_items_in_part // SPLIT_SIZE + 1
     freq_mat = np.zeros((hub.train_terms.num_types, num_splits))

@@ -113,7 +113,7 @@ def get_bow_token_representations(ws_mat, norm=NORM):
 dg0, dg1 = None, None
 for part_id in PART_IDS:
     # a window is [x1, x2, x3, x4, x5, x6, x7, y] if bptt=7
-    windows_mat = hub.make_windows_mat(hub.reordered_partitions[part_id], hub.num_windows_in_part)
+    windows_mat = hub.make_windows_mat(hub.reordered_parts[part_id], hub.num_windows_in_part)
     print('shape of windows_mat={}'.format(windows_mat.shape))
     token_reps = get_bow_token_representations(windows_mat)
     print('shape of reps={}'.format(token_reps.shape))

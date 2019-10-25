@@ -23,7 +23,7 @@ part_ids = range(2)
 cat2part_id2y1 = {cat: {part_id: None for part_id in part_ids} for cat in cats}
 cat2part_id2y2 = {cat: {part_id: None for part_id in part_ids} for cat in cats}
 for part_id in part_ids:
-    windows_mat = hub.make_windows_mat(hub.reordered_partitions[part_id], hub.num_windows_in_part)
+    windows_mat = hub.make_windows_mat(hub.reordered_parts[part_id], hub.num_windows_in_part)
     # inputs_mat
     assert windows_mat.shape[1] > NGRAM_SIZE  # last word is not part of context
     print('Making In-Out matrix...')

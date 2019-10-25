@@ -74,7 +74,7 @@ for part_order in BLOCK_ORDERS:
         ngram_range = (ngram_size, ngram_size)
         ngrams = hub.get_sliding_windows(ngram_range, hub.reordered_tokens)
         size_ngrams_list_dict[ngram_size].append(ngrams)
-    del hub.__dict__['reordered_partitions']
+    del hub.__dict__['reordered_parts']
     del hub.__dict__['reordered_token_ids']
     del hub.__dict__['reordered_tokens']
 

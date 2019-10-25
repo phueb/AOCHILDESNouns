@@ -13,7 +13,7 @@ CORPUS_NAME = 'childes-20180319'  # TODO
 
 def calc_y():
     result = []
-    for part in hub.reordered_partitions:
+    for part in hub.reordered_parts:
         terms = [hub.train_terms.types[term_id] for term_id in part]
         num_oovs = np.sum([1 if term == config.Terms.OOV_SYMBOL else 0 for term in terms])
         result.append(num_oovs)

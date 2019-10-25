@@ -37,7 +37,7 @@ def make_sentence_length_stat(items, is_avg, w_size=10000):
 
 def part_entropies(self):
     result = []
-    for part in self.reordered_partitions:
+    for part in self.reordered_parts:
         part_entropy = self.calc_entropy(part)
         result.append(part_entropy)
     return result

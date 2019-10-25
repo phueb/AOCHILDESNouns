@@ -42,7 +42,7 @@ def make_features_mat(parts):
 
 
 # stats
-ao_features_mat = make_features_mat(hub.reordered_partitions)
+ao_features_mat = make_features_mat(hub.reordered_parts)
 rho_mat, p_mat = spearmanr(ao_features_mat)
 print(p_mat < 0.05 / ao_features_mat.size)
 

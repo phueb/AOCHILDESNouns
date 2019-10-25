@@ -41,7 +41,7 @@ y1_early = []
 y1_late = []
 y2_early = []
 y2_late = []
-for part in hub.reordered_partitions:
+for part in hub.reordered_parts:
 
     tokens = [hub.train_terms.types[term_id] for term_id in part]
     print('tokens calculated')

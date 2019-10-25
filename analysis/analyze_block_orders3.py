@@ -50,14 +50,14 @@ def make_features_mat(parts):
 
 
 hub = Hub(mode=HUB_MODE, num_parts=NUM_PARTS, corpus_name=CORPUS_NAME, part_order='inc_age')
-ao_feature_mat = make_features_mat(hub.reordered_partitions)
+ao_feature_mat = make_features_mat(hub.reordered_parts)
 
 # make corr_mat
 corr_mat = np.zeros((num_part_orders, num_order_features))  # TODO paralellize algorithm?
 for row_id, part_order in enumerate(BLOCK_ORDERS):
     print(part_order, '\n/////////////////////////////////////////')
-    reordered_partitions = hub.reorder_parts(part_order)
-    bo_feature_mat = make_features_mat(reordered_partitions)
+    reordered_parts = hub.reorder_parts(part_order)
+    bo_feature_mat = make_features_mat(reordered_parts)
     row = [spearmanr(ao_feats, bo_feats)[0]  # rho
            for ao_feats, bo_feats in zip(ao_feature_mat.T, bo_feature_mat.T)]
     corr_mat[row_id, :] = row

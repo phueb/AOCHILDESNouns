@@ -19,7 +19,7 @@ y1_early = []
 y1_late = []
 y2_early = []
 y2_late = []
-for part in hub.reordered_partitions:
+for part in hub.reordered_parts:
     filtered_ids = [term_id for term_id in part if term_id in probe_term_ids_early + probe_term_ids_late]
     filtered_ids_early = [term_id for term_id in filtered_ids if term_id in probe_term_ids_early]
     filtered_ids_late = [term_id for term_id in filtered_ids if term_id in probe_term_ids_late]
