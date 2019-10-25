@@ -14,7 +14,7 @@ from wordplay.utils import split
 CORPUS_NAME = 'childes-20180319'  # _tags
 PROBES_NAME = 'sem-4096'
 
-NUM_PARTS = 8  # z-scoring doesn't make sense when num-parts=2
+NUM_PARTS = 32  # z-scoring doesn't make sense when num-parts=2
 SHUFFLE_DOCS = False
 START_MID = False
 START_END = False
@@ -29,12 +29,14 @@ prep = TrainPrep(docs, **attr.asdict(params))
 
 # /////////////////////////////////////////////////////////////////
 
-MAX_F = 1000
+MAX_F = 100000
 
 # define rare words independently of partition
 rare_words = set([w for w in prep.store.types if prep.store.w2f[w] < MAX_F])
 num_rare = len(rare_words)
 print(f'Found {num_rare} rare words')
+
+print([w for w in prep.store.types if w not in rare_words])
 
 # fig
 fig, ax = plt.subplots(dpi=192)
@@ -52,6 +54,7 @@ for tokens in split(prep.store.tokens, prep.num_tokens_in_part):
     num_rare_words = len([1 for w in tokens if w in rare_words])
     y.append(num_rare_words)
 
+print(y)
 ax.plot(stats.zscore(y), '-')
 plt.show()
 

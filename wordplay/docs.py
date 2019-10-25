@@ -4,8 +4,12 @@ from typing import List
 from wordplay import config
 
 
+childes_mid_doc_ids = tuple(range(1000, 2000))
+
+
 def load_docs(corpus_name: str,
               shuffle_docs: bool = False,
+              test_from_middle: bool = False,
               num_test_docs: int = 100,
               start_at_midpoint: bool = False,
               start_at_ends: bool = False,
@@ -23,6 +27,20 @@ def load_docs(corpus_name: str,
     assert not(shuffle_docs and start_at_ends)
     assert not(start_at_midpoint and start_at_ends)
 
+    if test_from_middle:
+        test_doc_ids = childes_mid_doc_ids
+    else:
+        num_test_doc_ids = num_docs - num_test_docs
+        random.seed(split_seed)
+        test_doc_ids = random.sample(range(num_test_doc_ids), num_test_docs)
+
+    # split train/test
+    print('Splitting docs into train and test...')
+    test_docs = []
+    for test_line_id in test_doc_ids:
+        test_doc = docs.pop(test_line_id)  # removes line and returns removed line
+        test_docs.append(test_doc)
+
     if shuffle_docs:
         random.seed(shuffle_seed)
         print('Shuffling documents')
@@ -33,16 +51,6 @@ def load_docs(corpus_name: str,
 
     if start_at_ends:
         docs = reorder_docs_from_ends(docs)
-
-    # split train/test
-    print('Splitting docs into train and test...')
-    num_test_doc_ids = num_docs - num_test_docs
-    random.seed(split_seed)
-    test_doc_ids = random.sample(range(num_test_doc_ids), num_test_docs)
-    test_docs = []
-    for test_line_id in test_doc_ids:
-        test_doc = docs.pop(test_line_id)  # removes line and returns removed line
-        test_docs.append(test_doc)
 
     return docs
 

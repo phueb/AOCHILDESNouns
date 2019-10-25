@@ -12,3 +12,7 @@ class Symbols:
     OOV = 'OOV'
     TITLED = 'TITLED'
     all = [OOV, TITLED, 'xxx']
+
+
+class Fig:
+    fontsize = 12

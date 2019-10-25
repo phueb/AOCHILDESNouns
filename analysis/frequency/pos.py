@@ -4,7 +4,6 @@ import attr
 from scipy import stats
 
 from preppy.legacy import TrainPrep
-from categoryeval.probestore import ProbeStore
 
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
@@ -15,12 +14,12 @@ from wordplay.utils import split
 
 # /////////////////////////////////////////////////////////////////
 
-CORPUS_NAME = 'childes-20180319_tags'
+CORPUS_NAME = 'childes-20180319_tags'  # must have spacy tags
 PROBES_NAME = 'sem-4096'
 
 REVERSE = False
-NUM_PARTS = 8
-SHUFFLE_DOCS = True
+NUM_PARTS = 32  # z-score does not make sense with num_parts=2
+SHUFFLE_DOCS = False
 START_MID = False
 START_END = False
 
