@@ -1,0 +1,12 @@
+pos2tags = {'verb': ['BES', 'HVS', 'MD', 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ'],
+            'noun': ['NN', 'NNS', 'WP'],
+            'adverb': ['EX', 'RB', 'RBR', 'RBS', 'WRB'],
+            'pronoun': ['PRP'],
+            'preposition': ['IN'],
+            'conjunction': ['CC'],
+            'interjection': ['UH'],
+            'determiner': ['DT'],
+            'particle': ['POS', 'RP', 'TO'],
+            'punctuation': [',', ':', '.', "''", 'HYPH', 'LS', 'NFP'],
+            'adjective': ['AFX', 'JJ', 'JJR', 'JJS', 'PDT', 'PRP$', 'WDT', 'WP$'],
+            'special': []}

@@ -1,0 +1,9 @@
+scipy
+attr
+numpy
+matplotlib
+spacy
+pandas
+cytoolz
+https://github.com/phueb/Preppy/archive/v1.0.0.tar.gz
+https://github.com/phueb/CategoryEval/archive/v1.1.0.tar.gz
