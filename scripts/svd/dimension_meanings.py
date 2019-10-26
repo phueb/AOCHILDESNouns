@@ -39,7 +39,7 @@ prep = TrainPrep(docs, **attr.asdict(params))
 WINDOW_SIZE = 3
 NUM_SVS = 128
 NORMALIZE = True  # this makes all the difference - this means that the scales of variables are different and matter
-MAX_FREQUENCY = 100  # largest value in co-occurrence matrix
+MAX_FREQUENCY = 1000  # largest value in co-occurrence matrix
 LOG_FREQUENCY = True  # take log of co-occurrence matrix element-wise
 
 ALPHA = 0.01 / NUM_SVS
@@ -61,12 +61,18 @@ u, s, _ = slinalg.svds(mat, k=NUM_SVS, return_singular_vectors=True)  # s is not
 
 nouns = load_pos_words('childes-20180319-nouns')
 verbs = load_pos_words('childes-20180319-verbs')
+rands = np.random.choice(prep.store.types, size=len(nouns), replace=False)
+prons = ['me', 'you', 'he', 'they', 'she', 'it', 'we']
+print(f'Loaded {len(rands)} rands ')
 print(f'Loaded {len(nouns)} nouns ')
 print(f'Loaded {len(verbs)} verbs ')
+print(f'Loaded {len(prons)} prons ')
 
 # collect (1-p) for each singular dimension for plotting
+rand_ps = []
 noun_ps = []
 verb_ps = []
+pron_ps = []
 for pc_id in range(NUM_SVS):
     print()
     print('Singular Dim={} s={}'.format(NUM_SVS - pc_id, s[pc_id]))
@@ -82,6 +88,15 @@ for pc_id in range(NUM_SVS):
         dimension = stats.norm.rvs(loc=0, scale=1, size=4096)
         stats.probplot(dimension, plot=axes)
         plt.show()
+
+    # non-parametric analysis of variance.
+    # is variance between random words  different?
+    groups = [[v for v, w in zip(dimension, prep.store.types) if w in rands],
+              [v for v, w in zip(dimension, prep.store.types) if w not in rands]]
+    _, p = stats.kruskal(*groups)
+    print(p)
+    print(f'Dimension encodes rands= {p < ALPHA}')
+    rand_ps.append(p)
 
     # non-parametric analysis of variance.
     # is variance between nouns and non-nouns different?
@@ -101,31 +116,44 @@ for pc_id in range(NUM_SVS):
     print(f'Dimension encodes verbs= {p < ALPHA}')
     verb_ps.append(p)
 
+    # non-parametric analysis of variance.
+    # is variance between pronouns and non-pronouns different?
+    groups = [[v for v, w in zip(dimension, prep.store.types) if w in prons],
+              [v for v, w in zip(dimension, prep.store.types) if w not in prons]]
+    _, p = stats.kruskal(*groups)
+    print(p)
+    print(f'Dimension encodes verbs= {p < ALPHA}')
+    pron_ps.append(p)
+
 
 # figure
-gs = gridspec.GridSpec(2, 1, height_ratios=[4, 1])
+gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1])
 ax0: Axes = plt.subplot(gs[0])
 ax1: Axes = plt.subplot(gs[1])
 ax0.set_title(f'Decoding Singular Dimensions\nof term-by-window matrix\nwindow size={WINDOW_SIZE}',
               fontsize=config.Fig.fontsize)
 x = np.arange(NUM_SVS)
+y0 = rand_ps[::-1]
 y1 = noun_ps[::-1]
 y2 = verb_ps[::-1]
+y3 = pron_ps[::-1]
 
 # a dimension cannot encode both nouns and verbs - so chose best
+y02 = []
 y12 = []
 y22 = []
-for values in zip(y1, y2):
+y32 = []
+for values in zip(y0, y1, y2, y3):
     values = list(values)  # allows item assignment
     if values[0] < ALPHA and values[1] < ALPHA:
         i = np.argmax(values).item()
-        values[i] = np.nan  # set larger value to np.nan
-        # if i==1, then p-value for verbs is larger, so nouns are more important
-        print(f'WARNING: Dimension encodes both nouns and verbs.'
-              f' Assigning dimension to {"nouns" if i == 1 else "verbs"}')
+        values[i] = np.nan  # set largest value to np.nan
+        print(f'WARNING: Dimension encodes multiple categories')
 
-    y12.append(0.02 if values[0] < ALPHA else np.nan)
-    y22.append(0.00 if values[1] < ALPHA else np.nan)
+    y02.append(0.00 if values[0] < ALPHA else np.nan)
+    y12.append(0.02 if values[1] < ALPHA else np.nan)
+    y22.append(0.04 if values[2] < ALPHA else np.nan)
+    y32.append(0.06 if values[3] < ALPHA else np.nan)
 
 # axis 0
 ax0.set_ylabel('1-p', fontsize=config.Fig.fontsize)
@@ -133,8 +161,10 @@ ax0.spines['right'].set_visible(False)
 ax0.spines['top'].set_visible(False)
 ax0.tick_params(axis='both', which='both', top=False, right=False)
 ax0.set_xticks([])
+ax0.scatter(x, 1 - np.array(y0), zorder=1, color='grey')
 ax0.scatter(x, 1 - np.array(y1), zorder=1, color='grey')
 ax0.scatter(x, 1 - np.array(y2), zorder=1, color='grey')
+ax0.scatter(x, 1 - np.array(y3), zorder=1, color='grey')
 
 # axis 1
 ax1.spines['right'].set_visible(False)
@@ -142,8 +172,10 @@ ax1.spines['left'].set_visible(False)
 ax1.spines['top'].set_visible(False)
 ax1.tick_params(axis='both', which='both', top=False, right=False, left=False)
 ax1.set_yticks([])
+ax1.scatter(x, y02, color='blue', label='rands')
 ax1.scatter(x, y12, color='red', label='nouns')
 ax1.scatter(x, y22, color='green', label='verbs')
+ax1.scatter(x, y32, color='orange', label='pronouns')
 ax1.set_xlabel('Singular Dimension', fontsize=config.Fig.fontsize)
 
 plt.legend(frameon=True, framealpha=1.0)
