@@ -37,13 +37,13 @@ probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
 
 # /////////////////////////////////////////////////////////////////
 
-WINDOW_SIZE = 1
+WINDOW_SIZE = 3
 NUM_SVS = 256
 NORMALIZE = True  # this makes all the difference - this means that the scales of variables are different and matter
-MAX_FREQUENCY = 1000 * 1  # largest value in co-occurrence matrix
+MAX_FREQUENCY = 1000 * 100  # largest value in co-occurrence matrix
 LOG_FREQUENCY = False  # take log of co-occurrence matrix element-wise
 
-ALPHA = 0.01 / NUM_SVS
+ALPHA = 0.05 / NUM_SVS
 
 PLOT_QQ = False
 
@@ -66,6 +66,8 @@ rands = np.random.choice(prep.store.types, size=len(nouns), replace=False)
 prons = ['me', 'you', 'he', 'they', 'she', 'it', 'we']
 numbs = probe_store.cat2probes['number']
 mamms = probe_store.cat2probes['animal']
+times = probe_store.cat2probes['time']
+famis = probe_store.cat2probes['family']
 
 print(f'Loaded {len(rands)} rands ')
 print(f'Loaded {len(nouns)} nouns ')
@@ -73,6 +75,8 @@ print(f'Loaded {len(verbs)} verbs ')
 print(f'Loaded {len(prons)} prons ')
 print(f'Loaded {len(numbs)} numbs ')
 print(f'Loaded {len(mamms)} mamms ')
+print(f'Loaded {len(times)} times ')
+print(f'Loaded {len(famis)} famis ')
 
 # collect (1-p) for each singular dimension for plotting
 rand_ps = []
@@ -81,6 +85,8 @@ verb_ps = []
 pron_ps = []
 numb_ps = []
 mamm_ps = []
+time_ps = []
+fami_ps = []
 for pc_id in range(NUM_SVS):
     print()
     print('Singular Dim={} s={}'.format(NUM_SVS - pc_id, s[pc_id]))
@@ -134,7 +140,7 @@ for pc_id in range(NUM_SVS):
     pron_ps.append(p)
 
     # non-parametric analysis of variance.
-    # is variance between pronouns and non-pronouns different?
+    # is variance between numbers and non-numbers different?
     groups = [[v for v, w in zip(dimension, prep.store.types) if w in numbs],
               [v for v, w in zip(dimension, prep.store.types) if w not in numbs]]
     _, p = stats.kruskal(*groups)
@@ -143,13 +149,31 @@ for pc_id in range(NUM_SVS):
     numb_ps.append(p)
 
     # non-parametric analysis of variance.
-    # is variance between pronouns and non-pronouns different?
+    # is variance between mammals and non-mammals different?
     groups = [[v for v, w in zip(dimension, prep.store.types) if w in mamms],
               [v for v, w in zip(dimension, prep.store.types) if w not in mamms]]
     _, p = stats.kruskal(*groups)
     print(p)
     print(f'Dimension encodes mamms= {p < ALPHA}')
     mamm_ps.append(p)
+
+    # non-parametric analysis of variance.
+    # is variance between times and non-times different?
+    groups = [[v for v, w in zip(dimension, prep.store.types) if w in times],
+              [v for v, w in zip(dimension, prep.store.types) if w not in times]]
+    _, p = stats.kruskal(*groups)
+    print(p)
+    print(f'Dimension encodes time= {p < ALPHA}')
+    time_ps.append(p)
+
+    # non-parametric analysis of variance.
+    # is variance between pronouns and non-pronouns different?
+    groups = [[v for v, w in zip(dimension, prep.store.types) if w in famis],
+              [v for v, w in zip(dimension, prep.store.types) if w not in famis]]
+    _, p = stats.kruskal(*groups)
+    print(p)
+    print(f'Dimension encodes fami= {p < ALPHA}')
+    fami_ps.append(p)
 
 
 # figure
@@ -165,6 +189,8 @@ y2 = verb_ps[::-1]
 y3 = pron_ps[::-1]
 y4 = numb_ps[::-1]
 y5 = mamm_ps[::-1]
+y6 = time_ps[::-1]
+y7 = fami_ps[::-1]
 
 # a dimension cannot encode both nouns and verbs - so chose best
 y02 = []
@@ -173,7 +199,9 @@ y22 = []
 y32 = []
 y42 = []
 y52 = []
-for values in zip(y0, y1, y2, y3, y4, y5):
+y62 = []
+y72 = []
+for values in zip(y0, y1, y2, y3, y4, y5, y6, y7):
     values = np.array(values)  # allows item assignment
 
     bool_ids = np.where(values < ALPHA)[0]
@@ -192,6 +220,8 @@ for values in zip(y0, y1, y2, y3, y4, y5):
     y32.append(0.06 if values[3] < ALPHA else np.nan)
     y42.append(0.08 if values[4] < ALPHA else np.nan)
     y52.append(0.10 if values[5] < ALPHA else np.nan)
+    y62.append(0.12 if values[6] < ALPHA else np.nan)
+    y72.append(0.14 if values[7] < ALPHA else np.nan)
 
 # axis 0
 ax0.set_ylabel('1-p', fontsize=config.Fig.fontsize)
@@ -206,6 +236,9 @@ ax0.scatter(x, 1 - np.array(y2), zorder=1, color='grey')
 ax0.scatter(x, 1 - np.array(y3), zorder=1, color='grey')
 ax0.scatter(x, 1 - np.array(y4), zorder=1, color='grey')
 ax0.scatter(x, 1 - np.array(y5), zorder=1, color='grey')
+ax0.scatter(x, 1 - np.array(y6), zorder=1, color='grey')
+ax0.scatter(x, 1 - np.array(y7), zorder=1, color='grey')
+
 
 # axis 1
 ax1.set_xlabel('Singular Dimension', fontsize=config.Fig.fontsize)
@@ -215,13 +248,15 @@ ax1.spines['top'].set_visible(False)
 ax1.tick_params(axis='both', which='both', top=False, right=False, left=False)
 ax1.set_yticks([])
 ax1.set_xlim(left=0, right=NUM_SVS)
-colors = sns.color_palette("hls", 6)
-ax1.scatter(x, y02, color=colors[0], label='rands')
+colors = sns.color_palette("hls", 8)
+ax1.scatter(x, y02, color=colors[0], label='random')
 ax1.scatter(x, y12, color=colors[1], label='nouns')
 ax1.scatter(x, y22, color=colors[2], label='verbs')
 ax1.scatter(x, y32, color=colors[3], label='pronouns')
 ax1.scatter(x, y42, color=colors[4], label='numbers')
 ax1.scatter(x, y52, color=colors[5], label='mammals')
+ax1.scatter(x, y62, color=colors[6], label='time')
+ax1.scatter(x, y72, color=colors[7], label='family')
 
 plt.legend(frameon=True, framealpha=1.0, bbox_to_anchor=(0.5, 1.4), ncol=4, loc='center')
 plt.show()
