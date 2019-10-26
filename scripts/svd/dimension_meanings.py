@@ -39,10 +39,10 @@ prep = TrainPrep(docs, **attr.asdict(params))
 WINDOW_SIZE = 3
 NUM_SVS = 128
 NORMALIZE = True  # this makes all the difference - this means that the scales of variables are different and matter
-MAX_FREQUENCY = 1000000  # largest value in co-occurrence matrix
-LOG_FREQUENCY = False  # take log of co-occurrence matrix element-wise
+MAX_FREQUENCY = 100  # largest value in co-occurrence matrix
+LOG_FREQUENCY = True  # take log of co-occurrence matrix element-wise
 
-P_VALUE = 0.01 / NUM_SVS
+ALPHA = 0.01 / NUM_SVS
 
 PLOT_QQ = False
 
@@ -65,8 +65,8 @@ print(f'Loaded {len(nouns)} nouns ')
 print(f'Loaded {len(verbs)} verbs ')
 
 # collect (1-p) for each singular dimension for plotting
-nouns_one_minus_p_list = []
-verbs_one_minus_p_list = []
+noun_ps = []
+verb_ps = []
 for pc_id in range(NUM_SVS):
     print()
     print('Singular Dim={} s={}'.format(NUM_SVS - pc_id, s[pc_id]))
@@ -89,8 +89,8 @@ for pc_id in range(NUM_SVS):
               [v for v, w in zip(dimension, prep.store.types) if w not in nouns]]
     _, p = stats.kruskal(*groups)
     print(p)
-    print(f'Dimension encodes nouns= {p < P_VALUE}')
-    nouns_one_minus_p_list.append(1 - p)
+    print(f'Dimension encodes nouns= {p < ALPHA}')
+    noun_ps.append(p)
 
     # non-parametric analysis of variance.
     # is variance between verbs and non-verbs different?
@@ -98,8 +98,8 @@ for pc_id in range(NUM_SVS):
               [v for v, w in zip(dimension, prep.store.types) if w not in verbs]]
     _, p = stats.kruskal(*groups)
     print(p)
-    print(f'Dimension encodes verbs= {p < P_VALUE}')
-    verbs_one_minus_p_list.append(1 - p)
+    print(f'Dimension encodes verbs= {p < ALPHA}')
+    verb_ps.append(p)
 
 
 # figure
@@ -109,24 +109,23 @@ ax1: Axes = plt.subplot(gs[1])
 ax0.set_title(f'Decoding Singular Dimensions\nof term-by-window matrix\nwindow size={WINDOW_SIZE}',
               fontsize=config.Fig.fontsize)
 x = np.arange(NUM_SVS)
-y1 = nouns_one_minus_p_list[::-1]
-y2 = verbs_one_minus_p_list[::-1]
+y1 = noun_ps[::-1]
+y2 = verb_ps[::-1]
 
 # a dimension cannot encode both nouns and verbs - so chose best
-thr = 1 - P_VALUE
 y12 = []
 y22 = []
 for values in zip(y1, y2):
     values = list(values)  # allows item assignment
-
-    if values[0] > thr and values[1] > thr:
-        i = np.argmin(values).item()
-        values[i] = np.nan  # set smaller value to np.nan
+    if values[0] < ALPHA and values[1] < ALPHA:
+        i = np.argmax(values).item()
+        values[i] = np.nan  # set larger value to np.nan
+        # if i==1, then p-value for verbs is larger, so nouns are more important
         print(f'WARNING: Dimension encodes both nouns and verbs.'
               f' Assigning dimension to {"nouns" if i == 1 else "verbs"}')
 
-    y12.append(0.00 if values[0] > 1 - P_VALUE else np.nan)
-    y22.append(0.02 if values[1] > 1 - P_VALUE else np.nan)
+    y12.append(0.02 if values[0] < ALPHA else np.nan)
+    y22.append(0.00 if values[1] < ALPHA else np.nan)
 
 # axis 0
 ax0.set_ylabel('1-p', fontsize=config.Fig.fontsize)
@@ -134,8 +133,8 @@ ax0.spines['right'].set_visible(False)
 ax0.spines['top'].set_visible(False)
 ax0.tick_params(axis='both', which='both', top=False, right=False)
 ax0.set_xticks([])
-ax0.scatter(x, y1, zorder=1, color='grey')
-ax0.scatter(x, y2, zorder=1, color='grey')
+ax0.scatter(x, 1 - np.array(y1), zorder=1, color='grey')
+ax0.scatter(x, 1 - np.array(y2), zorder=1, color='grey')
 
 # axis 1
 ax1.spines['right'].set_visible(False)

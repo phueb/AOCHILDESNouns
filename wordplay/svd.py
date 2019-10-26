@@ -6,30 +6,6 @@ from wordplay.utils import get_sliding_windows
 from categoryeval.probestore import ProbeStore
 
 
-def sparse_corrcoef(A, B=None):
-    """
-    https://stackoverflow.com/questions/19231268/correlation-coefficients-for-sparse-matrix-in-python
-    """
-
-    if B is not None:
-        A = sparse.vstack((A, B), format='csr')
-
-    A = A.astype(np.float64)
-    n = A.shape[1]
-
-    # Compute the covariance matrix
-    rowsum = A.sum(1)
-    centering = rowsum.dot(rowsum.T.conjugate()) / n
-    C = (A.dot(A.T.conjugate()) - centering) / (n - 1)
-
-    # The correlation coefficients are given by
-    # C_{i,j} / sqrt(C_{i} * C_{j})
-    d = np.diag(C)
-    coeffs = C / np.sqrt(np.outer(d, d))
-
-    return coeffs
-
-
 def make_term_by_window_co_occurrence_mat(prep,
                                           tokens: Optional[List[str]] = None,
                                           start: Optional[int] = None,
@@ -41,7 +17,7 @@ def make_term_by_window_co_occurrence_mat(prep,
     """
     terms are in cols, windows are in rows.
     y_words are windows, x_words are terms.
-    y_words always occur after y_words in the input.
+    y_words always occur after x_words in the input.
     this format matches that used in TreeTransitions
     """
 
@@ -78,10 +54,10 @@ def make_term_by_window_co_occurrence_mat(prep,
         # row_id + col_id
         row_id = window2row_id[window]
         next_window = windows_in_order[n + 1]
-        next_term = next_window[-1]  # -1 is correct because windows slide by 1 word
+        next_word = next_window[-1]  # -1 is correct because windows slide by 1 word
         try:
-            col_id = xw2col_id[next_term]
-        except KeyError:  # only_probes_in_x
+            col_id = xw2col_id[next_word]
+        except KeyError:  # using probe_store
             continue
         # freq
         try:
