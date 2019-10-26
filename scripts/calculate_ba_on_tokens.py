@@ -106,7 +106,7 @@ for w_size in WINDOW_SIZES:
         num_tokens_in_chunk = len(tokens) // NUM_BA_EVALS
         for tokens_chunk in itertoolz.partition_all(num_tokens_in_chunk, tokens):  # mimic incremental increase in ba
 
-            # new format to match analysis in tree-transitions: windows are RIGHT contexts and terms are left
+            # new format to match scripts in tree-transitions: windows are RIGHT contexts and terms are left
             # probes are in x-words - this works
             tw_mat, xws, yws = hub.make_term_by_window_co_occurrence_mat(
                 tokens=tokens_chunk, window_size=w_size, only_probes_in_x=True)

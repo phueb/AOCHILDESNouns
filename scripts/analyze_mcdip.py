@@ -20,7 +20,7 @@ hub = Hub(corpus_name=CORPUS_NAME, part_order='inc_age', num_types=10000)
 df = pd.read_csv(MCDIP_PATH, index_col=False)
 to_drop = []  # remove targets from df if not in vocab
 for n, t in enumerate(df['target']):
-    if t not in hub.train_terms.types:
+    if t not in prep.store.types:
         print('Dropping "{}"'.format(t))
         to_drop.append(n)
 df = df.drop(to_drop)
@@ -31,7 +31,7 @@ t2mcdip = {t: mcdip for t, mcdip in zip(targets, mcdips)}
 # collect context words of targets
 print('Collecting context words...')
 target2context_tokens = {t: [] for t in targets}
-pbar = pyprind.ProgBar(hub.train_terms.num_tokens, stream=sys.stdout)
+pbar = pyprind.ProgBar(prep.store.num_tokens, stream=sys.stdout)
 for n, t in enumerate(hub.reordered_tokens):
     pbar.update()
     if t in targets:
@@ -95,7 +95,7 @@ def plot_best_fit_line(ax, xys, fontsize, color='red', zorder=3, x_pos=0.85, y_p
 target_weighted_context_mcdip = [res[t] for t in targets]
 target_median_cgs = [hub.calc_median_term_cg(t) for t in targets]
 target_mcdips = [t2mcdip[t] for t in targets]
-target_freqs = [hub.train_terms.term_freq_dict[t] for t in targets]
+target_freqs = [prep.store.w2f[t] for t in targets]
 
 plot(target_weighted_context_mcdip, target_mcdips,
      'KWOOC', 'MCDIp')

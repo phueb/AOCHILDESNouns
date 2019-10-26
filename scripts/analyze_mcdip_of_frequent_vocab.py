@@ -21,7 +21,7 @@ hub = Hub(corpus_name=CORPUS_NAME, part_order='inc_age', num_types=NUM_TYPES)
 df = pd.read_csv(MCDIP_PATH, index_col=False)
 to_drop = []  # remove targets from df if not in vocab
 for n, t in enumerate(df['target']):
-    if t not in hub.train_terms.types:
+    if t not in prep.store.types:
         print('Dropping "{}"'.format(t))
         to_drop.append(n)
 df = df.drop(to_drop)
@@ -30,16 +30,16 @@ mcdips = df['MCDIp'].values
 t2mcdip = {t: mcdip for t, mcdip in zip(targets, mcdips)}
 
 # collect context words of vocab (if they are targets)
-vocab2context_tokens = {v: [] for v in hub.train_terms.types}
-pbar = pyprind.ProgBar(hub.train_terms.num_tokens, stream=sys.stdout)
-for n, t in enumerate(hub.train_terms.tokens):
+vocab2context_tokens = {v: [] for v in prep.store.types}
+pbar = pyprind.ProgBar(prep.store.num_tokens, stream=sys.stdout)
+for n, t in enumerate(prep.store.tokens):
     pbar.update()
-    if t in hub.train_terms.types:
-        context = [term for term in hub.train_terms.tokens[n - hub.params.window_size:n] if term in targets]
+    if t in prep.store.types:
+        context = [term for term in prep.store.tokens[n - hub.params.window_size:n] if term in targets]
         vocab2context_tokens[t] += context
 
 # calculate result for each vocab (average mcdip of context words weighted by number of times in target context)
-res = {v: 0 for v in hub.train_terms.types}
+res = {v: 0 for v in prep.store.types}
 for p, cts in vocab2context_tokens.items():
     if not cts:
         res[p] = None
@@ -97,13 +97,13 @@ def plot_best_fit_line(ax, xys, fontsize, color='red', zorder=3, x_pos=0.95, y_p
 filtered_vocab = [k for k, v in res.items() if v is not None]
 vocab_weighted_context_mcdip = [res[v] for v in filtered_vocab]
 vocab_median_cgs = [hub.calc_median_term_cg(v) for v in filtered_vocab]
-vocab_freqs = [hub.train_terms.term_freq_dict[v] for v in filtered_vocab]
+vocab_freqs = [prep.store.w2f[v] for v in filtered_vocab]
 
 plot(vocab_median_cgs, np.log(vocab_freqs),
      'vocab_median_cgs', 'log vocab_freqs')
 
 plot(vocab_weighted_context_mcdip, np.log(vocab_freqs),
-     'vocab_weighted_context_mcdip', 'log vocab_freqs', annotations=hub.train_terms.types)
+     'vocab_weighted_context_mcdip', 'log vocab_freqs', annotations=prep.store.types)
 
 plot(vocab_weighted_context_mcdip, vocab_median_cgs,
-     'vocab_weighted_context_mcdip', 'vocab_median_cgs', annotations=hub.train_terms.types)
+     'vocab_weighted_context_mcdip', 'vocab_median_cgs', annotations=prep.store.types)

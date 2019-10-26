@@ -16,7 +16,7 @@ hub = Hub(mode=HUB_MODE, num_parts=NUM_PARTS, part_order=BLOCK_ORDER)
 
 # contexts
 context_loc_d = {}
-pbar = pyprind.ProgBar(hub.train_terms.num_tokens)
+pbar = pyprind.ProgBar(prep.store.num_tokens)
 for loc, token in enumerate(hub.reordered_tokens[:-CONTEXT_DIST]):
     pbar.update()
     if token in hub.probe_store.types:
@@ -43,7 +43,7 @@ y2_early = []
 y2_late = []
 for part in hub.reordered_parts:
 
-    tokens = [hub.train_terms.types[term_id] for term_id in part]
+    tokens = [prep.store.types[term_id] for term_id in part]
     print('tokens calculated')
     contexts_in_part = [tuple(tokens[loc + d] for d in range(-CONTEXT_DIST, 0) if d != 0)
                         for loc, token in enumerate(tokens[:-CONTEXT_DIST])

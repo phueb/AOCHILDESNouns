@@ -27,7 +27,7 @@ print('there are {} {}'.format(len(filtered_pos_members), POS))
 
 # make term_by_window_co_occurrence_mats
 start1, end1 = 0, hub.midpoint_loc // 1
-start2, end2 = hub.train_terms.num_tokens - end1, hub.train_terms.num_tokens
+start2, end2 = prep.store.num_tokens - end1, prep.store.num_tokens
 label1 = 'partition 1' or 'tokens between\n{:,} & {:,}'.format(start1, end1)
 label2 = 'partition 2' or 'tokens between\n{:,} & {:,}'.format(start2, end2)
 tw_mat1, xws1, yws1 = hub.make_term_by_window_co_occurrence_mat(start=start1, end=end1, window_size=WINDOW_SIZE)

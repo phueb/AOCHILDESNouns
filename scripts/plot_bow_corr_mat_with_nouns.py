@@ -99,7 +99,7 @@ def get_bow_token_representations(ws_mat, norm=NORM):
     noun2rep = {w: np.zeros(hub.params.num_types) for w in WORDS}
     for window in ws_mat:
         obs_word_id = window[-1]
-        obs_word = hub.train_terms.types[obs_word_id]
+        obs_word = prep.store.types[obs_word_id]
         if obs_word in WORDS:
             for var_word_id in window[:-1]:
                 noun2rep[obs_word][var_word_id] += 1

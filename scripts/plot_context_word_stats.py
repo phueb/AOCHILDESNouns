@@ -16,7 +16,7 @@ HUB_MODE = 'sem'
 hub = Hub(mode=HUB_MODE)
 cats = hub.probe_store.cats
 probe2cat = hub.probe_store.probe_cat_dict
-vocab = hub.train_terms.types
+vocab = prep.store.types
 
 
 part_ids = range(2)
@@ -52,7 +52,7 @@ for part_id in part_ids:
     # plot statistic not collapsing over categories
     for cat_id, cat in enumerate(cats):
         cat_probes = [p for p in hub.probe_store.types if probe2cat[p] == cat]
-        term_ids = [hub.train_terms.term_id_dict[p] for p in cat_probes]
+        term_ids = [prep.store.term_id_dict[p] for p in cat_probes]
         filtered_rows = [counts for context_id, counts in enumerate(count_mat)
                          if unique_contexts[context_id][-1] in term_ids]
         #

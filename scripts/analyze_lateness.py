@@ -19,7 +19,7 @@ hub = Hub(mode=HUB_MODE, corpus_name=CORPUS_NAME, probes_name=PROBES_NAME)
 if TO_ANALYZE == 'probes':
     to_analyze = hub.probe_store.types
 elif TO_ANALYZE == 'terms':
-    to_analyze = list(zip(*hub.train_terms.term_freq_dict.most_common(NUM_ANALYZE)))[0]
+    to_analyze = list(zip(*prep.store.w2f.most_common(NUM_ANALYZE)))[0]
 else:
     raise AttributeError('Invalid arg to "TO_ANALYZE".')
 

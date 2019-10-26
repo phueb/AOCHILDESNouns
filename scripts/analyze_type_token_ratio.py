@@ -11,8 +11,8 @@ IS_REORDERED = False  # true if lateness of probes is determined after partition
 
 hub = Hub(mode=HUB_MODE, num_parts=NUM_PARTS, part_order=BLOCK_ORDER)
 probes_early, probes_late = hub.split_probes_by_loc(2, is_reordered=IS_REORDERED)  # typically unordered
-probe_term_ids_early = [hub.train_terms.term_id_dict[probe] for probe in probes_early]
-probe_term_ids_late = [hub.train_terms.term_id_dict[probe] for probe in probes_late]
+probe_term_ids_early = [prep.store.term_id_dict[probe] for probe in probes_early]
+probe_term_ids_late = [prep.store.term_id_dict[probe] for probe in probes_late]
 
 # original_transcripts
 y1_early = []

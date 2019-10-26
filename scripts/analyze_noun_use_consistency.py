@@ -39,9 +39,9 @@ assert MAX_SUM <= MAX_CONTEXT_CLASS
 # filtered_nouns
 hub = Hub(mode=HUB_MODE, part_order='inc_age', corpus_name=CORPUS_NAME)
 filtered_nouns = {noun for noun in hub.nouns
-                  if hub.train_terms.term_freq_dict[noun] > MIN_NOUN_FREQ}  # set for fast access
+                  if prep.store.w2f[noun] > MIN_NOUN_FREQ}  # set for fast access
 num_filtered_nouns = len(filtered_nouns)
-print('Using {} nouns for analysis'.format(num_filtered_nouns))
+print('Using {} nouns for scripts'.format(num_filtered_nouns))
 
 # get noun_locations
 noun_locations = []
@@ -56,12 +56,12 @@ def make_context2is_filler_noun2freq(start_loc, end_loc):
 
     # get contexts (can be multi-word spans)
     noun_context_start_locations = np.array(noun_locs_in_partition) - CONTEXT_SIZE
-    noun_contexts = {tuple(hub.train_terms.tokens[start_loc: start_loc + CONTEXT_SIZE])
+    noun_contexts = {tuple(prep.store.tokens[start_loc: start_loc + CONTEXT_SIZE])
                      for start_loc in noun_context_start_locations}
 
     # collect
     res = {context: {True: 0, False: 0} for context in noun_contexts}
-    for window in itertoolz.sliding_window(CONTEXT_SIZE + 1, hub.train_terms.tokens[start_loc:end_loc]):
+    for window in itertoolz.sliding_window(CONTEXT_SIZE + 1, prep.store.tokens[start_loc:end_loc]):
 
         context = window[:-1]
         filler = window[-1]
@@ -79,7 +79,7 @@ def make_context2is_filler_noun2freq(start_loc, end_loc):
 context2is_noun2freq1 = make_context2is_filler_noun2freq(start_loc=0,
                                                          end_loc=hub.midpoint_loc)
 context2is_noun2freq2 = make_context2is_filler_noun2freq(start_loc=hub.midpoint_loc,
-                                                         end_loc=hub.train_terms.num_tokens)
+                                                         end_loc=prep.store.num_tokens)
 
 # fig
 _, ax = plt.subplots(figsize=FIG_SIZE)

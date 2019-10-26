@@ -25,26 +25,26 @@ VERBOSE = False
 hub = Hub(mode=HUB_MODE)
 
 START1, END1 = 0, hub.midpoint_loc // 1
-START2, END2 = hub.train_terms.num_tokens - END1, hub.train_terms.num_tokens
+START2, END2 = prep.store.num_tokens - END1, prep.store.num_tokens
 
 
 filtered_nouns = set([noun for noun in hub.nouns
-                      if hub.train_terms.term_freq_dict[noun] > FREQ_THR]
+                      if prep.store.w2f[noun] > FREQ_THR]
                      + list(hub.probe_store.types))
 filtered_verbs = set([verb for verb in hub.verbs
-                      if hub.train_terms.term_freq_dict[verb] > FREQ_THR])
+                      if prep.store.w2f[verb] > FREQ_THR])
 filtered_adjs = set([verb for verb in hub.adjectives
-                     if hub.train_terms.term_freq_dict[verb] > FREQ_THR])
+                     if prep.store.w2f[verb] > FREQ_THR])
 filtered_preps = set([prep for prep in hub.prepositions
-                      if hub.train_terms.term_freq_dict[prep] > FREQ_THR])
+                      if prep.store.w2f[prep] > FREQ_THR])
 filtered_conjs = set([conj for conj in hub.conjunctions
-                      if hub.train_terms.term_freq_dict[conj] > FREQ_THR])
+                      if prep.store.w2f[conj] > FREQ_THR])
 filtered_dets = set([det for det in hub.determiners
-                     if hub.train_terms.term_freq_dict[det] > FREQ_THR])
+                     if prep.store.w2f[det] > FREQ_THR])
 filtered_pros = set([pro for pro in hub.pronouns
-                     if hub.train_terms.term_freq_dict[pro] > FREQ_THR])
+                     if prep.store.w2f[pro] > FREQ_THR])
 filtered_ints = set([pro for pro in hub.interjections
-                     if hub.train_terms.term_freq_dict[pro] > FREQ_THR])
+                     if prep.store.w2f[pro] > FREQ_THR])
 
 if VERBOSE:
     print('nouns')
@@ -58,7 +58,7 @@ if VERBOSE:
 
 # make term_by_window_co_occurrence_mats
 start1, end1 = 0, hub.midpoint_loc // 1
-start2, end2 = hub.train_terms.num_tokens - end1, hub.train_terms.num_tokens
+start2, end2 = prep.store.num_tokens - end1, prep.store.num_tokens
 label1 = 'partition 1' or 'tokens between\n{:,} & {:,}'.format(start1, end1)
 label2 = 'partition 2' or 'tokens between\n{:,} & {:,}'.format(start2, end2)
 tw_mat1, xws1, yws1 = hub.make_term_by_window_co_occurrence_mat(start=start1, end=end1, window_size=WINDOW_SIZE)

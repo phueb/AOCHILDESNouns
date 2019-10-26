@@ -21,7 +21,7 @@ hub = Hub(mode=HUB_MODE, corpus_name=CORPUS_NAME, part_order='inc_age', num_type
 df = pd.read_csv(MCDIP_PATH, index_col=False)
 to_drop = []  # remove targets from df if not in vocab
 for n, t in enumerate(df['target']):
-    if t not in hub.train_terms.types:
+    if t not in prep.store.types:
         print('Dropping "{}"'.format(t))
         to_drop.append(n)
 df = df.drop(to_drop)
@@ -89,7 +89,7 @@ def plot_best_fit_line(ax, xys, fontsize, color='red', zorder=3, x_pos=0.95, y_p
 
 probe_weighted_context_mcdip = [res[p] for p in hub.probe_store.types]
 probe_median_cgs = [hub.calc_median_term_cg(p) for p in hub.probe_store.types]
-probe_freqs = [hub.train_terms.term_freq_dict[p] for p in hub.probe_store.types]
+probe_freqs = [prep.store.w2f[p] for p in hub.probe_store.types]
 
 plot(probe_median_cgs, np.log(probe_freqs),
      'probe_median_cgs', 'log probe_freqs')

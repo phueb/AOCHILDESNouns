@@ -9,7 +9,7 @@ def get_terms_related_to_cat(self, cat):
         if any([term in cat_probes for term in self.train_terms.tokens[loc: n]]):
             term_hit_dict[term] += 1
     result = list(zip(*sorted(term_hit_dict.items(),
-                              key=lambda i: i[1] / self.train_terms.term_freq_dict[i[0]])))[0]
+                              key=lambda i: i[1] / self.train_terms.w2f[i[0]])))[0]
     return result
 
 
@@ -23,7 +23,7 @@ def get_term_set_prop_near_terms(self, terms, dist=1):
                 print('rnnlab: Invalid tokens location: {}'.format(loc + dist))
                 continue
     c = Counter(ts)
-    result = sorted(set(ts), key=lambda t: c[t] / self.train_terms.term_freq_dict[t])
+    result = sorted(set(ts), key=lambda t: c[t] / self.train_terms.w2f[t])
     return result
 
 
