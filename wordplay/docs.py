@@ -4,7 +4,7 @@ from typing import List
 from wordplay import config
 
 
-childes_mid_doc_ids = tuple(range(1000, 2000))
+childes_mid_doc_ids = tuple(range(1500, 1600))
 
 
 def load_docs(corpus_name: str,

@@ -32,7 +32,7 @@ def make_pos_words(vocab: List[str],
     res = set()
     for w in vocab:
         pos_ = nlp(w)[0].pos_
-        if pos_ == pos2pos_[pos] and w not in excluded_set and not w.endswith('s'):
+        if pos_ == pos2pos_[pos] and w not in excluded_set:
             res.add(w)
 
     assert len(res) != 0
@@ -45,4 +45,4 @@ def load_pos_words(file_name: str
                    ) -> Set[str]:
     p = config.Dirs.words / f'{file_name}.txt'
     res = p.read_text().split('\n')
-    return res
+    return set(res)

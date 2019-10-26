@@ -40,7 +40,7 @@ def make_term_by_window_co_occurrence_mat(prep,
                                           probe_store: Optional[ProbeStore] = None):
     """
     terms are in cols, windows are in rows.
-    y_words windows, x_words are terms.
+    y_words are windows, x_words are terms.
     y_words always occur after y_words in the input.
     this format matches that used in TreeTransitions
     """
