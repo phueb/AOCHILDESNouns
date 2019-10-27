@@ -37,13 +37,13 @@ probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
 
 # /////////////////////////////////////////////////////////////////
 
-WINDOW_SIZE = 3
+WINDOW_SIZE = 2
 NUM_SVS = 256
-NORMALIZE = True  # this makes all the difference - this means that the scales of variables are different and matter
+NORMALIZE = True
 MAX_FREQUENCY = 1000 * 100  # largest value in co-occurrence matrix
 LOG_FREQUENCY = False  # take log of co-occurrence matrix element-wise
 
-ALPHA = 0.05 / NUM_SVS
+ALPHA = 0.001 / NUM_SVS
 
 PLOT_QQ = False
 
@@ -99,7 +99,6 @@ for pc_id in range(NUM_SVS):
     # this means that  non-parametric test must be used to decode meaning (e.g. not point biserial correlation)
     if PLOT_QQ:
         fig, axes = plt.subplots(1)
-        dimension = stats.norm.rvs(loc=0, scale=1, size=4096)
         stats.probplot(dimension, plot=axes)
         plt.show()
 
@@ -175,6 +174,27 @@ for pc_id in range(NUM_SVS):
     print(f'Dimension encodes fami= {p < ALPHA}')
     fami_ps.append(p)
 
+    # inspect how family words actually differ in their loadings from other words
+    if p < ALPHA:
+        _, ax = plt.subplots(dpi=192, figsize=(6, 6))
+        x = np.arange(prep.store.num_types)
+        ax.scatter(x, dimension, color='grey')
+        loadings = [v if w in famis else np.nan for v, w in zip(dimension, prep.store.types)]
+        ax.scatter(x, loadings, color='red')
+        ax.axhline(y=np.nanmean(loadings), color='red', zorder=3)
+        plt.show()
+
+        _, ax = plt.subplots(dpi=192, figsize=(6, 6))
+        x = np.arange(prep.store.num_types)
+        ax.scatter(x, dimension, color='grey')
+        loadings = [v if w in rands else np.nan for v, w in zip(dimension, prep.store.types)]
+        ax.scatter(x, loadings, color='blue')
+        ax.axhline(y=np.nanmean(loadings), color='blue', zorder=3)
+        plt.show()
+
+        _, ax2 = plt.subplots(1)
+        stats.probplot(dimension, plot=ax2)
+        plt.show()
 
 # figure
 gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1])
