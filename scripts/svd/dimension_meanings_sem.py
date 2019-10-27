@@ -5,7 +5,7 @@ import numpy as np
 import attr
 import seaborn as sns
 import matplotlib.pyplot as plt
-from typing import Optional, List
+from typing import Optional, Set
 
 from preppy.legacy import TrainPrep
 
@@ -36,7 +36,7 @@ probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
 
 # /////////////////////////////////////////////////////////////////
 
-WINDOW_SIZE = 2
+WINDOW_SIZE = 1
 NUM_SVS = 256
 NORMALIZE = True
 MAX_FREQUENCY = 1000 * 100  # largest value in co-occurrence matrix
@@ -45,9 +45,9 @@ LOG_FREQUENCY = False  # take log of co-occurrence matrix element-wise
 ALPHA = 0.01 / NUM_SVS
 
 PLOT_LOADINGS = False
-CATEGORIES: Optional[List[str]] = [
-    'animal', 'day', 'number', 'family', 'house', 'machine', 'house',
-]
+CATEGORIES: Optional[Set[str]] = {
+    'animal', 'day', 'number', 'family', 'house', 'machine', 'meat', 'month'
+}
 
 # make categories for probing
 cat2words = {}
@@ -62,9 +62,11 @@ start1, end1 = 0, prep.store.num_tokens
 tw_mat1, xws1, yws1 = make_term_by_window_co_occurrence_mat(
     prep, start=start1, end=end1, window_size=WINDOW_SIZE, max_frequency=MAX_FREQUENCY, log=LOG_FREQUENCY)
 mat = tw_mat1.T.asfptype()  # transpose so that x-words now index rows (does not affect singular values)
+
 # normalization
 if NORMALIZE:
     mat = normalize(mat, axis=1, norm='l2', copy=False)
+
 # svd
 u, s, _ = slinalg.svds(mat, k=NUM_SVS, return_singular_vectors=True)  # s is not 2D
 
