@@ -1,6 +1,8 @@
 from typing import List, Optional
 from scipy import sparse
 import numpy as np
+from scipy import stats
+import matplotlib.pyplot as plt
 
 from wordplay.utils import get_sliding_windows
 from categoryeval.probestore import ProbeStore
@@ -82,3 +84,26 @@ def make_term_by_window_co_occurrence_mat(prep,
 
     y_words = unique_windows
     return res, x_words, y_words
+
+
+def inspect_loadings(prep, dimension, category_words, random_words):
+    _, ax = plt.subplots(dpi=192, figsize=(6, 6))
+    x = np.arange(prep.store.num_types)
+    ax.scatter(x, dimension, color='grey')
+    loadings = [v if w in category_words else np.nan for v, w in zip(dimension, prep.store.types)]
+    ax.scatter(x, loadings, color='red')
+    ax.axhline(y=np.nanmean(loadings), color='red', zorder=3)
+    plt.show()
+
+    _, ax = plt.subplots(dpi=192, figsize=(6, 6))
+    x = np.arange(prep.store.num_types)
+    ax.scatter(x, dimension, color='grey')
+    loadings = [v if w in random_words else np.nan for v, w in zip(dimension, prep.store.types)]
+    ax.scatter(x, loadings, color='blue')
+    ax.axhline(y=np.nanmean(loadings), color='blue', zorder=3)
+    plt.show()
+
+    # qq plot
+    _, ax2 = plt.subplots(1)
+    stats.probplot(dimension, plot=ax2)
+    plt.show()
