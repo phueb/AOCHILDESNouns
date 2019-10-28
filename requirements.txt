@@ -1,3 +1,4 @@
+pyprind
 seaborn
 scikit-learn
 scipy

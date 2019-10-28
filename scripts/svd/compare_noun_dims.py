@@ -31,7 +31,7 @@ prep = TrainPrep(docs, **attr.asdict(params))
 
 # /////////////////////////////////////////////////////////////////
 
-WINDOW_SIZE = 2
+WINDOW_SIZE = 1
 NUM_DIMS = 256
 NORMALIZE = True  # this makes all the difference - this means that the scales of variables are different and matter
 MAX_FREQUENCY = 1000000  # largest value in co-occurrence matrix
