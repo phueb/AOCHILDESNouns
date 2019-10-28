@@ -3,9 +3,9 @@ from scipy import sparse
 import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
+import pyprind
 
 from categoryeval.probestore import ProbeStore
-from preppy.legacy import TrainPrep
 
 from wordplay.utils import get_sliding_windows
 
@@ -24,6 +24,9 @@ def make_term_by_window_co_occurrence_mat(prep,
     y_words always occur after x_words in the input.
     this format matches that used in TreeTransitions
     """
+
+    print(f'Making term-window matrix'
+          f' from tokens between {start:,} & {end:,}')
 
     # tokens
     if tokens is None:
@@ -49,7 +52,7 @@ def make_term_by_window_co_occurrence_mat(prep,
 
     # make sparse matrix (y_words in rows, windows in cols)
     shape = (num_unique_windows, num_xws)
-    print('Making term-by-window co-occurrence matrix with shape={}...'.format(shape))
+    print(f'shape={shape}')
     data = []
     row_ids = []
     cold_ids = []
@@ -88,19 +91,23 @@ def make_term_by_window_co_occurrence_mat(prep,
     return res, x_words, y_words
 
 
-def inspect_loadings(prep, dimension, category_words, random_words):
+def inspect_loadings(x_words, dimension, category_words, random_words, dim_id):
+    num_x = len(x_words)
+
     _, ax = plt.subplots(dpi=192, figsize=(6, 6))
-    x = np.arange(prep.store.num_types)
+    ax.set_title(f'Singular dimension {dim_id}')
+    x = np.arange(num_x)
     ax.scatter(x, dimension, color='grey')
-    loadings = [v if w in category_words else np.nan for v, w in zip(dimension, prep.store.types)]
+    loadings = [v if w in category_words else np.nan for v, w in zip(dimension, x_words)]
     ax.scatter(x, loadings, color='red')
     ax.axhline(y=np.nanmean(loadings), color='red', zorder=3)
     plt.show()
 
     _, ax = plt.subplots(dpi=192, figsize=(6, 6))
-    x = np.arange(prep.store.num_types)
+    ax.set_title(f'Singular dimension {dim_id}')
+    x = np.arange(num_x)
     ax.scatter(x, dimension, color='grey')
-    loadings = [v if w in random_words else np.nan for v, w in zip(dimension, prep.store.types)]
+    loadings = [v if w in random_words else np.nan for v, w in zip(dimension, x_words)]
     ax.scatter(x, loadings, color='blue')
     ax.axhline(y=np.nanmean(loadings), color='blue', zorder=3)
     plt.show()
@@ -113,10 +120,12 @@ def inspect_loadings(prep, dimension, category_words, random_words):
 
 def decode_singular_dimensions(u: np.ndarray,
                                cat2words: Dict[str, Set[str]],
-                               prep: TrainPrep,
+                               x_words: List[str],
                                num_dims: int = 256,
                                nominal_alpha: float = 0.01,
-                               plot_loadings: bool = False):
+                               plot_loadings: bool = False,
+                               verbose: bool = False,
+                               ):
     """
     collect p-value for each singular dimension for plotting
     """
@@ -124,11 +133,16 @@ def decode_singular_dimensions(u: np.ndarray,
     adj_alpha = nominal_alpha / num_dims
     categories = cat2words.keys()
 
+    if not verbose:
+        pbar = pyprind.ProgBar(num_dims, stream=2, title='Decoding')
+
     cat2ps = {cat: [] for cat in categories}
     dim_ids = []
     for dim_id in range(num_dims):
-        print()
-        print(f'Singular Dimension={num_dims - dim_id}')
+        if verbose:
+            print()
+            print(f'Singular Dimension={num_dims - dim_id}')
+
         dimension = u[:, dim_id]
 
         for cat in categories:
@@ -136,19 +150,24 @@ def decode_singular_dimensions(u: np.ndarray,
 
             # non-parametric analysis of variance.
             # is variance between category words and random words different?
-            groups = [[v for v, w in zip(dimension, prep.store.types) if w in category_words],
-                      [v for v, w in zip(dimension, prep.store.types) if w not in category_words]]
+            groups = [[v for v, w in zip(dimension, x_words) if w in category_words],
+                      [v for v, w in zip(dimension, x_words) if w not in category_words]]
             _, p = stats.kruskal(*groups)
-            print(p)
-            print(f'Dimension encodes {cat}= {p < adj_alpha}')
             cat2ps[cat].append(p)
+
+            if verbose:
+                print(p)
+                print(f'Dimension encodes {cat}= {p < adj_alpha}')
 
             # inspect how category words actually differ in their loadings from other words
             if p < adj_alpha and plot_loadings:
-                inspect_loadings(prep, dimension, category_words, cat2words['random'])
+                inspect_loadings(x_words, dimension, category_words, cat2words['random'], dim_id)
 
-            if p < adj_alpha:
+            if p < adj_alpha and cat != 'random':
                 dim_ids.append(dim_id)
+
+        if not verbose:
+            pbar.update()
 
     # a dimension cannot encode both nouns and verbs - so chose best
     cat2y = {cat: [] for cat in categories}
@@ -160,7 +179,7 @@ def decode_singular_dimensions(u: np.ndarray,
         # by setting all but lowest value to np.nan
         if len(bool_ids) > 1:
             min_i = np.argmin(ps_at_sd).item()
-            ps_at_sd = [v if i == min_i else np.nan for i, v in enumerate(ps_at_sd)]
+            values = [v if i == min_i else np.nan for i, v in enumerate(ps_at_sd)]
             print(f'WARNING: Dimension encodes multiple categories')
 
         # collect

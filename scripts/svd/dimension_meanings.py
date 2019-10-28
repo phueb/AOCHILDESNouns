@@ -21,11 +21,13 @@ from wordplay import config
 CORPUS_NAME = 'childes-20180319'
 PROBES_NAME = 'sem-4096'
 
-TEST_FROM_MIDDLE = False  # put 1K docs in middle into test split
+SHUFFLE_DOCS = False
+NUM_MID_TEST_DOCS = 100
 
 docs = load_docs(CORPUS_NAME,
-                 test_from_middle=TEST_FROM_MIDDLE,
-                 num_test_docs=0)
+                 num_test_take_from_mid=NUM_MID_TEST_DOCS,
+                 num_test_take_random=0,
+                 shuffle_docs=SHUFFLE_DOCS)
 
 params = PrepParams()
 prep = TrainPrep(docs, **attr.asdict(params))
@@ -95,7 +97,7 @@ u, s, _ = slinalg.svds(mat, k=NUM_DIMS, return_singular_vectors=True)  # s is no
 label2dim_ids = {}
 for cat2words, label in zip([syn_cat2words, sem_cat2words], LABELS):
 
-    cat2y, dim_ids = decode_singular_dimensions(u, cat2words, prep, num_dims=NUM_DIMS)
+    cat2y, dim_ids = decode_singular_dimensions(u, cat2words, prep.store.types, num_dims=NUM_DIMS)
     label2dim_ids[label] = dim_ids
 
     categories = cat2words.keys()

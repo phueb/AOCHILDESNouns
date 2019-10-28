@@ -20,13 +20,12 @@ PROBES_NAME = 'sem-4096'
 REVERSE = False
 NUM_PARTS = 32  # z-score does not make sense with num_parts=2
 SHUFFLE_DOCS = False
-START_MID = False
-START_END = False
+NUM_MID_TEST_DOCS = 100
 
 docs = load_docs(CORPUS_NAME,
-                 shuffle_docs=SHUFFLE_DOCS,
-                 start_at_midpoint=START_MID,
-                 start_at_ends=START_END)
+                 num_test_take_from_mid=NUM_MID_TEST_DOCS,
+                 num_test_take_random=0,
+                 shuffle_docs=SHUFFLE_DOCS)
 
 params = PrepParams(num_parts=NUM_PARTS, reverse=REVERSE)
 prep = TrainPrep(docs, **attr.asdict(params))

@@ -1,16 +1,14 @@
 import random
 from typing import List
+from sortedcontainers import SortedSet
 
 from wordplay import config
 
 
-childes_mid_doc_ids = tuple(range(1500, 1600))
-
-
 def load_docs(corpus_name: str,
               shuffle_docs: bool = False,
-              test_from_middle: bool = False,
-              num_test_docs: int = 100,
+              num_test_take_from_mid: int = 0,
+              num_test_take_random: int = 100,
               start_at_midpoint: bool = False,
               start_at_ends: bool = False,
               split_seed: int = 3,
@@ -27,32 +25,37 @@ def load_docs(corpus_name: str,
     assert not(shuffle_docs and start_at_ends)
     assert not(start_at_midpoint and start_at_ends)
 
-    if test_from_middle:
-        test_doc_ids = childes_mid_doc_ids
-    else:
-        num_test_doc_ids = num_docs - num_test_docs
-        random.seed(split_seed)
-        test_doc_ids = random.sample(range(num_test_doc_ids), num_test_docs)
+    # test doc ids
+    midpoint = len(docs) // 2
+    test_doc_ids = SortedSet(range(midpoint, midpoint + num_test_take_from_mid))  # from middle
+    #
+    num_random_ids = num_docs - num_test_take_random
+    random.seed(split_seed)
+    random_test_doc_ids = set(random.sample(range(num_random_ids), num_test_take_random))
+    test_doc_ids.update(random_test_doc_ids)
+    print('test doc IDs:')
+    print(test_doc_ids)
 
     # split train/test
     print('Splitting docs into train and test...')
-    test_docs = []
-    for test_line_id in test_doc_ids:
-        test_doc = docs.pop(test_line_id)  # removes line and returns removed line
-        test_docs.append(test_doc)
+
+    train_docs = []
+    for n, doc in enumerate(docs):
+        if n not in test_doc_ids:
+            train_docs.append(doc)
 
     if shuffle_docs:
         random.seed(shuffle_seed)
         print('Shuffling documents')
-        random.shuffle(docs)
+        random.shuffle(train_docs)
 
     if start_at_midpoint:
-        docs = reorder_docs_from_midpoint(docs)
+        train_docs = reorder_docs_from_midpoint(train_docs)
 
     if start_at_ends:
-        docs = reorder_docs_from_ends(docs)
+        train_docs = reorder_docs_from_ends(train_docs)
 
-    return docs
+    return train_docs
 
 
 def reorder_docs_from_midpoint(docs: List[str]

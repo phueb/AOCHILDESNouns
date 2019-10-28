@@ -16,16 +16,12 @@ from wordplay import config
 CORPUS_NAME = 'childes-20180319'
 
 SHUFFLE_DOCS = False
-START_MID = False
-START_END = False
-TEST_FROM_MIDDLE = True  # put 1K docs in middle into test split
+NUM_MID_TEST_DOCS = 100
 
 docs = load_docs(CORPUS_NAME,
-                 test_from_middle=TEST_FROM_MIDDLE,
-                 num_test_docs=0,
-                 shuffle_docs=SHUFFLE_DOCS,
-                 start_at_midpoint=START_MID,
-                 start_at_ends=START_END)
+                 num_test_take_from_mid=NUM_MID_TEST_DOCS,
+                 num_test_take_random=0,
+                 shuffle_docs=SHUFFLE_DOCS)
 
 params = PrepParams()
 prep = TrainPrep(docs, **attr.asdict(params))
@@ -33,7 +29,7 @@ prep = TrainPrep(docs, **attr.asdict(params))
 # /////////////////////////////////////////////////////////////////
 
 WINDOW_SIZE = 2
-NUM_SVS = 32
+NUM_DIMS = 32
 NORMALIZE = False  # this makes all the difference - this means that the scales of variables are different and matter
 MAX_FREQUENCY = 1000000  # largest value in co-occurrence matrix
 LOG_FREQUENCY = True  # take log of co-occurrence matrix element-wise
@@ -65,7 +61,7 @@ for y, mat in [(y1, tw_mat1.asfptype()),
 
     # SVD
     print('Fitting SVD ...')
-    _, s, _ = slinalg.svds(mat, k=NUM_SVS, return_singular_vectors='vh')  # s is not 2D
+    _, s, _ = slinalg.svds(mat, k=NUM_DIMS, return_singular_vectors='vh')  # s is not 2D
     print('sum of singular values={:,}'.format(s.sum()))
     print('var of singular values={:,}'.format(s.var()))
 
