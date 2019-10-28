@@ -1,11 +1,13 @@
-from typing import List, Optional
+from typing import Optional, List, Set, Dict
 from scipy import sparse
 import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
 
-from wordplay.utils import get_sliding_windows
 from categoryeval.probestore import ProbeStore
+from preppy.legacy import TrainPrep
+
+from wordplay.utils import get_sliding_windows
 
 
 def make_term_by_window_co_occurrence_mat(prep,
@@ -107,3 +109,62 @@ def inspect_loadings(prep, dimension, category_words, random_words):
     _, ax2 = plt.subplots(1)
     stats.probplot(dimension, plot=ax2)
     plt.show()
+
+
+def decode_singular_dimensions(u: np.ndarray,
+                               cat2words: Dict[str, Set[str]],
+                               prep: TrainPrep,
+                               num_dims: int = 256,
+                               nominal_alpha: float = 0.01,
+                               plot_loadings: bool = False):
+    """
+    collect p-value for each singular dimension for plotting
+    """
+
+    adj_alpha = nominal_alpha / num_dims
+    categories = cat2words.keys()
+
+    cat2ps = {cat: [] for cat in categories}
+    dim_ids = []
+    for dim_id in range(num_dims):
+        print()
+        print(f'Singular Dimension={num_dims - dim_id}')
+        dimension = u[:, dim_id]
+
+        for cat in categories:
+            category_words = cat2words[cat]
+
+            # non-parametric analysis of variance.
+            # is variance between category words and random words different?
+            groups = [[v for v, w in zip(dimension, prep.store.types) if w in category_words],
+                      [v for v, w in zip(dimension, prep.store.types) if w not in category_words]]
+            _, p = stats.kruskal(*groups)
+            print(p)
+            print(f'Dimension encodes {cat}= {p < adj_alpha}')
+            cat2ps[cat].append(p)
+
+            # inspect how category words actually differ in their loadings from other words
+            if p < adj_alpha and plot_loadings:
+                inspect_loadings(prep, dimension, category_words, cat2words['random'])
+
+            if p < adj_alpha:
+                dim_ids.append(dim_id)
+
+    # a dimension cannot encode both nouns and verbs - so chose best
+    cat2y = {cat: [] for cat in categories}
+    for ps_at_sd in zip(*[cat2ps[cat] for cat in categories]):
+        values = np.array(ps_at_sd)  # allows item assignment
+        bool_ids = np.where(values < adj_alpha)[0]
+
+        # in case the dimension encodes more than 1 category, only allow 1 winner
+        # by setting all but lowest value to np.nan
+        if len(bool_ids) > 1:
+            min_i = np.argmin(ps_at_sd).item()
+            ps_at_sd = [v if i == min_i else np.nan for i, v in enumerate(ps_at_sd)]
+            print(f'WARNING: Dimension encodes multiple categories')
+
+        # collect
+        for n, cat in enumerate(categories):
+            cat2y[cat].append(0.02 * n if values[n] < adj_alpha else np.nan)
+
+    return cat2y, dim_ids
