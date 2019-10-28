@@ -31,17 +31,19 @@ prep = TrainPrep(docs, **attr.asdict(params))
 
 # /////////////////////////////////////////////////////////////////
 
-WINDOW_SIZE = 1
+WINDOW_SIZE = 2
 NUM_DIMS = 256
-NORMALIZE = True  # this makes all the difference - this means that the scales of variables are different and matter
-MAX_FREQUENCY = 1000000  # largest value in co-occurrence matrix
+NORMALIZE = False  # this makes all the difference - this means that the scales of variables are different and matter
+MAX_FREQUENCY = 100 * 1000  # largest value in co-occurrence matrix
 LOG_FREQUENCY = True  # take log of co-occurrence matrix element-wise
 
 NOM_ALPHA = 0.05
 
-OFFSET = 200 * 1000
+OFFSET = prep.midpoint
 LABELS = [f'first {OFFSET:,} tokens',
           f'last {OFFSET:,} tokens']
+
+SCATTER_PLOT = False
 
 # make term_by_window_co_occurrence_mats
 start1, end1 = 0, OFFSET
@@ -84,43 +86,66 @@ for mat, label, x_words in zip([tw_mat1.T.asfptype(), tw_mat2.T.asfptype()],
     print('Dimensions identified as encoding noun-membership:')
     print(dim_ids)
 
-    # scatter plot
-    _, ax = plt.subplots(dpi=192, figsize=(6, 6))
-    ax.set_title(f'Decoding Singular Dimensions\nof term-by-window matrix\nwindow size={WINDOW_SIZE}',
-                 fontsize=config.Fig.fontsize)
-    # axis
-    ax.set_xlabel('Singular Dimension', fontsize=config.Fig.fontsize)
-    ax.spines['right'].set_visible(False)
-    ax.spines['left'].set_visible(False)
-    ax.spines['top'].set_visible(False)
-    ax.tick_params(axis='both', which='both', top=False, right=False, left=False)
-    ax.set_yticks([])
-    ax.set_xlim(left=0, right=NUM_DIMS)
-    # plot
-    x = np.arange(NUM_DIMS)
-    num_categories = len(categories)
-    cat2color = {n: c for n, c in zip(categories, sns.color_palette("hls", num_categories))}
-    for cat in categories:
-        color = cat2color[cat] if cat != 'random' else 'black'
-        ax.scatter(x, cat2y[cat][::-1], color=color, label=cat)
+    if SCATTER_PLOT:
 
-    plt.legend(frameon=True, framealpha=1.0, bbox_to_anchor=(0.5, 1.4), ncol=4, loc='lower center')
-    plt.show()
+        # scatter plot
+        _, ax = plt.subplots(dpi=192, figsize=(6, 6))
+        ax.set_title(f'Decoding Singular Dimensions\nof term-by-window matrix\nwindow size={WINDOW_SIZE}',
+                     fontsize=config.Fig.fontsize)
+        # axis
+        ax.set_xlabel('Singular Dimension', fontsize=config.Fig.fontsize)
+        ax.spines['right'].set_visible(False)
+        ax.spines['left'].set_visible(False)
+        ax.spines['top'].set_visible(False)
+        ax.tick_params(axis='both', which='both', top=False, right=False, left=False)
+        ax.set_yticks([])
+        ax.set_xlim(left=0, right=NUM_DIMS)
+        # plot
+        x = np.arange(NUM_DIMS)
+        num_categories = len(categories)
+        cat2color = {n: c for n, c in zip(categories, sns.color_palette("hls", num_categories))}
+        for cat in categories:
+            color = cat2color[cat] if cat != 'random' else 'black'
+            ax.scatter(x, cat2y[cat][::-1], color=color, label=cat)
+
+        plt.legend(frameon=True, framealpha=1.0, bbox_to_anchor=(0.5, 1.4), ncol=4, loc='lower center')
+        plt.show()
 
 
 # comparing singular values - does syntactic or semantic category account for more?
 _, ax = plt.subplots(dpi=192, figsize=(6, 6))
-ax.set_title(f'Singular values of NOUN-encoding dimensions\nwindow size={WINDOW_SIZE}', fontsize=config.Fig.fontsize)
-ax.set_ylabel('Singular Value', fontsize=config.Fig.fontsize)
+ax.set_title(f'Variance explained by NOUN-encoding dimensions\nwindow size={WINDOW_SIZE}', fontsize=config.Fig.fontsize)
+ax.set_ylabel('Normalized Singular Value', fontsize=config.Fig.fontsize)
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
 ax.tick_params(axis='both', which='both', top=False, right=False)
 ax.set_xticklabels(LABELS)
-ax.set_ylim([0, 5])
-ax.yaxis.grid(True, alpha=0.1)
-#
-y1 = [label2s[LABELS[0]][::-1][i] for i in label2dim_ids[LABELS[0]]]  # singular values for part 1 noun dimensions
-y2 = [label2s[LABELS[1]][::-1][i] for i in label2dim_ids[LABELS[1]]]  # singular values for part 2 noun dimensions
-ax.boxplot([y1,
-            y2])
+ax.yaxis.grid(True, alpha=0.5)
+plt.grid(True, which='both', axis='y', alpha=0.2)
+plt.yscale('log')
+# y-lims
+if NORMALIZE:
+    ylims = [0, 5]
+elif LOG_FREQUENCY:
+    ylims = [10e-6, 10e-2]
+else:
+    ylims = [0, 20]
+ax.set_ylim(ylims)
+
+
+# plot
+s1 = label2s[LABELS[0]]
+s2 = label2s[LABELS[1]]
+s1_all_dims = label2s[LABELS[0]]
+s2_all_dims = label2s[LABELS[1]]
+assert np.count_nonzero(s1) == len(s1)
+assert np.count_nonzero(s2) == len(s2)
+s1_noun_dims = np.array([s1[::-1][i] for i in label2dim_ids[LABELS[0]]])  # singular values for part 1 noun dimensions
+s2_noun_dims = np.array([s2[::-1][i] for i in label2dim_ids[LABELS[1]]])  # singular values for part 2 noun dimensions
+ax.boxplot([s1_noun_dims / s1_all_dims.sum(), s2_noun_dims / s2_all_dims.sum()], zorder=3)
 plt.show()
+
+
+# proportion of total variance
+print(s1_noun_dims.sum(), s1_all_dims.sum(), s1_noun_dims.sum() / s1_all_dims.sum())
+print(s2_noun_dims.sum(), s2_all_dims.sum(), s2_noun_dims.sum() / s2_all_dims.sum())
