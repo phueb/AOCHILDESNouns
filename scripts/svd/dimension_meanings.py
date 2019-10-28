@@ -34,7 +34,7 @@ probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
 
 # /////////////////////////////////////////////////////////////////
 
-WINDOW_SIZE = 1
+WINDOW_SIZE = 4
 NUM_DIMS = 256
 NORMALIZE = True
 MAX_FREQUENCY = 1000 * 100  # largest value in co-occurrence matrix
@@ -124,18 +124,17 @@ for cat2words, label in zip([syn_cat2words, sem_cat2words], LABELS):
     plt.show()
 
 
-# histogram has both semantic and syntactic dimensions
-_, axh = plt.subplots(dpi=192, figsize=(6, 6))
-axh.set_title(f'Singular Dimensions encoding syntactic categories\nwindow size={WINDOW_SIZE}',
-              fontsize=config.Fig.fontsize)
-axh.set_xlabel('Singular Dimension', fontsize=config.Fig.fontsize)
-axh.set_ylabel('Normalized Frequency', fontsize=config.Fig.fontsize)
-axh.spines['right'].set_visible(False)
-axh.spines['top'].set_visible(False)
-axh.tick_params(axis='both', which='both', top=False, right=False)
+# comparing singular values - does syntactic or semantic category account for more?
+_, ax = plt.subplots(dpi=192, figsize=(6, 6))
+ax.set_title(f'Accounting for variance\nnouns vs. semantics\nwindow size={WINDOW_SIZE}', fontsize=config.Fig.fontsize)
+ax.set_xlabel('Category', fontsize=config.Fig.fontsize)
+ax.set_ylabel('Log Singular Value', fontsize=config.Fig.fontsize)
+ax.spines['right'].set_visible(False)
+ax.spines['top'].set_visible(False)
+ax.tick_params(axis='both', which='both', top=False, right=False)
+ax.set_xticklabels(LABELS)
 #
-for label, dim_ids in label2dim_ids.items():
-    y = np.abs(np.array(dim_ids) - NUM_DIMS)
-    axh.hist(y, density=True, label=label, histtype='step', bins=None, range=[0, NUM_DIMS])
-plt.legend(frameon=False, framealpha=1.0)
+y1 = [s[::-1][i] for i in label2dim_ids[LABELS[0]]]  # singular values for syntactic categories
+y2 = [s[::-1][i] for i in label2dim_ids[LABELS[1]]]  # singular values for semantic categories
+ax.boxplot([np.log(y1), np.log(y2)], labels=LABELS)
 plt.show()
