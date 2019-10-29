@@ -36,11 +36,11 @@ probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
 
 # /////////////////////////////////////////////////////////////////
 
-WINDOW_SIZE = 4
+WINDOW_SIZE = 2
 NUM_DIMS = 256
-NORMALIZE = True
+NORMALIZE = False
 MAX_FREQUENCY = 1000 * 100  # largest value in co-occurrence matrix
-LOG_FREQUENCY = False  # take log of co-occurrence matrix element-wise
+LOG_FREQUENCY = True  # take log of co-occurrence matrix element-wise
 
 SYN_CATEGORIES: Optional[Set[str]] = {'nouns'}
 SEM_CATEGORIES: Optional[Set[str]] = None
@@ -130,13 +130,18 @@ for cat2words, label in zip([syn_cat2words, sem_cat2words], LABELS):
 _, ax = plt.subplots(dpi=192, figsize=(6, 6))
 ax.set_title(f'Accounting for variance\nnouns vs. semantics\nwindow size={WINDOW_SIZE}', fontsize=config.Fig.fontsize)
 ax.set_xlabel('Category', fontsize=config.Fig.fontsize)
-ax.set_ylabel('Log Singular Value', fontsize=config.Fig.fontsize)
+ax.set_ylabel('Singular Value', fontsize=config.Fig.fontsize)
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
 ax.tick_params(axis='both', which='both', top=False, right=False)
 ax.set_xticklabels(LABELS)
+plt.grid(True, which='both', axis='y', alpha=0.2)
+plt.yscale('log')
 #
 y1 = [s[::-1][i] for i in label2dim_ids[LABELS[0]]]  # singular values for syntactic categories
 y2 = [s[::-1][i] for i in label2dim_ids[LABELS[1]]]  # singular values for semantic categories
-ax.boxplot([np.log(y1), np.log(y2)], labels=LABELS)
+ax.boxplot([y1, y2], labels=LABELS)
+ax.axhline(y=np.mean(y1), label=f'noun n={len(y1)}', color='blue')
+ax.axhline(y=np.mean(y2), label=f'semantics n={len(y2)}', color='red')
+plt.legend()
 plt.show()

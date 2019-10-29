@@ -7,16 +7,17 @@ import seaborn as sns
 import attr
 
 from preppy.legacy import TrainPrep
+from categoryeval.probestore import ProbeStore
 
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 from wordplay.svd import make_term_by_window_co_occurrence_mat, decode_singular_dimensions
-from wordplay.pos import load_pos_words
 from wordplay import config
 
 # /////////////////////////////////////////////////////////////////
 
 CORPUS_NAME = 'childes-20180319'
+PROBES_NAME = 'sem-4096'
 
 SHUFFLE_DOCS = False
 NUM_MID_TEST_DOCS = 0
@@ -31,7 +32,7 @@ prep = TrainPrep(docs, **attr.asdict(params))
 
 # /////////////////////////////////////////////////////////////////
 
-WINDOW_SIZE = 2
+WINDOW_SIZE = 3
 NUM_DIMS = 256
 NORMALIZE = False  # this makes all the difference - this means that the scales of variables are different and matter
 MAX_FREQUENCY = 100 * 1000  # largest value in co-occurrence matrix
@@ -43,6 +44,19 @@ OFFSET = prep.midpoint
 LABELS = [f'first {OFFSET:,} tokens', f'last {OFFSET:,} tokens']
 
 SCATTER_PLOT = True
+
+# /////////////////////////////////////////////////////////////////////// probes
+
+# make semantic categories for probing
+probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
+cat2words = {}
+for cat in probe_store.cats:
+    category_words = probe_store.cat2probes[cat]
+    cat2words[cat] = category_words
+    print(f'Loaded {len(category_words)} words in category {cat}')
+    assert len(category_words) > 0
+
+# ////////////////////////////////////////////////////////////////////// TW matrix
 
 # make term_by_window_co_occurrence_mats
 start1, end1 = 0, OFFSET
@@ -72,17 +86,13 @@ for mat, label, x_words in zip([tw_mat1.T.asfptype(), tw_mat2.T.asfptype()],
 
 # /////////////////////////////////////////////////////////////////////////// decode + plot
 
-    nouns = load_pos_words(f'{CORPUS_NAME}-nouns')
-    rands = load_pos_words(f'{CORPUS_NAME}-random')
-    print(f'Loaded {len(nouns)} nouns')
-    cat2words = {'noun': nouns, 'random': rands}
     categories = cat2words.keys()
 
     cat2y, dim_ids = decode_singular_dimensions(u, cat2words, x_words,
                                                 num_dims=NUM_DIMS, nominal_alpha=NOM_ALPHA, plot_loadings=False)
     label2dim_ids[label] = dim_ids
 
-    print('Dimensions identified as encoding noun-membership:')
+    print('Dimensions identified as encoding semantic-category-membership:')
     print(dim_ids)
 
     if SCATTER_PLOT:
@@ -106,6 +116,7 @@ for mat, label, x_words in zip([tw_mat1.T.asfptype(), tw_mat2.T.asfptype()],
         for cat in categories:
             color = cat2color[cat] if cat != 'random' else 'black'
             ax.scatter(x, cat2y[cat][::-1], color=color, label=cat)
+            print(f'{np.count_nonzero(~np.isnan(cat2y[cat]))} dimensions encode {cat:<12}')
 
         plt.legend(frameon=True, framealpha=1.0, bbox_to_anchor=(0.5, 1.4), ncol=4, loc='lower center')
         plt.show()
@@ -113,7 +124,7 @@ for mat, label, x_words in zip([tw_mat1.T.asfptype(), tw_mat2.T.asfptype()],
 
 # comparing singular values - does syntactic or semantic category account for more?
 _, ax = plt.subplots(dpi=192, figsize=(6, 6))
-ax.set_title(f'Variance explained by NOUN-encoding dimensions\nwindow size={WINDOW_SIZE}', fontsize=config.Fig.fontsize)
+ax.set_title(f'Variance explained by semantics-encoding dimensions\nwindow size={WINDOW_SIZE}', fontsize=config.Fig.fontsize)
 ax.set_ylabel('Normalized Singular Value', fontsize=config.Fig.fontsize)
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
@@ -149,7 +160,7 @@ ax.boxplot([y1, y2], zorder=3)
 
 ax.axhline(y=np.mean(y1), label=f'part 1 mean={np.mean(y1):.4f} n={len(y1)}', color='blue')
 ax.axhline(y=np.mean(y2), label=f'part 2 mean={np.mean(y2):.4f} n={len(y2)}', color='red')
-plt.legend()
+plt.legend(loc='lower left', framealpha=1.0)
 plt.show()
 
 

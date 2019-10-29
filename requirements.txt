@@ -8,5 +8,5 @@ matplotlib
 spacy
 pandas
 cytoolz
-https://github.com/phueb/Preppy/archive/v1.0.0.tar.gz
+https://github.com/phueb/Preppy/archive/v1.1.1.tar.gz
 https://github.com/phueb/CategoryEval/archive/v1.0.1.tar.gz
