@@ -10,6 +10,7 @@ from preppy.legacy import TrainPrep
 from categoryeval.probestore import ProbeStore
 
 from wordplay.params import PrepParams
+from wordplay.pos import load_pos_words
 from wordplay.docs import load_docs
 from wordplay.svd import make_term_by_window_co_occurrence_mat, decode_singular_dimensions
 from wordplay import config
@@ -32,7 +33,7 @@ prep = TrainPrep(docs, **attr.asdict(params))
 
 # /////////////////////////////////////////////////////////////////
 
-WINDOW_SIZE = 3
+WINDOW_SIZE = 2
 NUM_DIMS = 256
 NORMALIZE = False  # this makes all the difference - this means that the scales of variables are different and matter
 MAX_FREQUENCY = 100 * 1000  # largest value in co-occurrence matrix
@@ -45,7 +46,9 @@ LABELS = [f'first {OFFSET:,} tokens', f'last {OFFSET:,} tokens']
 
 SCATTER_PLOT = True
 
-# /////////////////////////////////////////////////////////////////////// probes
+# /////////////////////////////////////////////////////////////////////// categories
+
+nouns = load_pos_words(f'{CORPUS_NAME}-nouns')
 
 # make semantic categories for probing
 probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
@@ -55,6 +58,9 @@ for cat in probe_store.cats:
     cat2words[cat] = category_words
     print(f'Loaded {len(category_words)} words in category {cat}')
     assert len(category_words) > 0
+
+categories = cat2words.keys()
+num_categories = len(categories)
 
 # ////////////////////////////////////////////////////////////////////// TW matrix
 
@@ -86,10 +92,13 @@ for mat, label, x_words in zip([tw_mat1.T.asfptype(), tw_mat2.T.asfptype()],
 
 # /////////////////////////////////////////////////////////////////////////// decode + plot
 
-    categories = cat2words.keys()
-
+    y_offset = 0.02
     cat2y, dim_ids = decode_singular_dimensions(u, cat2words, x_words,
-                                                num_dims=NUM_DIMS, nominal_alpha=NOM_ALPHA, plot_loadings=False)
+                                                num_dims=NUM_DIMS,
+                                                nominal_alpha=NOM_ALPHA,
+                                                plot_loadings=False,
+                                                control_words=nouns,
+                                                y_offset=y_offset)
     label2dim_ids[label] = dim_ids
 
     print('Dimensions identified as encoding semantic-category-membership:')
@@ -109,9 +118,9 @@ for mat, label, x_words in zip([tw_mat1.T.asfptype(), tw_mat2.T.asfptype()],
         ax.tick_params(axis='both', which='both', top=False, right=False, left=False)
         ax.set_yticks([])
         ax.set_xlim(left=0, right=NUM_DIMS)
+        ax.set_ylim([-y_offset, y_offset * num_categories + y_offset])
         # plot
         x = np.arange(NUM_DIMS)
-        num_categories = len(categories)
         cat2color = {n: c for n, c in zip(categories, sns.color_palette("hls", num_categories))}
         for cat in categories:
             color = cat2color[cat] if cat != 'random' else 'black'
@@ -124,7 +133,7 @@ for mat, label, x_words in zip([tw_mat1.T.asfptype(), tw_mat2.T.asfptype()],
 
 # comparing singular values - does syntactic or semantic category account for more?
 _, ax = plt.subplots(dpi=192, figsize=(6, 6))
-ax.set_title(f'Variance explained by semantics-encoding dimensions\nwindow size={WINDOW_SIZE}', fontsize=config.Fig.fontsize)
+ax.set_title(f'Variance explained by {PROBES_NAME}-encoding dimensions\nwindow size={WINDOW_SIZE}', fontsize=config.Fig.fontsize)
 ax.set_ylabel('Normalized Singular Value', fontsize=config.Fig.fontsize)
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
@@ -140,8 +149,6 @@ elif LOG_FREQUENCY:
 else:
     ylims = [0, 20]
 ax.set_ylim(ylims)
-
-
 # plot
 s1 = label2s[LABELS[0]]
 s2 = label2s[LABELS[1]]
@@ -157,7 +164,6 @@ s2_sem_dims = np.array([s2[::-1][i] for i in dims2])  # sing values for part 2 s
 y1 = s1_sem_dims / s1_all_dims.sum()
 y2 = s2_sem_dims / s2_all_dims.sum()
 ax.boxplot([y1, y2], zorder=3)
-
 ax.axhline(y=np.mean(y1), label=f'part 1 mean={np.mean(y1):.4f} n={len(y1)}', color='blue')
 ax.axhline(y=np.mean(y2), label=f'part 2 mean={np.mean(y2):.4f} n={len(y2)}', color='red')
 plt.legend(loc='lower left', framealpha=1.0)

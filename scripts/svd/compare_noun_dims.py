@@ -44,6 +44,16 @@ LABELS = [f'first {OFFSET:,} tokens', f'last {OFFSET:,} tokens']
 
 SCATTER_PLOT = True
 
+# ///////////////////////////////////////////////////////////////////// categories
+
+nouns = load_pos_words(f'{CORPUS_NAME}-nouns')
+rands = load_pos_words(f'{CORPUS_NAME}-random')
+print(f'Loaded {len(nouns)} nouns')
+cat2words = {'noun': nouns, 'random': rands}
+categories = cat2words.keys()
+
+# /////////////////////////////////////////////////////////////////////// TW-matrix
+
 # make term_by_window_co_occurrence_mats
 start1, end1 = 0, OFFSET
 start2, end2 = prep.store.num_tokens - OFFSET, prep.store.num_tokens
@@ -71,12 +81,6 @@ for mat, label, x_words in zip([tw_mat1.T.asfptype(), tw_mat2.T.asfptype()],
     label2s[label] = s
 
 # /////////////////////////////////////////////////////////////////////////// decode + plot
-
-    nouns = load_pos_words(f'{CORPUS_NAME}-nouns')
-    rands = load_pos_words(f'{CORPUS_NAME}-random')
-    print(f'Loaded {len(nouns)} nouns')
-    cat2words = {'noun': nouns, 'random': rands}
-    categories = cat2words.keys()
 
     cat2y, dim_ids = decode_singular_dimensions(u, cat2words, x_words,
                                                 num_dims=NUM_DIMS, nominal_alpha=NOM_ALPHA, plot_loadings=False)

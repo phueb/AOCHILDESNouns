@@ -121,10 +121,12 @@ def inspect_loadings(x_words, dimension, category_words, random_words, dim_id):
 def decode_singular_dimensions(u: np.ndarray,
                                cat2words: Dict[str, Set[str]],
                                x_words: List[str],
+                               control_words: Optional[Set[str]] = None,
                                num_dims: int = 256,
                                nominal_alpha: float = 0.01,
                                plot_loadings: bool = False,
                                verbose: bool = False,
+                               y_offset: float = 0.02,
                                ):
     """
     collect p-value for each singular dimension for plotting
@@ -148,10 +150,18 @@ def decode_singular_dimensions(u: np.ndarray,
         for cat in categories:
             category_words = cat2words[cat]
 
+            # control words are useful when semantic categories are tested, containing only nouns.
+            # instead of comparing category_words to all other words, compare to non-category nouns instead
+            if control_words is None:
+                groups = [[v for v, w in zip(dimension, x_words) if w in category_words],
+                          [v for v, w in zip(dimension, x_words) if w not in category_words]]
+            else:
+                groups = [[v for v, w in zip(dimension, x_words) if w in category_words],
+                          [v for v, w in zip(dimension, x_words)
+                           if w in control_words and w not in category_words]]
+
             # non-parametric analysis of variance.
             # is variance between category words and random words different?
-            groups = [[v for v, w in zip(dimension, x_words) if w in category_words],
-                      [v for v, w in zip(dimension, x_words) if w not in category_words]]
             _, p = stats.kruskal(*groups)
             cat2ps[cat].append(p)
 
@@ -184,6 +194,6 @@ def decode_singular_dimensions(u: np.ndarray,
 
         # collect
         for n, cat in enumerate(categories):
-            cat2y[cat].append(0.02 * n if values[n] < adj_alpha else np.nan)
+            cat2y[cat].append(y_offset * n if values[n] < adj_alpha else np.nan)
 
     return cat2y, dim_ids
