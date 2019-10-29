@@ -33,7 +33,7 @@ prep = TrainPrep(docs, **attr.asdict(params))
 
 # /////////////////////////////////////////////////////////////////
 
-WINDOW_SIZE = 2
+WINDOW_SIZE = 1
 NUM_DIMS = 256
 NORMALIZE = False  # this makes all the difference - this means that the scales of variables are different and matter
 MAX_FREQUENCY = 100 * 1000  # largest value in co-occurrence matrix
@@ -75,7 +75,7 @@ tw_mat2, xws2, yws2 = make_term_by_window_co_occurrence_mat(
 
 # ////////////////////////////////////////////////////////////////////// svd
 
-label2dim_ids = {}
+label2cat2dim_ids = {}
 label2s = {}
 for mat, label, x_words in zip([tw_mat1.T.asfptype(), tw_mat2.T.asfptype()],
                                LABELS,
@@ -90,21 +90,28 @@ for mat, label, x_words in zip([tw_mat1.T.asfptype(), tw_mat2.T.asfptype()],
     u, s, _ = slinalg.svds(mat, k=NUM_DIMS, return_singular_vectors=True)  # s is not 2D
     label2s[label] = s
 
-# /////////////////////////////////////////////////////////////////////////// decode + plot
+    # /////////////////////////////////////////////////////////////////////////// decode + plot
 
-    y_offset = 0.02
-    cat2y, dim_ids = decode_singular_dimensions(u, cat2words, x_words,
-                                                num_dims=NUM_DIMS,
-                                                nominal_alpha=NOM_ALPHA,
-                                                plot_loadings=False,
-                                                control_words=nouns,
-                                                y_offset=y_offset)
-    label2dim_ids[label] = dim_ids
+    cat2dim_ids = decode_singular_dimensions(u, cat2words, x_words,
+                                             num_dims=NUM_DIMS,
+                                             nominal_alpha=NOM_ALPHA,
+                                             plot_loadings=False,
+                                             control_words=nouns)
+
+    dim_ids = []
+    for cat, idx in cat2dim_ids.items():
+        dim_ids_without_nans = [i for i in idx if not np.isnan(i)]
+        dim_ids += dim_ids_without_nans
+    assert len(dim_ids) == len(set(dim_ids))  # do not accept duplicates
+
+    label2cat2dim_ids[label] = cat2dim_ids
 
     print('Dimensions identified as encoding semantic-category-membership:')
     print(dim_ids)
 
     if SCATTER_PLOT:
+
+        y_offset = 0.02
 
         # scatter plot
         _, ax = plt.subplots(dpi=192, figsize=(6, 6))
@@ -122,10 +129,12 @@ for mat, label, x_words in zip([tw_mat1.T.asfptype(), tw_mat2.T.asfptype()],
         # plot
         x = np.arange(NUM_DIMS)
         cat2color = {n: c for n, c in zip(categories, sns.color_palette("hls", num_categories))}
-        for cat in categories:
+        for n, cat in enumerate(categories):
             color = cat2color[cat] if cat != 'random' else 'black'
-            ax.scatter(x, cat2y[cat][::-1], color=color, label=cat)
-            print(f'{np.count_nonzero(~np.isnan(cat2y[cat]))} dimensions encode {cat:<12}')
+            cat_dim_ids = cat2dim_ids[cat][::-1]
+            y = [n * y_offset if not np.isnan(dim_id) else np.nan for dim_id in cat_dim_ids]
+            ax.scatter(x, y, color=color, label=cat)
+            print(f'{np.count_nonzero(~np.isnan(y))} dimensions encode {cat:<12}')
 
         plt.legend(frameon=True, framealpha=1.0, bbox_to_anchor=(0.5, 1.4), ncol=4, loc='lower center')
         plt.show()
@@ -156,13 +165,19 @@ s1_all_dims = label2s[LABELS[0]]
 s2_all_dims = label2s[LABELS[1]]
 assert np.count_nonzero(s1) == len(s1)
 assert np.count_nonzero(s2) == len(s2)
-# some dimensions occur more than once - set() removes duplicates
-dims1 = set(label2dim_ids[LABELS[0]])
-dims2 = set(label2dim_ids[LABELS[1]])
+# dimensions
+dims1_nans = np.unique([label2cat2dim_ids[LABELS[0]][cat] for cat in categories])
+dims2_nans = np.unique([label2cat2dim_ids[LABELS[1]][cat] for cat in categories])
+dims1 = [int(i) for i in dims1_nans if not np.isnan(i)]
+dims2 = [int(i) for i in dims2_nans if not np.isnan(i)]
+# singular variances
 s1_sem_dims = np.array([s1[::-1][i] for i in dims1])  # sing values for part 1 sem dimensions
 s2_sem_dims = np.array([s2[::-1][i] for i in dims2])  # sing values for part 2 sem dimensions
-y1 = s1_sem_dims / s1_all_dims.sum()
-y2 = s2_sem_dims / s2_all_dims.sum()
+total_var1 = s1_all_dims.sum()
+total_var2 = s2_all_dims.sum()
+# plot
+y1 = s1_sem_dims / total_var1
+y2 = s2_sem_dims / total_var2
 ax.boxplot([y1, y2], zorder=3)
 ax.axhline(y=np.mean(y1), label=f'part 1 mean={np.mean(y1):.4f} n={len(y1)}', color='blue')
 ax.axhline(y=np.mean(y2), label=f'part 2 mean={np.mean(y2):.4f} n={len(y2)}', color='red')
@@ -171,5 +186,16 @@ plt.show()
 
 
 # proportion of total variance
-print(f'{s1_sem_dims.sum():>12,.1f} {s1_all_dims.sum():>12,.1f} {s1_sem_dims.sum() / s1_all_dims.sum():>6,.3f}')
-print(f'{s2_sem_dims.sum():>12,.1f} {s2_all_dims.sum():>12,.1f} {s2_sem_dims.sum() / s2_all_dims.sum():>6,.3f}')
+print(f'{s1_sem_dims.sum():>12,.1f} {total_var1 :>12,.1f} {s1_sem_dims.sum() / total_var1 :>6,.3f}')
+print(f'{s2_sem_dims.sum():>12,.1f} {total_var2 :>12,.1f} {s2_sem_dims.sum() / total_var2 :>6,.3f}')
+
+
+print(f'category     prop1  prop2')
+for cat in categories:
+    cat_dim_ids1 = [i for i in label2cat2dim_ids[LABELS[0]][cat] if not np.isnan(i)]
+    cat_dim_ids2 = [i for i in label2cat2dim_ids[LABELS[1]][cat] if not np.isnan(i)]
+    cat_var1 = np.sum([label2s[LABELS[0]][i] for i in cat_dim_ids1])
+    cat_var2 = np.sum([label2s[LABELS[1]][i] for i in cat_dim_ids2])
+    prop1 = cat_var1 / total_var1
+    prop2 = cat_var2 / total_var2
+    print(f'{cat:<12}{prop1 :>6,.3f} {prop2 :>6,.3f} | {prop1 / prop2: .2f}')

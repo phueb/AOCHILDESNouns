@@ -126,7 +126,6 @@ def decode_singular_dimensions(u: np.ndarray,
                                nominal_alpha: float = 0.01,
                                plot_loadings: bool = False,
                                verbose: bool = False,
-                               y_offset: float = 0.02,
                                ):
     """
     collect p-value for each singular dimension for plotting
@@ -139,7 +138,6 @@ def decode_singular_dimensions(u: np.ndarray,
         pbar = pyprind.ProgBar(num_dims, stream=2, title='Decoding')
 
     cat2ps = {cat: [] for cat in categories}
-    dim_ids = []
     for dim_id in range(num_dims):
         if verbose:
             print()
@@ -173,27 +171,27 @@ def decode_singular_dimensions(u: np.ndarray,
             if p < adj_alpha and plot_loadings:
                 inspect_loadings(x_words, dimension, category_words, cat2words['random'], dim_id)
 
-            if p < adj_alpha and cat != 'random':
-                dim_ids.append(dim_id)
-
         if not verbose:
             pbar.update()
 
-    # a dimension cannot encode both nouns and verbs - so chose best
-    cat2y = {cat: [] for cat in categories}
-    for ps_at_sd in zip(*[cat2ps[cat] for cat in categories]):
-        values = np.array(ps_at_sd)  # allows item assignment
+    # a dimension is not allowed to encode multiple categories - so chose best
+    cat2dim_ids = {cat: [] for cat in categories}
+    for dim_id, ps_at_dim in enumerate(zip(*[cat2ps[cat] for cat in categories])):
+        values = np.array(ps_at_dim)  # allows item assignment
         bool_ids = np.where(values < adj_alpha)[0]
 
         # in case the dimension encodes more than 1 category, only allow 1 winner
         # by setting all but lowest value to np.nan
         if len(bool_ids) > 1:
-            min_i = np.argmin(ps_at_sd).item()
-            values = [v if i == min_i else np.nan for i, v in enumerate(ps_at_sd)]
+            min_i = np.argmin(ps_at_dim).item()
+            values = np.array([v if i == min_i else np.nan for i, v in enumerate(ps_at_dim)])
             print(f'WARNING: Dimension encodes multiple categories')
+
+        num_significant = len(np.where(values < adj_alpha)[0])
+        assert num_significant <= 1  # only one dimension can have p < alpha
 
         # collect
         for n, cat in enumerate(categories):
-            cat2y[cat].append(y_offset * n if values[n] < adj_alpha else np.nan)
+            cat2dim_ids[cat].append(dim_id if values[n] < adj_alpha else np.nan)
 
-    return cat2y, dim_ids
+    return cat2dim_ids
