@@ -130,10 +130,11 @@ for mat, label, x_words in zip([tw_mat1.T.asfptype(), tw_mat2.T.asfptype()],
         x = np.arange(NUM_DIMS)
         cat2color = {n: c for n, c in zip(categories, sns.color_palette("hls", num_categories))}
         for n, cat in enumerate(categories):
-            color = cat2color[cat] if cat != 'random' else 'black'
             cat_dim_ids = cat2dim_ids[cat][::-1]
             y = [n * y_offset if not np.isnan(dim_id) else np.nan for dim_id in cat_dim_ids]
-            ax.scatter(x, y, color=color, label=cat)
+            color = cat2color[cat] if cat != 'random' else 'black'
+            color = 'white' if np.all(np.isnan(y)) else color
+            ax.scatter(x, y, color=color, label=cat.upper())
             print(f'{np.count_nonzero(~np.isnan(y))} dimensions encode {cat:<12}')
 
         plt.legend(frameon=True, framealpha=1.0, bbox_to_anchor=(0.5, 1.4), ncol=4, loc='lower center')
@@ -185,11 +186,11 @@ plt.legend(loc='lower left', framealpha=1.0)
 plt.show()
 
 
-# proportion of total variance
+# proportion of total variance accounted for by dimensions encoding semantics
 print(f'{s1_sem_dims.sum():>12,.1f} {total_var1 :>12,.1f} {s1_sem_dims.sum() / total_var1 :>6,.3f}')
 print(f'{s2_sem_dims.sum():>12,.1f} {total_var2 :>12,.1f} {s2_sem_dims.sum() / total_var2 :>6,.3f}')
 
-
+# proportion of variance by category
 print(f'category     prop1  prop2')
 for cat in categories:
     cat_dim_ids1 = [i for i in label2cat2dim_ids[LABELS[0]][cat] if not np.isnan(i)]
