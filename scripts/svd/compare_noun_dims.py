@@ -142,7 +142,13 @@ assert np.count_nonzero(s1) == len(s1)
 assert np.count_nonzero(s2) == len(s2)
 s1_noun_dims = np.array([s1[::-1][i] for i in label2dim_ids[LABELS[0]]])  # singular values for part 1 noun dimensions
 s2_noun_dims = np.array([s2[::-1][i] for i in label2dim_ids[LABELS[1]]])  # singular values for part 2 noun dimensions
-ax.boxplot([s1_noun_dims / s1_all_dims.sum(), s2_noun_dims / s2_all_dims.sum()], zorder=3)
+y1 = s1_noun_dims / s1_all_dims.sum()
+y2 = s2_noun_dims / s2_all_dims.sum()
+ax.boxplot([y1, y2], zorder=3)
+
+ax.axhline(y=np.mean(y1), label=f'part 1 mean={np.mean(y1):.4f}', color='blue')
+ax.axhline(y=np.mean(y2), label=f'part 2 mean={np.mean(y2):.4f}', color='red')
+plt.legend()
 plt.show()
 
 
