@@ -1,14 +1,9 @@
 """
 Research questions:
-1. How discriminative of semantic categories are probe contexts?
+1. How discriminative of semantic categories are probe contexts in partition 1 vs. partition 2?
 """
 
-import matplotlib.pyplot as plt
-from scipy.stats import ttest_ind
 import attr
-import numpy as np
-import pyprind
-import seaborn as sns
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 
 from preppy.legacy import TrainPrep
@@ -62,7 +57,8 @@ tw_mat2, xws2, yws2 = make_term_by_window_co_occurrence_mat(
 
 for x, xws in zip([tw_mat1.T.toarray(), tw_mat2.T.toarray()],
                   [xws1, xws2]):
-    y = [probe_store.cat2id[probe_store.probe2cat[p]] for p in xws1]
+    y = [probe_store.cat2id[probe_store.probe2cat[p]] for p in xws]
+    print(f'Number of probes included in LDA={len(y)}')
     clf = LinearDiscriminantAnalysis(n_components=None, priors=None, shrinkage=None,
                                      solver='svd', store_covariance=False)
     clf.fit(x, y)
