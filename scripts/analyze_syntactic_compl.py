@@ -40,7 +40,7 @@ for ax, ylabel, y in zip(axs, ylabels, ys):
     ax.set_ylabel(ylabel, fontsize=LEG_FONTSIZE)
     ax.spines['right'].set_visible(False)
     ax.spines['top'].set_visible(False)
-    ax.tick_params(axis='both', which='both', top='off', right='off')
+    ax.tick_params(axis='both', which='both', top=False, right=False)
     plt.setp(ax.get_yticklabels(), fontsize=LEG_FONTSIZE)
     # plot
     ax.plot(y, linewidth=LW, label=ylabel, c='black')

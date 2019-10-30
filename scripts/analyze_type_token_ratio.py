@@ -47,7 +47,7 @@ for ax, y_name, ys in zip(axarr, y_names, [(y1_early, y1_late), (y2_early, y2_la
     ax.set_ylabel('Number of {}'.format(y_name))
     ax.spines['right'].set_visible(False)
     ax.spines['top'].set_visible(False)
-    ax.tick_params(axis='both', which='both', top='off', right='off')
+    ax.tick_params(axis='both', which='both', top=False, right=False)
     ax.set_ylim([0, np.max(np.concatenate(ys)) + 10])
     ax.yaxis.grid(True, alpha=0.1)
     # plot

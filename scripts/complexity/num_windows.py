@@ -1,3 +1,9 @@
+"""
+Research questions:
+1. How many unique windows are in the first vs second half of the input?
+2. How many repeated windows are the first vs second half of the input?
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
@@ -45,7 +51,7 @@ def calc_y(w_mat, w_size, uniq):
     #
     print(num_total_windows, num_uniq, num_repeated)
     if uniq:
-        return len(u)
+        return num_uniq
     else:
         return num_repeated
 
@@ -55,11 +61,10 @@ def plot(y_label, ys_list):
     bar_width1 = 0.25
     _, ax = plt.subplots(dpi=192)
     ax.set_ylabel(y_label)
-    ax.set_xlabel('punctuation')
-    ax.set_xlabel('window_size')
+    ax.set_xlabel('Window size')
     ax.spines['right'].set_visible(False)
     ax.spines['top'].set_visible(False)
-    ax.tick_params(axis='both', which='both', top='off', right='off')
+    ax.tick_params(axis='both', which='both', top=False, right=False)
     num_conditions = len(WINDOW_SIZES)
     xs = np.arange(1, num_conditions + 1)
     ax.set_xticks(xs)
@@ -75,8 +80,8 @@ def plot(y_label, ys_list):
     plt.show()
 
 
-plot('Number of repeated IO Mappings', [(calc_y(windows_mat1, ws, False), calc_y(windows_mat2, ws, False))
-                                        for ws in WINDOW_SIZES])
+plot('Number of repeated windows', [(calc_y(windows_mat1, ws, False), calc_y(windows_mat2, ws, False))
+                                    for ws in WINDOW_SIZES])
 
-plot('Number of unique IO Mappings', [(calc_y(windows_mat1, ws, True), calc_y(windows_mat2, ws, True))
-                                      for ws in WINDOW_SIZES])
+plot('Number of unique windows', [(calc_y(windows_mat1, ws, True), calc_y(windows_mat2, ws, True))
+                                  for ws in WINDOW_SIZES])

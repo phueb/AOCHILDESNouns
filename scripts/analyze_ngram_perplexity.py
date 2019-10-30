@@ -73,7 +73,7 @@ for title, ax, xys in zip(['Reduced Vocabulary', 'Full Vocabulary'], axarr, xys_
     # ax.set_ylim([0, 30])
     ax.spines['right'].set_visible(False)
     ax.spines['top'].set_visible(False)
-    ax.tick_params(axis='both', which='both', top='off', right='off')
+    ax.tick_params(axis='both', which='both', top=False, right=False)
     ax.set_xticks(np.array(NGRAM_SIZES) + bar_width / 2)
     ax.set_xticklabels(NGRAM_SIZES)
     # plot

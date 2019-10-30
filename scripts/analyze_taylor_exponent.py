@@ -58,7 +58,7 @@ for part_id, part in enumerate(hub.reordered_parts):
     ax.set_ylabel('std')
     ax.spines['right'].set_visible(False)
     ax.spines['top'].set_visible(False)
-    ax.tick_params(axis='both', which='both', top='off', right='off')
+    ax.tick_params(axis='both', which='both', top=False, right=False)
     ax.text(x=1.0, y=0.3, s='Taylor\'s exponent: {:.3f}'.format(alpha))
     ax.loglog(x, y, '.', markersize=2)
 

@@ -92,9 +92,9 @@ if num_ngram_sizes == 1:
 for ax, xys, ngram_size in zip(axs, xys_list, NGRAM_SIZES):
     if ax == axs[-1]:
         ax.set_xlabel('Number of n-grams', fontsize=AX_FONTSIZE)
-        ax.tick_params(axis='both', which='both', top='off', right='off')
+        ax.tick_params(axis='both', which='both', top=False, right=False)
     else:
-        ax.tick_params(axis='both', which='both', top='off', right='off', bottom='off')
+        ax.tick_params(axis='both', which='both', top=False, right=False, bottom='off')
     # if ax == axs[-num_ngram_sizes // 2]:
     #     ax.set_ylabel('Log Frequency of Novel n-grams'.format(ngram_size), fontsize=AX_FONTSIZE)
     ax.spines['right'].set_visible(False)
@@ -123,7 +123,7 @@ plt.show()
 _, ax = plt.subplots(dpi=DPI, figsize=(6.0, 3))
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
-ax.tick_params(axis='both', which='both', top='off', right='off')
+ax.tick_params(axis='both', which='both', top=False, right=False)
 plt.setp(ax.get_yticklabels(), fontsize=LEG_FONTSIZE)
 plt.setp(ax.get_xticklabels(), fontsize=LEG_FONTSIZE)
 ax.set_xlim([0, 10000])
