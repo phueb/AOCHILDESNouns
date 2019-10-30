@@ -142,7 +142,7 @@ elif LOG_FREQUENCY:
 else:
     ylims = [0, 20]
 ax.set_ylim(ylims)
-# plot
+#
 s1 = label2s[LABELS[0]]
 s2 = label2s[LABELS[1]]
 s1_all_dims = label2s[LABELS[0]]
@@ -154,14 +154,14 @@ dims1_nans = np.unique([label2cat2dim_ids[LABELS[0]][cat] for cat in categories]
 dims2_nans = np.unique([label2cat2dim_ids[LABELS[1]][cat] for cat in categories])
 dims1 = [int(i) for i in dims1_nans if not np.isnan(i)]
 dims2 = [int(i) for i in dims2_nans if not np.isnan(i)]
-# singular variances
-s1_sem_dims = np.array([s1[::-1][i] for i in dims1])  # sing values for part 1 sem dimensions
-s2_sem_dims = np.array([s2[::-1][i] for i in dims2])  # sing values for part 2 sem dimensions
+# singular values
+s1_sem_dims = np.array([s1[i] for i in dims1])  # sing values for part 1 sem dimensions
+s2_sem_dims = np.array([s2[i] for i in dims2])  # sing values for part 2 sem dimensions
 total_var1 = s1_all_dims.sum()
 total_var2 = s2_all_dims.sum()
 # plot
-y1 = s1_sem_dims / total_var1
-y2 = s2_sem_dims / total_var2
+y1 = s1_sem_dims[::-1] / total_var1
+y2 = s2_sem_dims[::-1] / total_var2
 ax.boxplot([y1, y2], zorder=3)
 ax.axhline(y=np.mean(y1), label=f'part 1 mean={np.mean(y1):.4f} n={len(y1)}', color='blue')
 ax.axhline(y=np.mean(y2), label=f'part 2 mean={np.mean(y2):.4f} n={len(y2)}', color='red')

@@ -15,6 +15,7 @@ from categoryeval.probestore import ProbeStore
 
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
+from wordplay.stats import calc_kl_divergence
 
 # /////////////////////////////////////////////////////////////////
 
@@ -96,13 +97,6 @@ def make_kld2locations(ps, tokens, distance):
                     # collect
                     result[kl] = context_d[context]['locations']
     return result
-
-
-def calc_kl_divergence(p, q, epsilon=0.00001):
-    pe = p + epsilon
-    qe = q + epsilon
-    divergence = np.sum(pe * np.log2(pe / qe))
-    return divergence
 
 
 # plot results

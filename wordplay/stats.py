@@ -49,6 +49,7 @@ def ttr(text):
 def mtld(words, min=10):
     """
     Measure of lexical textual diversity (MTLD), described in Jarvis & McCarthy.
+    'average number of words until text is saturated, or stable'
     implementation obtained from
     https://github.com/kristopherkyle/lexical_diversity/blob/master/lexical_diversity/lex_div.py
     """
@@ -72,5 +73,12 @@ def mtld(words, min=10):
         mtld = safe_divide(factor_lengths,factor)
         return mtld
     input_reversed = list(reversed(words))
-    mtld_full = safe_divide((mtlder(words) + mtlder(input_reversed)), 2)
-    return mtld_full
+    res = safe_divide((mtlder(words) + mtlder(input_reversed)), 2)
+    return res
+
+
+def calc_kl_divergence(p, q, epsilon=0.00001):
+    pe = p + epsilon
+    qe = q + epsilon
+    res = np.sum(pe * np.log2(pe / qe))
+    return res
