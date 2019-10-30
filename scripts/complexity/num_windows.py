@@ -11,7 +11,6 @@ import attr
 
 from preppy.legacy import TrainPrep
 from preppy.legacy import make_windows_mat
-from categoryeval.probestore import ProbeStore
 
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
@@ -31,8 +30,6 @@ docs = load_docs(CORPUS_NAME,
 
 params = PrepParams(num_parts=2)
 prep = TrainPrep(docs, **attr.asdict(params))
-
-probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
 
 # /////////////////////////////////////////////////////////////////
 
