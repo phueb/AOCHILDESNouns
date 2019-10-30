@@ -1,8 +1,16 @@
+"""
+Research questions:
+1. Which singualr value dimensions of term-window matrix encode which semantic categories?
+2. How does the first vs. second half of the input vary in which semantic categories are encoded?
+3. Is overall more variance accounted for by semantic-encoding dimensions in the first or second half of input?
+
+"""
+
+
 import matplotlib.pyplot as plt
 from scipy.sparse import linalg as slinalg
 from sklearn.preprocessing import normalize
 import numpy as np
-import seaborn as sns
 
 import attr
 
@@ -12,7 +20,9 @@ from categoryeval.probestore import ProbeStore
 from wordplay.params import PrepParams
 from wordplay.pos import load_pos_words
 from wordplay.docs import load_docs
-from wordplay.svd import make_term_by_window_co_occurrence_mat, decode_singular_dimensions
+from wordplay.svd import make_term_by_window_co_occurrence_mat
+from wordplay.svd import decode_singular_dimensions
+from wordplay.svd import plot_category_encoding_dimensions
 from wordplay import config
 
 # /////////////////////////////////////////////////////////////////
@@ -39,14 +49,14 @@ NORMALIZE = False  # this makes all the difference - this means that the scales 
 MAX_FREQUENCY = 100 * 1000  # largest value in co-occurrence matrix
 LOG_FREQUENCY = True  # take log of co-occurrence matrix element-wise
 
-NOM_ALPHA = 0.05
+NOM_ALPHA = 0.01
 
 OFFSET = prep.midpoint
 LABELS = [f'first {OFFSET:,} tokens', f'last {OFFSET:,} tokens']
 
 SCATTER_PLOT = True
 
-# /////////////////////////////////////////////////////////////////////// categories
+# ///////////////////////////////////////////////////////////////////// categories
 
 nouns = load_pos_words(f'{CORPUS_NAME}-nouns')
 
@@ -110,35 +120,8 @@ for mat, label, x_words in zip([tw_mat1.T.asfptype(), tw_mat2.T.asfptype()],
     print(dim_ids)
 
     if SCATTER_PLOT:
-
-        y_offset = 0.02
-
-        # scatter plot
-        _, ax = plt.subplots(dpi=192, figsize=(6, 6))
-        ax.set_title(f'Decoding Singular Dimensions\nof {label} term-by-window matrix\nwindow size={WINDOW_SIZE}',
-                     fontsize=config.Fig.fontsize)
-        # axis
-        ax.set_xlabel('Singular Dimension', fontsize=config.Fig.fontsize)
-        ax.spines['right'].set_visible(False)
-        ax.spines['left'].set_visible(False)
-        ax.spines['top'].set_visible(False)
-        ax.tick_params(axis='both', which='both', top=False, right=False, left=False)
-        ax.set_yticks([])
-        ax.set_xlim(left=0, right=NUM_DIMS)
-        ax.set_ylim([-y_offset, y_offset * num_categories + y_offset])
-        # plot
-        x = np.arange(NUM_DIMS)
-        cat2color = {n: c for n, c in zip(categories, sns.color_palette("hls", num_categories))}
-        for n, cat in enumerate(categories):
-            cat_dim_ids = cat2dim_ids[cat][::-1]
-            y = [n * y_offset if not np.isnan(dim_id) else np.nan for dim_id in cat_dim_ids]
-            color = cat2color[cat] if cat != 'random' else 'black'
-            color = 'white' if np.all(np.isnan(y)) else color
-            ax.scatter(x, y, color=color, label=cat.upper())
-            print(f'{np.count_nonzero(~np.isnan(y))} dimensions encode {cat:<12}')
-
-        plt.legend(frameon=True, framealpha=1.0, bbox_to_anchor=(0.5, 1.4), ncol=4, loc='lower center')
-        plt.show()
+        title = f'Decoding Singular Dimensions\nof {label} term-by-window matrix\nwindow size={WINDOW_SIZE}'
+        plot_category_encoding_dimensions(cat2dim_ids, NUM_DIMS, title)
 
 
 # comparing singular values - does syntactic or semantic category account for more?

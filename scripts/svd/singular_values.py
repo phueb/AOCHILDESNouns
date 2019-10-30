@@ -1,14 +1,23 @@
+"""
+Research questions:
+1. Are singular values higher for first or second half of input?
+2. Are those dimensions with higher singular values NOUN-encoding dimensions?
+"""
+
 import matplotlib.pyplot as plt
 from scipy.sparse import linalg as slinalg
 from sklearn.preprocessing import normalize
 from sklearn.preprocessing import StandardScaler
 import attr
+import numpy as np
 
 from preppy.legacy import TrainPrep
 
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 from wordplay.svd import make_term_by_window_co_occurrence_mat
+from wordplay.svd import decode_singular_dimensions
+from wordplay.pos import load_pos_words
 from wordplay import config
 
 # /////////////////////////////////////////////////////////////////
@@ -16,7 +25,7 @@ from wordplay import config
 CORPUS_NAME = 'childes-20180319'
 
 SHUFFLE_DOCS = False
-NUM_MID_TEST_DOCS = 100
+NUM_MID_TEST_DOCS = 0
 
 docs = load_docs(CORPUS_NAME,
                  num_test_take_from_mid=NUM_MID_TEST_DOCS,
@@ -28,17 +37,32 @@ prep = TrainPrep(docs, **attr.asdict(params))
 
 # /////////////////////////////////////////////////////////////////
 
-WINDOW_SIZE = 2
+WINDOW_SIZE = 3
 NUM_DIMS = 32
 NORMALIZE = False  # this makes all the difference - this means that the scales of variables are different and matter
-MAX_FREQUENCY = 1000000  # largest value in co-occurrence matrix
+MAX_FREQUENCY = 1000 * 1000  # largest value in co-occurrence matrix
 LOG_FREQUENCY = True  # take log of co-occurrence matrix element-wise
 
+NOM_ALPHA = 0.01  # TODO test
+
+OFFSET = 1000 * 1000
+LABELS = [f'first {OFFSET:,} tokens', f'last {OFFSET:,} tokens']
+
+# ///////////////////////////////////////////////////////////////////// categories
+
+# make syntactic categories for probing
+cat2words = {}
+for cat in ['nouns', 'verbs']:
+    category_words = load_pos_words(f'{CORPUS_NAME}-{cat}')
+    cat2words[cat] = category_words
+    print(f'Loaded {len(category_words)} words in category {cat}')
+    assert len(category_words) > 0
+
+# /////////////////////////////////////////////////////////////////////////// SVD
+
 # make term_by_window_co_occurrence_mats
-start1, end1 = 0, prep.midpoint // 1
-start2, end2 = prep.store.num_tokens - end1, prep.store.num_tokens
-label1 = 'partition 1' or 'tokens between\n{:,} & {:,}'.format(start1, end1)
-label2 = 'partition 2' or 'tokens between\n{:,} & {:,}'.format(start2, end2)
+start1, end1 = 0, prep.midpoint
+start2, end2 = prep.midpoint, prep.store.num_tokens
 tw_mat1, xws1, yws1 = make_term_by_window_co_occurrence_mat(
     prep, start=start1, end=end1, window_size=WINDOW_SIZE, max_frequency=MAX_FREQUENCY, log=LOG_FREQUENCY)
 tw_mat2, xws2, yws2 = make_term_by_window_co_occurrence_mat(
@@ -46,41 +70,55 @@ tw_mat2, xws2, yws2 = make_term_by_window_co_occurrence_mat(
 
 
 # collect singular values
-y1 = []
-y2 = []
-for y, mat in [(y1, tw_mat1.asfptype()),
-               (y2, tw_mat2.asfptype())]:
-
-    # compute variance of sparse matrix
-    fit = StandardScaler(with_mean=False).fit(mat)
-    print('sum of column variances of term-by-window co-occurrence matrix={:,}'.format(fit.var_.sum()))
+label2cat2dim_ids = {}
+label2s = {}
+for mat, label, x_words in zip([tw_mat1.T.asfptype(), tw_mat2.T.asfptype()],
+                               LABELS,
+                               [xws1, xws2]):
 
     if NORMALIZE:
-        print('Normalizing...')
         mat = normalize(mat, axis=1, norm='l2', copy=False)
 
     # SVD
-    print('Fitting SVD ...')
-    _, s, _ = slinalg.svds(mat, k=NUM_DIMS, return_singular_vectors='vh')  # s is not 2D
+    u, s, _ = slinalg.svds(mat, k=NUM_DIMS, return_singular_vectors=True)
     print('sum of singular values={:,}'.format(s.sum()))
     print('var of singular values={:,}'.format(s.var()))
 
     # collect singular values
-    for sing_val in s[:-1][::-1]:  # last s is combination of all remaining s
-        y.append(sing_val)
-    print()
+    label2s[label] = s
+
+    # let noun and verbs compete for dimensions to be sure that a dimension encodes nouns
+    cat2dim_ids = decode_singular_dimensions(u, cat2words, x_words,
+                                             num_dims=NUM_DIMS,
+                                             nominal_alpha=NOM_ALPHA,
+                                             plot_loadings=False)
+
+    label2cat2dim_ids[label] = cat2dim_ids
+
+# get noun dims to label figure
+noun_dims1 = label2cat2dim_ids[LABELS[0]]['nouns']
+noun_dims2 = label2cat2dim_ids[LABELS[1]]['nouns']
+s1 = label2s[LABELS[0]]
+s2 = label2s[LABELS[1]]
+s1_noun_dims = [s1[i] if not np.isnan(i) else np.nan for i in noun_dims1]
+s2_noun_dims = [s2[i] if not np.isnan(i) else np.nan for i in noun_dims2]
 
 # figure
 fig, ax = plt.subplots(1, figsize=(5, 5), dpi=None)
 plt.title(f'SVD of AO-CHILDES partitions\nwindow size={WINDOW_SIZE}', fontsize=config.Fig.fontsize)
-ax.set_ylabel('singular value', fontsize=config.Fig.fontsize)
+ax.set_ylabel('Singular value', fontsize=config.Fig.fontsize)
 ax.set_xlabel('Singular Dimension', fontsize=config.Fig.fontsize)
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
 ax.tick_params(axis='both', which='both', top=False, right=False)
 # plot
-ax.plot(y1, label=label1, linewidth=2)
-ax.plot(y2, label=label2, linewidth=2)
+ax.plot(s1[::-1], label=LABELS[0], linewidth=2, color='C0')
+ax.plot(s2[::-1], label=LABELS[1], linewidth=2, color='C1')
+# label noun-dims
+x = np.arange(NUM_DIMS)
+
+ax.scatter(x, s1_noun_dims[::-1], label='NOUN dimension', color='C0', zorder=3)
+ax.scatter(x, s2_noun_dims[::-1], label='NOUN dimension', color='C1', zorder=3)
 ax.legend(loc='upper right', frameon=False, fontsize=config.Fig.fontsize)
 plt.tight_layout()
 plt.show()

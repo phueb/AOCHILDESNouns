@@ -1,3 +1,4 @@
+sortedcontainers
 pyprind
 seaborn
 scikit-learn

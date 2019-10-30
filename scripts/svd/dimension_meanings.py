@@ -1,10 +1,18 @@
+"""
+Research questions:
+1. Which singular dimensions of term-window matrix encode semantic or syntactic categories?
+2. Do syntactic or semantic category-encoding dimensions account for more total variance?
+
+"""
+
+
 from typing import Optional, Set
 
 from scipy.sparse import linalg as slinalg
 from sklearn.preprocessing import normalize
 import numpy as np
 import attr
-import seaborn as sns
+
 import matplotlib.pyplot as plt
 
 from preppy.legacy import TrainPrep
@@ -13,7 +21,9 @@ from categoryeval.probestore import ProbeStore
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 from wordplay.pos import load_pos_words
-from wordplay.svd import make_term_by_window_co_occurrence_mat, decode_singular_dimensions
+from wordplay.svd import make_term_by_window_co_occurrence_mat
+from wordplay.svd import decode_singular_dimensions
+from wordplay.svd import plot_category_encoding_dimensions
 from wordplay import config
 
 # /////////////////////////////////////////////////////////////////
@@ -39,10 +49,10 @@ probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
 WINDOW_SIZE = 2
 NUM_DIMS = 256
 NORMALIZE = False
-MAX_FREQUENCY = 1000 * 100  # largest value in co-occurrence matrix
+MAX_FREQUENCY = 1000 * 1000  # largest value in co-occurrence matrix
 LOG_FREQUENCY = True  # take log of co-occurrence matrix element-wise
 
-SYN_CATEGORIES: Optional[Set[str]] = {'nouns'}
+SYN_CATEGORIES: Optional[Set[str]] = {'nouns', 'verbs'}
 SEM_CATEGORIES: Optional[Set[str]] = None
 
 LABELS = ['noun', 'semantic']  # order matters
@@ -52,6 +62,8 @@ if SYN_CATEGORIES is None:
 
 if SEM_CATEGORIES is None:
     SEM_CATEGORIES = probe_store.cats
+
+SCATTER_PLOT = True
 
 # /////////////////////////////////////////////////////////////////////////// categories
 
@@ -97,38 +109,26 @@ u, s, _ = slinalg.svds(mat, k=NUM_DIMS, return_singular_vectors=True)  # s is no
 label2dim_ids = {}
 for cat2words, label in zip([syn_cat2words, sem_cat2words], LABELS):
 
-    cat2y, dim_ids = decode_singular_dimensions(u, cat2words, prep.store.types, num_dims=NUM_DIMS)
+    cat2dim_ids = decode_singular_dimensions(u, cat2words, prep.store.types, num_dims=NUM_DIMS)
+
+    dim_ids = []
+    for cat, idx in cat2dim_ids.items():
+        dim_ids_without_nans = [i for i in idx if not np.isnan(i)]
+        dim_ids += dim_ids_without_nans
+    assert len(dim_ids) == len(set(dim_ids))  # do not accept duplicates
+
     label2dim_ids[label] = dim_ids
 
-    categories = cat2words.keys()
+    print(f'Dimensions identified as encoding {label}-membership:')
+    print(dim_ids)
 
-    # scatter plot
-    _, ax = plt.subplots(dpi=192, figsize=(6, 6))
-    ax.set_title(f'Decoding Singular Dimensions\nof term-by-window matrix\nwindow size={WINDOW_SIZE}',
-                 fontsize=config.Fig.fontsize)
-    # axis
-    ax.set_xlabel('Singular Dimension', fontsize=config.Fig.fontsize)
-    ax.spines['right'].set_visible(False)
-    ax.spines['left'].set_visible(False)
-    ax.spines['top'].set_visible(False)
-    ax.tick_params(axis='both', which='both', top=False, right=False, left=False)
-    ax.set_yticks([])
-    ax.set_xlim(left=0, right=NUM_DIMS)
-    # plot
-    x = np.arange(NUM_DIMS)
-    num_categories = len(categories)
-    cat2color = {n: c for n, c in zip(categories, sns.color_palette("hls", num_categories))}
-    for cat in categories:
-        color = cat2color[cat] if cat != 'random' else 'black'
-        ax.scatter(x, cat2y[cat][::-1], color=color, label=cat)
-
-    plt.legend(frameon=True, framealpha=1.0, bbox_to_anchor=(0.5, 1.4), ncol=4, loc='lower center')
-    plt.show()
-
+    if SCATTER_PLOT:
+        title = f'Decoding Singular Dimensions\nof {label} term-by-window matrix\nwindow size={WINDOW_SIZE}'
+        plot_category_encoding_dimensions(cat2dim_ids, NUM_DIMS, title)
 
 # comparing singular values - does syntactic or semantic category account for more?
 _, ax = plt.subplots(dpi=192, figsize=(6, 6))
-ax.set_title(f'Accounting for variance\nnouns vs. semantics\nwindow size={WINDOW_SIZE}', fontsize=config.Fig.fontsize)
+ax.set_title(f'Variance explained\nnouns vs. semantics\nwindow size={WINDOW_SIZE}', fontsize=config.Fig.fontsize)
 ax.set_xlabel('Category', fontsize=config.Fig.fontsize)
 ax.set_ylabel('Singular Value', fontsize=config.Fig.fontsize)
 ax.spines['right'].set_visible(False)

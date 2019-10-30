@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 from scipy.sparse import linalg as slinalg
 from sklearn.preprocessing import normalize
 import numpy as np
-import seaborn as sns
 
 import attr
 
@@ -10,7 +9,9 @@ from preppy.legacy import TrainPrep
 
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
-from wordplay.svd import make_term_by_window_co_occurrence_mat, decode_singular_dimensions
+from wordplay.svd import make_term_by_window_co_occurrence_mat
+from wordplay.svd import decode_singular_dimensions
+from wordplay.svd import plot_category_encoding_dimensions
 from wordplay.pos import load_pos_words
 from wordplay import config
 
@@ -31,7 +32,7 @@ prep = TrainPrep(docs, **attr.asdict(params))
 
 # /////////////////////////////////////////////////////////////////
 
-WINDOW_SIZE = 2
+WINDOW_SIZE = 1
 NUM_DIMS = 256
 NORMALIZE = False  # this makes all the difference - this means that the scales of variables are different and matter
 MAX_FREQUENCY = 100 * 1000  # largest value in co-occurrence matrix
@@ -51,8 +52,9 @@ rands = load_pos_words(f'{CORPUS_NAME}-random')
 print(f'Loaded {len(nouns)} nouns')
 cat2words = {'noun': nouns, 'random': rands}
 categories = cat2words.keys()
+num_categories = len(categories)
 
-# /////////////////////////////////////////////////////////////////////// TW-matrix
+# ////////////////////////////////////////////////////////////////////// TW matrix
 
 # make term_by_window_co_occurrence_mats
 start1, end1 = 0, OFFSET
@@ -72,47 +74,33 @@ for mat, label, x_words in zip([tw_mat1.T.asfptype(), tw_mat2.T.asfptype()],
                                [xws1, xws2]):
 
     if NORMALIZE:
-        print('Normalizing...')
         mat = normalize(mat, axis=1, norm='l2', copy=False)
 
     # SVD
-    print('Fitting SVD ...')
-    u, s, _ = slinalg.svds(mat, k=NUM_DIMS, return_singular_vectors=True)  # s is not 2D
+    u, s, _ = slinalg.svds(mat, k=NUM_DIMS, return_singular_vectors=True)
     label2s[label] = s
 
 # /////////////////////////////////////////////////////////////////////////// decode + plot
 
-    cat2y, dim_ids = decode_singular_dimensions(u, cat2words, x_words,
-                                                num_dims=NUM_DIMS, nominal_alpha=NOM_ALPHA, plot_loadings=False)
+    cat2dim_ids = decode_singular_dimensions(u, cat2words, x_words,
+                                             num_dims=NUM_DIMS,
+                                             nominal_alpha=NOM_ALPHA,
+                                             plot_loadings=False)
+
+    dim_ids = []
+    for cat, idx in cat2dim_ids.items():
+        dim_ids_without_nans = [i for i in idx if not np.isnan(i)]
+        dim_ids += dim_ids_without_nans
+    assert len(dim_ids) == len(set(dim_ids))  # do not accept duplicates
+
     label2dim_ids[label] = dim_ids
 
     print('Dimensions identified as encoding noun-membership:')
     print(dim_ids)
 
     if SCATTER_PLOT:
-
-        # scatter plot
-        _, ax = plt.subplots(dpi=192, figsize=(6, 6))
-        ax.set_title(f'Decoding Singular Dimensions\nof {label} term-by-window matrix\nwindow size={WINDOW_SIZE}',
-                     fontsize=config.Fig.fontsize)
-        # axis
-        ax.set_xlabel('Singular Dimension', fontsize=config.Fig.fontsize)
-        ax.spines['right'].set_visible(False)
-        ax.spines['left'].set_visible(False)
-        ax.spines['top'].set_visible(False)
-        ax.tick_params(axis='both', which='both', top=False, right=False, left=False)
-        ax.set_yticks([])
-        ax.set_xlim(left=0, right=NUM_DIMS)
-        # plot
-        x = np.arange(NUM_DIMS)
-        num_categories = len(categories)
-        cat2color = {n: c for n, c in zip(categories, sns.color_palette("hls", num_categories))}
-        for cat in categories:
-            color = cat2color[cat] if cat != 'random' else 'black'
-            ax.scatter(x, cat2y[cat][::-1], color=color, label=cat)
-
-        plt.legend(frameon=True, framealpha=1.0, bbox_to_anchor=(0.5, 1.4), ncol=4, loc='lower center')
-        plt.show()
+        title = f'Decoding Singular Dimensions\nof {label} term-by-window matrix\nwindow size={WINDOW_SIZE}'
+        plot_category_encoding_dimensions(cat2dim_ids, NUM_DIMS, title)
 
 
 # comparing singular values - does syntactic or semantic category account for more?
@@ -133,8 +121,6 @@ elif LOG_FREQUENCY:
 else:
     ylims = [0, 20]
 ax.set_ylim(ylims)
-
-
 # plot
 s1 = label2s[LABELS[0]]
 s2 = label2s[LABELS[1]]

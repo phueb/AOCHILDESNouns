@@ -4,10 +4,48 @@ import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
 import pyprind
+import seaborn as sns
+from sortedcontainers import SortedSet
 
 from categoryeval.probestore import ProbeStore
 
 from wordplay.utils import get_sliding_windows
+from wordplay import config
+
+
+def plot_category_encoding_dimensions(cat2dim_ids: Dict[str, List[int]],
+                                      num_dims: int,
+                                      title: Optional[str] = '',
+                                      ):
+    y_offset = 0.02
+    categories = SortedSet(cat2dim_ids.keys())
+    num_categories = len(categories)
+
+    # scatter plot
+    _, ax = plt.subplots(dpi=192, figsize=(6, 6))
+    ax.set_title(title, fontsize=config.Fig.fontsize)
+    # axis
+    ax.set_xlabel('Singular Dimension', fontsize=config.Fig.fontsize)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.tick_params(axis='both', which='both', top=False, right=False, left=False)
+    ax.set_yticks([])
+    ax.set_xlim(left=0, right=num_dims)
+    ax.set_ylim([-y_offset, y_offset * num_categories + y_offset])
+    # plot
+    x = np.arange(num_dims)
+    cat2color = {n: c for n, c in zip(categories, sns.color_palette("hls", num_categories))}
+    for n, cat in enumerate(categories):
+        cat_dim_ids = cat2dim_ids[cat][::-1]
+        y = [n * y_offset if not np.isnan(dim_id) else np.nan for dim_id in cat_dim_ids]
+        color = cat2color[cat] if cat != 'random' else 'black'
+        color = 'white' if np.all(np.isnan(y)) else color
+        ax.scatter(x, y, color=color, label=cat.upper())
+        print(f'{np.count_nonzero(~np.isnan(y))} dimensions encode {cat:<12}')
+
+    plt.legend(frameon=True, framealpha=1.0, bbox_to_anchor=(0.5, 1.4), ncol=4, loc='lower center')
+    plt.show()
 
 
 def make_term_by_window_co_occurrence_mat(prep,
@@ -128,7 +166,12 @@ def decode_singular_dimensions(u: np.ndarray,
                                verbose: bool = False,
                                ):
     """
-    collect p-value for each singular dimension for plotting
+    Collect singular dimension IDs which have been identified as encoding a category.
+    Each dimension is allowed to encode only one category.
+
+    WARNING: the dimension IDs are not ordered by descending amount of variance accounted for.
+    They are ordered by increasing amount of variance accounted for.
+    This means that larger IDs correspond to more dimensions accounting for more variance.
     """
 
     adj_alpha = nominal_alpha / num_dims
