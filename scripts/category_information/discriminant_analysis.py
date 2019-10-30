@@ -39,7 +39,6 @@ probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
 # /////////////////////////////////////////////////////////////////
 
 WINDOW_SIZE = 1
-NUM_DIMS = 256
 NORMALIZE = False  # this makes all the difference - this means that the scales of variables are different and matter
 MAX_FREQUENCY = 100 * 1000  # largest value in co-occurrence matrix
 LOG_FREQUENCY = True  # take log of co-occurrence matrix element-wise
@@ -61,16 +60,13 @@ tw_mat2, xws2, yws2 = make_term_by_window_co_occurrence_mat(
 
 # ///////////////////////////////////////////////////////////////// LDA
 
-x1 = tw_mat1.T.toarray()
-y1 = [probe_store.cat2id[probe_store.probe2cat[p]] for p in xws1]
-clf = LinearDiscriminantAnalysis()
-clf.fit(x1, y1)
-score1 = clf.score(x1, y1)
-print(score1)
-
-x2 = tw_mat2.T.toarray()
-y2 = [probe_store.cat2id[probe_store.probe2cat[p]] for p in xws2]
-clf = LinearDiscriminantAnalysis()
-clf.fit(x2, y2)
-score2 = clf.score(x2, y2)
-print(score2)
+for x, xws in zip([tw_mat1.T.toarray(), tw_mat2.T.toarray()],
+                  [xws1, xws2]):
+    y = [probe_store.cat2id[probe_store.probe2cat[p]] for p in xws1]
+    clf = LinearDiscriminantAnalysis(n_components=None, priors=None, shrinkage=None,
+                                     solver='svd', store_covariance=False)
+    clf.fit(x, y)
+    score = clf.score(x, y)
+    print(score)
+    print(f'prop var of comp1: {clf.explained_variance_ratio_[0]:.2f}')
+    print(f'prop var of comp2: {clf.explained_variance_ratio_[1]:.2f}')
