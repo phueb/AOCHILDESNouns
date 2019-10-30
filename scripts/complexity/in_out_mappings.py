@@ -1,14 +1,39 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+import attr
 
-from childeshub.hub import Hub
+from preppy.legacy import TrainPrep
+from preppy.legacy import make_windows_mat
+from categoryeval.probestore import ProbeStore
+
+from wordplay.params import PrepParams
+from wordplay.docs import load_docs
+
+# /////////////////////////////////////////////////////////////////
+
+CORPUS_NAME = 'childes-20180319'
+PROBES_NAME = 'sem-4096'
+
+SHUFFLE_DOCS = False
+NUM_MID_TEST_DOCS = 100
+
+docs = load_docs(CORPUS_NAME,
+                 num_test_take_from_mid=NUM_MID_TEST_DOCS,
+                 num_test_take_random=0,
+                 shuffle_docs=SHUFFLE_DOCS)
+
+params = PrepParams(num_parts=2)
+prep = TrainPrep(docs, **attr.asdict(params))
+
+probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
+
+# /////////////////////////////////////////////////////////////////
 
 WINDOW_SIZES = [2, 3, 4, 5, 6]
 
-hub = Hub(mode='sem')
-windows_mat1 = hub.make_windows_mat(hub.reordered_parts[0], hub.num_windows_in_part)
-windows_mat2 = hub.make_windows_mat(hub.reordered_parts[1], hub.num_windows_in_part)
+windows_mat1 = make_windows_mat(prep.reordered_halves[0], prep.num_windows_in_part, prep.num_tokens_in_window)
+windows_mat2 = make_windows_mat(prep.reordered_halves[1], prep.num_windows_in_part, prep.num_tokens_in_window)
 
 
 def calc_y(w_mat, w_size, uniq):
@@ -25,11 +50,11 @@ def calc_y(w_mat, w_size, uniq):
         return num_repeated
 
 
-def plot(ylabel, ys_list):
+def plot(y_label, ys_list):
     bar_width0 = 0.0
     bar_width1 = 0.25
     _, ax = plt.subplots(dpi=192)
-    ax.set_ylabel(ylabel)
+    ax.set_ylabel(y_label)
     ax.set_xlabel('punctuation')
     ax.set_xlabel('window_size')
     ax.spines['right'].set_visible(False)

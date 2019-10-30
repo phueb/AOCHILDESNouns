@@ -37,7 +37,7 @@ prep = TrainPrep(docs, **attr.asdict(params))
 
 # /////////////////////////////////////////////////////////////////
 
-WINDOW_SIZE = 3
+WINDOW_SIZE = 6
 NUM_DIMS = 32
 NORMALIZE = False  # this makes all the difference - this means that the scales of variables are different and matter
 MAX_FREQUENCY = 1000 * 1000  # largest value in co-occurrence matrix
@@ -45,7 +45,7 @@ LOG_FREQUENCY = True  # take log of co-occurrence matrix element-wise
 
 NOM_ALPHA = 0.01  # TODO test
 
-OFFSET = 1000 * 1000
+OFFSET = prep.midpoint
 LABELS = [f'first {OFFSET:,} tokens', f'last {OFFSET:,} tokens']
 
 # ///////////////////////////////////////////////////////////////////// categories

@@ -21,8 +21,8 @@ LW = 0.5
 
 # xys
 ys = [hub.part_entropies,
-      hub.make_sentence_length_stat(hub.reordered_tokens, is_avg=True),
-      hub.make_sentence_length_stat(hub.reordered_tokens, is_avg=False)]
+      hub.calc_utterance_lengths(hub.reordered_tokens, is_avg=True),
+      hub.calc_utterance_lengths(hub.reordered_tokens, is_avg=False)]
 
 # fig
 ylabels = ['Shannon\nEntropy', 'Mean Utterance\nLength', 'Std Utterance\nLength']

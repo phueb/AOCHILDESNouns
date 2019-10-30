@@ -1,21 +1,16 @@
-
-
-"""
-
-# TODO use functions from https://github.com/kristopherkyle/lexical_diversity
-
-"""
+import numpy as np
+import pandas as pd
 from collections import Counter
 
 
 def calc_entropy(labels):
     num_labels = len(labels)
-    probs = np.asarray([count / num_labels for count in Counter(labels).values()])
-    result = - probs.dot(np.log2(probs))
+    probabilities = np.asarray([count / num_labels for count in Counter(labels).values()])
+    result = - probabilities.dot(np.log2(probabilities))
     return result
 
 
-def make_sentence_length_stat(items, is_avg, w_size=10000):
+def calc_utterance_lengths(items, is_avg, w_size=10000):
     # make sent_lengths
     last_period = 0
     sent_lengths = []
@@ -24,6 +19,7 @@ def make_sentence_length_stat(items, is_avg, w_size=10000):
             sent_length = n - last_period - 1
             sent_lengths.append(sent_length)
             last_period = n
+
     # rolling window
     df = pd.Series(sent_lengths)
     if is_avg:
@@ -35,9 +31,4 @@ def make_sentence_length_stat(items, is_avg, w_size=10000):
     return result
 
 
-def part_entropies(self):
-    result = []
-    for part in self.reordered_parts:
-        part_entropy = self.calc_entropy(part)
-        result.append(part_entropy)
-    return result
+# TODO add functions from https://github.com/kristopherkyle/lexical_diversity

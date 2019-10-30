@@ -1,71 +1,100 @@
-import matplotlib.pyplot as plt
-import seaborn as sns
-import pyprind
-import numpy as np
-from scipy.stats import ttest_ind
+"""
+Research questions:
+1. Are same-category probe words more substitutable in the first or second half of the input?
+"""
 
-from childeshub.hub import Hub
+import matplotlib.pyplot as plt
+from scipy.stats import ttest_ind
+import attr
+import numpy as np
+import pyprind
+import seaborn as sns
+
+from preppy.legacy import TrainPrep
+from categoryeval.probestore import ProbeStore
+
+from wordplay.params import PrepParams
+from wordplay.docs import load_docs
+
+# /////////////////////////////////////////////////////////////////
 
 CORPUS_NAME = 'childes-20180319'
+PROBES_NAME = 'sem-4096'
+
+SHUFFLE_DOCS = False
+NUM_MID_TEST_DOCS = 100
+
+docs = load_docs(CORPUS_NAME,
+                 num_test_take_from_mid=NUM_MID_TEST_DOCS,
+                 num_test_take_random=0,
+                 shuffle_docs=SHUFFLE_DOCS)
+
+params = PrepParams()
+prep = TrainPrep(docs, **attr.asdict(params))
+
+probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
+
+# /////////////////////////////////////////////////////////////////
+
 
 MIN_CONTEXT_FREQ = 10
 MIN_CAT_FREQ = 1
-HUB_MODE = 'sem'
-CONTEXT_DISTS = [1]
-YMAX = 0.5
+CONTEXT_DISTANCES = [3]
+Y_MAX = 0.5
 
 
-def make_y2locs(h, tokens_, context_dist):
-    print('Calculating context stats with hub_mode={}...'.format(h.mode))
-    cat2probes_expected_probs = {cat: np.array([1 / len(h.probe_store.cat_probe_list_dict[cat])
-                                                if probe in h.probe_store.cat_probe_list_dict[cat] else 0.0
-                                                for probe in h.probe_store.types])
-                                 for cat in h.probe_store.cats}
+def make_kld2locations(ps, tokens, distance):
+    print('Collecting information about probe context locations...')
+    cat2probes_expected_probabilities = {cat: np.array([1 / len(ps.cat2probes[cat])
+                                                        if probe in ps.cat2probes[cat] else 0.0
+                                                        for probe in ps.types])
+                                         for cat in ps.cats}
     # context_d
     context_d = {}
-    pbar = pyprind.ProgBar(h.train_terms.num_tokens)
-    for loc, token in enumerate(tokens_[:-context_dist]):
-        pbar.update()
-        context = tuple(tokens_[loc + d] for d in range(-context_dist, 0) if d != 0)
-        if token in h.probe_store.types:
+    pbar = pyprind.ProgBar(len(tokens))
+    for loc, token in enumerate(tokens[:-distance]):
+        context = tuple(tokens[loc + d] for d in range(-distance, 0) if d != 0)
+        if token in ps.types:
             try:
-                cat = h.probe_store.probe_cat_dict[token]
+                cat = ps.probe2cat[token]
                 context_d[context]['freq_by_probe'][token] += 1
                 context_d[context]['freq_by_cat'][cat] += 1
                 context_d[context]['total_freq'] += 1
                 context_d[context]['term_freq'] += 0
                 context_d[context]['probe_freq'] += 1
-                context_d[context]['locs'].append(loc)
+                context_d[context]['locations'].append(loc)
             except KeyError:
-                context_d[context] = {'freq_by_probe': {probe: 0.0 for probe in h.probe_store.types},
-                                      'freq_by_cat': {cat: 0.0 for cat in h.probe_store.cats},
+                context_d[context] = {'freq_by_probe': {probe: 0.0 for probe in ps.types},
+                                      'freq_by_cat': {cat: 0.0 for cat in ps.cats},
                                       'total_freq': 0,
                                       'term_freq': 0,
                                       'probe_freq': 0,
-                                      'locs': [],
-                                      'y': 0}  # must be numeric for sorting
+                                      'locations': [],
+                                      }
         else:
             try:
                 context_d[context]['term_freq'] += 1
             except KeyError:  # only update contexts which are already tracked
                 pass
+        pbar.update()
 
     # result
+    print('Calculating KL divergences...')
     result = {}
     for context in context_d.keys():
         context_freq = context_d[context]['total_freq']
         if context_freq > MIN_CONTEXT_FREQ:
             # observed
-            probes_observed_probs = np.array(
+            probes_observed_probabilities = np.array(
                 [context_d[context]['freq_by_probe'][probe] / context_d[context]['total_freq']
-                 for probe in h.probe_store.types])
+                 for probe in ps.types])
             # compute KL div for each category that the context is associated with (not just most common category)
             for cat, cat_freq in context_d[context]['freq_by_cat'].items():
                 if cat_freq > MIN_CAT_FREQ:
-                    probes_expected_probs = cat2probes_expected_probs[cat]
-                    y = calc_kl_divergence(probes_expected_probs, probes_observed_probs)  # asymmetric
-                    # collect y
-                    result[y] = context_d[context]['locs']
+                    probes_expected_probabilities = cat2probes_expected_probabilities[cat]
+                    kl = calc_kl_divergence(probes_expected_probabilities, probes_observed_probabilities)  # asymmetric
+                    # collect
+                    result[kl] = context_d[context]['locations']
     return result
 
 
@@ -76,26 +105,11 @@ def calc_kl_divergence(p, q, epsilon=0.00001):
     return divergence
 
 
-def print_contexts(d):
-    for context, infos in sorted(d.items(),
-                                 key=lambda i: (i[1]['y'], i[1]['probe_freq'])):  # sort by y, then by context_freq
-        if d[context]['probe_freq'] > MIN_CONTEXT_FREQ:
-            print(round(infos['y'], 2),
-                  '{}'.format(context),
-                  d[context]['probe_freq'],
-                  sorted(d[context]['freq_by_cat'].items(), key=lambda i: i[1])[-3:],
-                  sorted(d[context]['freq_by_probe'].items(), key=lambda i: i[1])[-5:])
+# plot results
+for context_dist in CONTEXT_DISTANCES:
 
+    kld2locations = make_kld2locations(probe_store, prep.store.tokens, context_dist)
 
-# original_transcripts
-y2locs_list = []
-hub = Hub(mode=HUB_MODE, part_order='inc_age', corpus_name=CORPUS_NAME)
-for context_dist in CONTEXT_DISTS:
-    y2locs = make_y2locs(hub, hub.reordered_tokens, context_dist)
-    y2locs_list.append(y2locs)
-
-# plot
-for context_dist, y2locs in zip(CONTEXT_DISTS, y2locs_list):
     # fig
     fontsize = 16
     _, ax = plt.subplots(figsize=(6, 6))
@@ -104,17 +118,17 @@ for context_dist, y2locs in zip(CONTEXT_DISTS, y2locs_list):
     ax.set_xlabel('KL Divergence', fontsize=fontsize)
     ax.spines['right'].set_visible(False)
     ax.spines['top'].set_visible(False)
-    ax.tick_params(axis='both', which='both', top='off', right='off')
-    ax.set_ylim([0, YMAX])
+    ax.tick_params(axis='both', which='both', top=False, right=False)
+    ax.set_ylim([0, Y_MAX])
     # plot
     colors = sns.color_palette("hls", 2)[::-1]
     y1 = []
     y2 = []
-    for y, locs in y2locs.items():
-        num_locs_in_part1 = len(np.where(np.array(locs) < hub.midpoint_loc)[0])
-        num_locs_in_part2 = len(np.where(np.array(locs) > hub.midpoint_loc)[0])
-        y1 += [y] * num_locs_in_part1
-        y2 += [y] * num_locs_in_part2
+    for kld, locations in kld2locations.items():
+        num_locations_in_part1 = len(np.where(np.array(locations) < prep.midpoint)[0])
+        num_locations_in_part2 = len(np.where(np.array(locations) > prep.midpoint)[0])
+        y1 += [kld] * num_locations_in_part1
+        y2 += [kld] * num_locations_in_part2
     y1 = np.array(y1)
     y2 = np.array(y2)
     num_bins = 20
