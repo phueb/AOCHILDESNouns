@@ -7,7 +7,6 @@ Research questions:
 import matplotlib.pyplot as plt
 from scipy.sparse import linalg as slinalg
 from sklearn.preprocessing import normalize
-from sklearn.preprocessing import StandardScaler
 import attr
 import numpy as np
 

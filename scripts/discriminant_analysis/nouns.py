@@ -5,6 +5,7 @@ Research questions:
 
 import attr
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+import scipy.sparse.linalg as sparse_linalg
 
 from preppy.legacy import TrainPrep
 
@@ -32,6 +33,7 @@ prep = TrainPrep(docs, **attr.asdict(params))
 # /////////////////////////////////////////////////////////////////
 
 WINDOW_SIZE = 2
+NUM_DIMS = None
 NORMALIZE = False  # this makes all the difference - this means that the scales of variables are different and matter
 MAX_FREQUENCY = 100 * 1000  # largest value in co-occurrence matrix
 LOG_FREQUENCY = True  # take log of co-occurrence matrix element-wise
@@ -51,22 +53,30 @@ tw_mat2, xws2, yws2 = make_term_by_window_co_occurrence_mat(
 
 # ///////////////////////////////////////////////////////////////// LDA
 
-set_memory_limit(prop=1.5)
+set_memory_limit(prop=1.0)
 
 nouns = load_pos_words(f'{CORPUS_NAME}-nouns')
 
 # use only features common to both
 common_yws = set(yws1).intersection(set(yws2))
 print(f'Number of common contexts={len(common_yws)}')
-x1 = tw_mat1.T.toarray()[:, [True if yw in common_yws else False for yw in yws1]]
-x2 = tw_mat2.T.toarray()[:, [True if yw in common_yws else False for yw in yws2]]
+x1_common = tw_mat1.T[:, [n for n, yw in enumerate(yws1) if yw in common_yws]]
+x2_common = tw_mat2.T[:, [n for n, yw in enumerate(yws2) if yw in common_yws]]
 y1 = [1 if w in nouns else 0 for w in xws1]
 y2 = [1 if w in nouns else 0 for w in xws2]
+
+if NUM_DIMS is not None:
+    # reduce dimensionality
+    x1, _, _ = sparse_linalg.svds(x1_common, k=NUM_DIMS, return_singular_vectors=True)
+    x2, _, _ = sparse_linalg.svds(x2_common, k=NUM_DIMS, return_singular_vectors=True)
+else:
+    x1 = x1_common.toarray()
+    x2 = x2_common.toarray()
 
 for x, y in zip([x1, x2],
                 [y1, y2]):
 
-    print(f'Number of words included in LDA={len(y)}')
+    print(f'Shape of input to LDA={x.shape}')
     clf = LinearDiscriminantAnalysis(n_components=None, priors=None, shrinkage=None,
                                      solver='svd', store_covariance=False)
     try:
@@ -80,4 +90,3 @@ for x, y in zip([x1, x2],
     score2 = clf.score(x2, y2)
     print(f'partition-1 accuracy={score1:.3f}')
     print(f'partition-2 accuracy={score2:.3f}')
-    

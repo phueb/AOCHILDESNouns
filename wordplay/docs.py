@@ -33,12 +33,10 @@ def load_docs(corpus_name: str,
     random.seed(split_seed)
     random_test_doc_ids = set(random.sample(range(num_random_ids), num_test_take_random))
     test_doc_ids.update(random_test_doc_ids)
-    print('test doc IDs:')
-    print(test_doc_ids)
 
     # split train/test
-    print('Splitting docs into train and test...')
-
+    if test_doc_ids:
+        print(f'Removing {len(test_doc_ids)} test documents')
     train_docs = []
     for n, doc in enumerate(docs):
         if n not in test_doc_ids:

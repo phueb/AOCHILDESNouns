@@ -12,6 +12,7 @@ from categoryeval.probestore import ProbeStore
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 from wordplay.svd import make_term_by_window_co_occurrence_mat
+from wordplay.memory import set_memory_limit
 
 # /////////////////////////////////////////////////////////////////
 
@@ -19,7 +20,7 @@ CORPUS_NAME = 'childes-20180319'
 PROBES_NAME = 'sem-4096'
 
 SHUFFLE_DOCS = False
-NUM_MID_TEST_DOCS = 100
+NUM_MID_TEST_DOCS = 0
 
 docs = load_docs(CORPUS_NAME,
                  num_test_take_from_mid=NUM_MID_TEST_DOCS,
@@ -33,13 +34,12 @@ probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
 
 # /////////////////////////////////////////////////////////////////
 
-WINDOW_SIZE = 1
+WINDOW_SIZE = 3
 NORMALIZE = False  # this makes all the difference - this means that the scales of variables are different and matter
 MAX_FREQUENCY = 100 * 1000  # largest value in co-occurrence matrix
 LOG_FREQUENCY = True  # take log of co-occurrence matrix element-wise
 
 OFFSET = prep.midpoint
-
 
 # ///////////////////////////////////////////////////////////////// TW matrix
 
@@ -55,14 +55,31 @@ tw_mat2, xws2, yws2 = make_term_by_window_co_occurrence_mat(
 
 # ///////////////////////////////////////////////////////////////// LDA
 
-for x, xws in zip([tw_mat1.T.toarray(), tw_mat2.T.toarray()],
-                  [xws1, xws2]):
-    y = [probe_store.cat2id[probe_store.probe2cat[p]] for p in xws]
+set_memory_limit(prop=1.0)
+
+# use only features common to both
+common_yws = set(yws1).intersection(set(yws2))
+print(f'Number of common contexts={len(common_yws)}')
+x1 = tw_mat1.T[:, [n for n, yw in enumerate(yws1) if yw in common_yws]].toarray()
+x2 = tw_mat2.T[:, [n for n, yw in enumerate(yws2) if yw in common_yws]].toarray()
+y1 = [probe_store.cat2id[probe_store.probe2cat[p]] for p in xws1]
+y2 = [probe_store.cat2id[probe_store.probe2cat[p]] for p in xws2]
+
+for x, y in zip([x1, x2],
+                [y1, y2]):
+
     print(f'Number of probes included in LDA={len(y)}')
     clf = LinearDiscriminantAnalysis(n_components=None, priors=None, shrinkage=None,
                                      solver='svd', store_covariance=False)
-    clf.fit(x, y)
-    score = clf.score(x, y)
-    print(score)
-    print(f'prop var of comp1: {clf.explained_variance_ratio_[0]:.2f}')
-    print(f'prop var of comp2: {clf.explained_variance_ratio_[1]:.2f}')
+    try:
+        clf.fit(x, y)
+
+    except MemoryError as e:
+        raise SystemExit('Reached memory limit')
+
+    # how well does discriminant function work for other part?
+    score1 = clf.score(x1, y1)
+    score2 = clf.score(x2, y2)
+    print(f'partition-1 accuracy={score1:.3f}')
+    print(f'partition-2 accuracy={score2:.3f}')
+
