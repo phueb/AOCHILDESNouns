@@ -9,17 +9,16 @@ import matplotlib.pyplot as plt
 import attr
 from scipy import stats
 import spacy
-from spacy.tokens import Span
 import pyprind
 
 from preppy.legacy import TrainPrep
 
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
-from wordplay import config
 from wordplay.utils import fit_line
 from wordplay.utils import split
 from wordplay.sentences import get_sentences_from_tokens
+from wordplay.svo import subject_verb_object_triples
 
 # /////////////////////////////////////////////////////////////////
 
@@ -40,21 +39,10 @@ prep = TrainPrep(docs, **attr.asdict(params))
 
 # /////////////////////////////////////////////////////////////////
 
-VERBOSE = False
+VERBOSE = True
 
 spacy.prefer_gpu()
 nlp = spacy.load("en_core_web_sm", disable=['ner'])
-
-
-def contains_symbol(span):
-    """
-    checks if span has any undesired symbols.
-    used to filter noun chunks.
-    """
-    return any(s in span.text for s in set(config.Symbols.all))
-
-
-Span.set_extension("contains_symbol", getter=contains_symbol)
 
 
 y = []
@@ -63,27 +51,28 @@ for tokens in split(prep.store.tokens, prep.num_tokens_in_part):
     sentences = get_sentences_from_tokens(tokens, punctuation={'.', '!', '?'})
     texts = [' '.join(s) for s in sentences]
 
-    noun_chunks_in_part = []
+    triples_in_part = []
     for doc in nlp.pipe(texts):
-        for chunk in doc.noun_chunks:
-            if not chunk._.contains_symbol:
-                noun_chunks_in_part.append(chunk.text)
+        triples = [t for t in subject_verb_object_triples(doc)]  # only returns triples, not partial triples
+        triples_in_part += triples
 
-    num_chunks_in_part = len(noun_chunks_in_part)
-    num_unique_chunks_in_part = len(set(noun_chunks_in_part))
+    print(triples_in_part)
+
+    num_triples_in_part = len(triples_in_part)
+    num_unique_triples_in_part = len(set(triples_in_part))  # TODO this does not work
     if VERBOSE:
-        print(f'Found {num_chunks_in_part:>12,} noun chunks')
-        print(f'Found {num_unique_chunks_in_part:>12,} unique noun chunks')
+        print(f'Found {num_triples_in_part:>12,} SVO triples')
+        print(f'Found {num_unique_triples_in_part:>12,} unique SVO triples')
     else:
         pbar.update()
 
-    y.append(num_unique_chunks_in_part)
+    y.append(num_unique_triples_in_part)
 
 
 # fig
 _, ax = plt.subplots(dpi=192)
-plt.title('Noun chunks')
-ax.set_ylabel('Num unique noun chunks')
+plt.title('SVO-triples')
+ax.set_ylabel('Num unique SVO-triples')
 ax.set_xlabel('Partition')
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
@@ -97,8 +86,8 @@ plt.show()
 
 # fig
 _, ax = plt.subplots(dpi=192)
-plt.title('Noun chunks')
-ax.set_ylabel(f'Z-scored Num unique noun chunks')
+plt.title('SVO-triples')
+ax.set_ylabel(f'Z-scored Num unique SVO-triples')
 ax.set_xlabel('Partition')
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
