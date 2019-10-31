@@ -12,6 +12,7 @@ from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 from wordplay.svd import make_term_by_window_co_occurrence_mat
 from wordplay.pos import load_pos_words
+from wordplay.memory import set_memory_limit
 
 # /////////////////////////////////////////////////////////////////
 
@@ -30,12 +31,12 @@ prep = TrainPrep(docs, **attr.asdict(params))
 
 # /////////////////////////////////////////////////////////////////
 
-WINDOW_SIZE = 3
+WINDOW_SIZE = 2
 NORMALIZE = False  # this makes all the difference - this means that the scales of variables are different and matter
 MAX_FREQUENCY = 100 * 1000  # largest value in co-occurrence matrix
 LOG_FREQUENCY = True  # take log of co-occurrence matrix element-wise
 
-OFFSET = 1000 * 1000
+OFFSET = prep.midpoint
 
 # ///////////////////////////////////////////////////////////////// TW matrix
 
@@ -45,21 +46,38 @@ start2, end2 = prep.store.num_tokens - OFFSET, prep.store.num_tokens
 tw_mat1, xws1, yws1 = make_term_by_window_co_occurrence_mat(
     prep, start=start1, end=end1, window_size=WINDOW_SIZE, max_frequency=MAX_FREQUENCY, log=LOG_FREQUENCY)
 tw_mat2, xws2, yws2 = make_term_by_window_co_occurrence_mat(
-    prep, start=start2, end=end2, window_size=WINDOW_SIZE, max_frequency=MAX_FREQUENCY, log=LOG_FREQUENCY,)
+    prep, start=start2, end=end2, window_size=WINDOW_SIZE, max_frequency=MAX_FREQUENCY, log=LOG_FREQUENCY)
+
 
 # ///////////////////////////////////////////////////////////////// LDA
 
-nouns = load_pos_words(f'{CORPUS_NAME}-nouns+plurals')
+set_memory_limit(prop=1.5)
 
-for mat, xws in zip([tw_mat1, tw_mat2],
-                    [xws1, xws2]):
+nouns = load_pos_words(f'{CORPUS_NAME}-nouns')
 
-    x = mat.T.toarray()
-    y = [1 if w in nouns else 0 for w in xws]
+# use only features common to both
+common_yws = set(yws1).intersection(set(yws2))
+print(f'Number of common contexts={len(common_yws)}')
+x1 = tw_mat1.T.toarray()[:, [True if yw in common_yws else False for yw in yws1]]
+x2 = tw_mat2.T.toarray()[:, [True if yw in common_yws else False for yw in yws2]]
+y1 = [1 if w in nouns else 0 for w in xws1]
+y2 = [1 if w in nouns else 0 for w in xws2]
+
+for x, y in zip([x1, x2],
+                [y1, y2]):
+
     print(f'Number of words included in LDA={len(y)}')
     clf = LinearDiscriminantAnalysis(n_components=None, priors=None, shrinkage=None,
                                      solver='svd', store_covariance=False)
-    clf.fit(x, y)
-    score = clf.score(x, y)
-    print(score)
-    print(f'prop var of comp1: {clf.explained_variance_ratio_[0]:.2f}')
+    try:
+        clf.fit(x, y)
+
+    except MemoryError as e:
+        raise SystemExit('Reached memory limit')
+
+    # how well does discriminant function work for other part?
+    score1 = clf.score(x1, y1)
+    score2 = clf.score(x2, y2)
+    print(f'partition-1 accuracy={score1:.3f}')
+    print(f'partition-2 accuracy={score2:.3f}')
+    
