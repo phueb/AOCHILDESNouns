@@ -1,3 +1,8 @@
+"""
+Research questions:
+1. Is language in partition 1 more systematic or template-like?
+"""
+
 import numpy as np
 from collections import Counter
 from scipy import optimize

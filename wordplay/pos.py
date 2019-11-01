@@ -6,22 +6,25 @@ from wordplay import config
 
 nlp = spacy.load('en_core_web_sm', disable=['parser', 'ner'])
 
-pos2tags = {'verb': ['BES', 'HVS', 'MD', 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ'],
-            'noun': ['NN', 'NNS', 'WP'],
-            'adverb': ['EX', 'RB', 'RBR', 'RBS', 'WRB'],
-            'pronoun': ['PRP'],
-            'preposition': ['IN'],
-            'conjunction': ['CC'],
-            'interjection': ['UH'],
-            'determiner': ['DT'],
-            'particle': ['POS', 'RP', 'TO'],
-            'punctuation': [',', ':', '.', "''", 'HYPH', 'LS', 'NFP'],
-            'adjective': ['AFX', 'JJ', 'JJR', 'JJS', 'PDT', 'PRP$', 'WDT', 'WP$'],
-            'special': []}
+pos2tags = {'verb': {'BES', 'HVS', 'MD', 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ'},
+            'noun': {'NN', 'NNS', 'WP'},
+            'adverb': {'EX', 'RB', 'RBR', 'RBS', 'WRB'},
+            'pronoun': {'PRP'},
+            'preposition': {'IN'},
+            'conjunction': {'CC'},
+            'interjection': {'UH'},
+            'determiner': {'DT'},
+            'particle': {'POS', 'RP', 'TO'},
+            'punctuation': {',', ':', '.', "''", 'HYPH', 'LS', 'NFP'},
+            'adjective': {'AFX', 'JJ', 'JJR', 'JJS', 'PDT', 'PRP$', 'WDT', 'WP$'},
+            'special': {}}
 
 pos2pos_ = {'noun': 'NOUN',
             'verb': 'VERB',
-            'preposition': 'ADP'}
+            'preposition': 'ADP',
+            'conjunction': 'CCONJ',
+            'adjective': 'ADJ',
+            }
 
 excluded_set = set(string.printable.split() + config.Symbols.all)
 
@@ -29,6 +32,7 @@ excluded_set = set(string.printable.split() + config.Symbols.all)
 def make_pos_words(vocab: List[str],
                    pos: str,
                    ) -> Set[str]:
+    print(f'Making list of {pos} words in vocabulary...')
     res = set()
     for w in vocab:
         pos_ = nlp(w)[0].pos_
