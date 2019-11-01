@@ -6,18 +6,75 @@ from wordplay import config
 
 nlp = spacy.load('en_core_web_sm', disable=['parser', 'ner'])
 
-pos2tags = {'verb': {'BES', 'HVS', 'MD', 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ'},
-            'noun': {'NN', 'NNS', 'WP'},
-            'adverb': {'EX', 'RB', 'RBR', 'RBS', 'WRB'},
-            'pronoun': {'PRP'},
-            'preposition': {'IN'},
-            'conjunction': {'CC'},
-            'interjection': {'UH'},
-            'determiner': {'DT'},
-            'particle': {'POS', 'RP', 'TO'},
-            'punctuation': {',', ':', '.', "''", 'HYPH', 'LS', 'NFP'},
-            'adjective': {'AFX', 'JJ', 'JJR', 'JJS', 'PDT', 'PRP$', 'WDT', 'WP$'},
-            'special': {}}
+pos2tags = {
+    'noun': {'NN', 'NNS'},
+    'verb': {'MD', 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ'},
+    'adjective': {'AFX', 'JJ', 'JJR', 'JJS'},
+    'proper-noun': {'NNP', 'NNPS'},
+    'adverb': {'RB', 'RBR', 'RBS', 'WRB'},
+    'pronoun': {'PRP', 'PRP$', 'WP', 'WP$', 'EX'},
+    'preposition': {'IN'},
+    'conjunction': {'CC'},
+    'interjection': {'UH'},
+    'determiner': {'DT', 'PDT', 'WDT'},
+    'particle': {'POS', 'RP', 'TO'},
+    'punctuation': {',', ':', '.', "''", 'HYPH', 'NFP'},
+}
+
+tag2pos = {
+
+    'NN': 'noun',
+    'NNS': 'noun',
+
+    'MD': 'verb',
+    'VB': 'verb',
+    'VBD': 'verb',
+    'VBG': 'verb',
+    'VBN': 'verb',
+    'VBP': 'verb',
+    'VBZ': 'verb',
+
+    'AFX': 'adjective',
+    'JJ': 'adjective',
+    'JJR': 'adjective',
+    'JJS': 'adjective',
+
+    'NNP': 'proper-noun',
+    'NNPS': 'proper-noun',
+
+    'RB': 'adverb',
+    'RBR': 'adverb',
+    'RBS': 'adverb',
+    'WRB': 'adverb',
+
+    'PRP': 'pronoun',
+    'PRP$': 'pronoun',
+    'WP': 'pronoun',
+    'WP$': 'pronoun',
+    'EX': 'pronoun',
+
+    'IN': 'preposition',
+    'CC': 'conjunction',
+    'UH': 'interjection',
+
+    'PDT': 'determiner',
+    'WDT': 'determine',
+    'DT': 'determiner',
+
+    'POS': 'particle',
+    'RP': 'particle',
+    'TO': 'particle',
+
+    '.': 'punctuation',
+    ',': 'punctuation',
+    ':': 'punctuation',
+    "'": 'punctuation',
+    'HYPH': 'punctuation',
+    'NFP': 'punctuation',
+
+    'CD': 'number',
+
+}
 
 pos2pos_ = {'noun': 'NOUN',
             'verb': 'VERB',

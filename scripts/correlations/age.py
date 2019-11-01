@@ -1,4 +1,4 @@
-from scipy.stats import spearmanr
+from scipy import stats
 import numpy as np
 import attr
 from tabulate import tabulate
@@ -8,16 +8,16 @@ from preppy.legacy import TrainPrep
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 from wordplay.utils import split
-from wordplay.pos import make_pos_words
+from wordplay.pos import tag2pos
 
 # /////////////////////////////////////////////////////////////////
 
-CORPUS_NAME = 'childes-20180319'
+CORPUS_NAME = 'childes-20180319_tags'
 PROBES_NAME = 'sem-4096'
 
 SHUFFLE_DOCS = False
 NUM_MID_TEST_DOCS = 0
-NUM_PARTS = 2
+NUM_PARTS = 128  # spearman correlation requires more than just 2
 
 docs = load_docs(CORPUS_NAME,
                  num_test_take_from_mid=NUM_MID_TEST_DOCS,
@@ -37,29 +37,36 @@ POS_LIST = [
     'adjective',
 ]
 
-# TODO just iterate over tags text file?
+# collect counts
+pos2counts = {pos: [] for pos in POS_LIST}
+for tags in split(prep.store.tokens, prep.num_tokens_in_part):
 
-pos_words_list = [make_pos_words(prep.store.types, pos) for pos in POS_LIST]
+    for t in tags:
+        if t not in tag2pos:
+            print(t)
 
-for tokens in split(prep.store.tokens, prep.num_tokens_in_part):
-
-    for pos, pos_words in zip(POS_LIST, pos_words_list):
-        y = len([w for w in tokens if tokens in pos_words])
-        print(f'{pos:<16} num={y:,}')
-
-
-raise SystemExit('Debugging')
-
-# TODO don't just correlate with position in corpus - use the actual age value
-
-# stats
-rho_mat, p_mat = spearmanr(ao_features_mat)
-print(p_mat < 0.05 / ao_features_mat.size)
+    pos_tags = [tag2pos.get(t, None) for t in tags]
+    print()
+    print(f'{"excluded":<16} num={pos_tags.count(None):>9,}')
+    for pos in POS_LIST:
+        y = pos_tags.count(pos)
+        print(f'{pos:<16} num={y:>9,}')
+        # collect
+        pos2counts[pos].append(y)
 
 
-data = [[1, 'Liquid', 24, 12],
-        [2, 'Virtus.pro', 19, 14],
-        [3, 'PSG.LGD', 15, 19],
-        [4,'Team Secret', 10, 20]]
-print (tabulate(data, headers=["Pos", "Team", "Win", "Lose"]))
+# calculate Spearman's correlation
+data = []
+a = np.arange(NUM_PARTS)  # TODO don't just correlate with position in corpus - use the actual age value
+for pos in POS_LIST:
+    b = np.array(pos2counts[pos]) / prep.num_tokens_in_part
+    rho, p = stats.spearmanr(a, b)
+    print(f'{pos:<12} rho={rho:+.2f} p={p:.4f}')
+    # collect for pretty-printed table
+    data.append((pos, rho, p))
+
+# print pretty table
+print()
+print(tabulate(data, headers=["Part-of-Speech", "Spearman's Rho", "p-value"]))
+print(f'Number of corpus partitions={NUM_PARTS}')
 
