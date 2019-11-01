@@ -18,14 +18,13 @@ PROBES_NAME = 'sem-4096'
 SHUFFLE_DOCS = False
 NUM_MID_TEST_DOCS = 0
 NUM_PARTS = 2
-NUM_TYPES = 1000 * 26
 
 docs = load_docs(CORPUS_NAME,
                  num_test_take_from_mid=NUM_MID_TEST_DOCS,
                  num_test_take_random=0,
                  shuffle_docs=SHUFFLE_DOCS)
 
-params = PrepParams(num_parts=NUM_PARTS, num_types=NUM_TYPES)
+params = PrepParams(num_parts=NUM_PARTS)
 prep = TrainPrep(docs, **attr.asdict(params))
 
 # /////////////////////////////////////////////////////////////////
@@ -37,6 +36,8 @@ POS_LIST = [
     'verb',
     'adjective',
 ]
+
+# TODO just iterate over tags text file?
 
 pos_words_list = [make_pos_words(prep.store.types, pos) for pos in POS_LIST]
 
