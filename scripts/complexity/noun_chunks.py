@@ -1,6 +1,6 @@
 """
 Research questions:
-1. does partition 1 have fewer unique noun chunks?
+1. does partition 1 have fewer SVO triples? in other words, are fewer meanings expressed?
 """
 
 

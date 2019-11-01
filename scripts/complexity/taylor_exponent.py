@@ -1,15 +1,38 @@
 import numpy as np
 from collections import Counter
-import matplotlib.pyplot as plt
 from scipy import optimize
+import matplotlib.pyplot as plt
+import attr
 
-from childeshub.hub import Hub
+from preppy.legacy import TrainPrep
 
-HUB_MODE = 'sem'
-NUM_PARTS = 4
+from wordplay.params import PrepParams
+from wordplay.docs import load_docs
+
+# /////////////////////////////////////////////////////////////////
+
+CORPUS_NAME = 'childes-20180319'
+PROBES_NAME = 'sem-4096'
+
+SHUFFLE_DOCS = False
+NUM_MID_TEST_DOCS = 0
+NUM_PARTS = 2
 NUM_TYPES = 1000 * 26
+
+docs = load_docs(CORPUS_NAME,
+                 num_test_take_from_mid=NUM_MID_TEST_DOCS,
+                 num_test_take_random=0,
+                 shuffle_docs=SHUFFLE_DOCS)
+
+params = PrepParams(num_parts=NUM_PARTS, num_types=NUM_TYPES)
+prep = TrainPrep(docs, **attr.asdict(params))
+
+# /////////////////////////////////////////////////////////////////
+
+
 SPLIT_SIZE = 5620
 CORPUS_ID = 1  # 0=mobydick, 1=CHILDES
+PLOT_FIT = False
 
 
 def fitfunc(p, x):
@@ -21,14 +44,13 @@ def errfunc(p, x, y):
 
 
 corpus_name = ['mobydick', 'childes-20180319'][CORPUS_ID]
-hub = Hub(mode=HUB_MODE, num_types=NUM_TYPES, corpus_name=corpus_name, num_parts=NUM_PARTS)
 
 
-for part_id, part in enumerate(hub.reordered_parts):
+for part_id, part in enumerate(prep.reordered_parts):
     # make freq_mat
-    num_splits = hub.num_items_in_part // SPLIT_SIZE + 1
+    num_splits = prep.num_tokens_in_part // SPLIT_SIZE + 1
     freq_mat = np.zeros((prep.store.num_types, num_splits))
-    start_locs = np.arange(0, hub.num_items_in_part, SPLIT_SIZE)
+    start_locs = np.arange(0, prep.num_tokens_in_part, SPLIT_SIZE)
     num_start_locs = len(start_locs)
     for split_id, start_loc in enumerate(start_locs):
         for token_id, f in Counter(part[start_loc:start_loc + SPLIT_SIZE]).items():
@@ -49,23 +71,19 @@ for part_id, part in enumerate(hub.reordered_parts):
     pfinal = out[0]
     amp = pfinal[0]
     alpha = pfinal[1]
-    # print(part_id, alpha)
     # fig
     fig, ax = plt.subplots()
-    plt.title('{} (num_types={:,}, part# {} of{})'.format(
-        corpus_name, NUM_TYPES, part_id + 1, NUM_PARTS))
+    plt.title(f'{corpus_name}\nnum_types={NUM_TYPES:,}, part {part_id + 1} of {NUM_PARTS}')
     ax.set_xlabel('mean')
     ax.set_ylabel('std')
     ax.spines['right'].set_visible(False)
     ax.spines['top'].set_visible(False)
     ax.tick_params(axis='both', which='both', top=False, right=False)
+    # plot
     ax.text(x=1.0, y=0.3, s='Taylor\'s exponent: {:.3f}'.format(alpha))
     ax.loglog(x, y, '.', markersize=2)
-
-    # TODO
-    ax.loglog(x, amp * (x ** alpha) + 0, '.', markersize=2)
-
-
+    if PLOT_FIT:
+        ax.loglog(x, amp * (x ** alpha) + 0, '.', markersize=2)  # TODO test
     plt.show()
 
 
