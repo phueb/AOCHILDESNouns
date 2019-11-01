@@ -90,3 +90,5 @@ for x, y in zip([x1, x2],
     score2 = clf.score(x2, y2)
     print(f'partition-1 accuracy={score1:.3f}')
     print(f'partition-2 accuracy={score2:.3f}')
+
+    # TODO use clf.coef_ to get idea of what features are most predictive

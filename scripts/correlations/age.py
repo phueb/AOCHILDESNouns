@@ -30,21 +30,20 @@ prep = TrainPrep(docs, **attr.asdict(params))
 # /////////////////////////////////////////////////////////////////
 
 POS_LIST = [
-    'conjunction',
-    'preposition',
     'noun',
     'verb',
     'adjective',
+    'adverb',
+    'conjunction',
+    'preposition',
+    'pronoun',
+    'punctuation',
+    'interjection',  # TODO is not significant - perhaps spacy tags are not very accurate
 ]
 
 # collect counts
 pos2counts = {pos: [] for pos in POS_LIST}
 for tags in split(prep.store.tokens, prep.num_tokens_in_part):
-
-    for t in tags:
-        if t not in tag2pos:
-            print(t)
-
     pos_tags = [tag2pos.get(t, None) for t in tags]
     print()
     print(f'{"excluded":<16} num={pos_tags.count(None):>9,}')
@@ -67,6 +66,13 @@ for pos in POS_LIST:
 
 # print pretty table
 print()
-print(tabulate(data, headers=["Part-of-Speech", "Spearman's Rho", "p-value"]))
+print(tabulate(data,
+               headers=["Part-of-Speech", "Spearman's Rho", "p-value"]))
 print(f'Number of corpus partitions={NUM_PARTS}')
+
+# latex
+print(tabulate(data,
+               headers=["Part-of-Speech", "Spearman's Rho", "p-value"],
+               tablefmt='latex',
+               floatfmt=".4f"))
 
