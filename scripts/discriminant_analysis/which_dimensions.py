@@ -1,7 +1,6 @@
 """
 Research questions:
-1.Which singular dimensions of input result in good noun discrimination
- and which result in good semantic category discrimination?
+1. Which singular dimensions of input result in good semantic or syntactic category discrimination?
 """
 
 import attr
@@ -16,13 +15,11 @@ from categoryeval.probestore import ProbeStore
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 from wordplay.svd import make_term_by_window_co_occurrence_mat
-from wordplay.pos import load_pos_words
 
 # /////////////////////////////////////////////////////////////////
 
 CORPUS_NAME = 'childes-20180319'
-SEM_PROBES_NAME = 'sem-4096'
-SYN_PROBES_NAME = 'syn-4096'  # TODO make one with only verbs vs. nouns vs. adjectives
+PROBES_NAME = 'syn-nva'  # change this to analyze semantic or syntactic categories
 
 SHUFFLE_DOCS = False
 NUM_MID_TEST_DOCS = 0
@@ -55,20 +52,20 @@ tw_mat, xws, yws = make_term_by_window_co_occurrence_mat(
 
 # ///////////////////////////////////////////////////////////////// LDA
 
-syn_store = ProbeStore(CORPUS_NAME, SYN_PROBES_NAME, prep.store.w2id)
-sem_store = ProbeStore(CORPUS_NAME, SEM_PROBES_NAME, prep.store.w2id)
-y_syn = np.array([syn_store.cat2id[syn_store.probe2cat[w]] if w in syn_store.types else 0 for w in xws])
-y_sem = np.array([sem_store.cat2id[sem_store.probe2cat[w]] if w in sem_store.types else 0 for w in xws])
+probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
+y_true = np.array([probe_store.cat2id[probe_store.probe2cat[w]] if w in probe_store.types else 0 for w in xws])
+y_rand = np.random.permutation(y_true)
 
 # reduce dimensionality
 dims, _, _ = sparse_linalg.svds(tw_mat.T, k=NUM_DIMS, return_singular_vectors=True)
 
-labels = ['syntactic', 'semantic']
+labels = [PROBES_NAME, PROBES_NAME + ' shuffled']
+ys = [y_true, y_rand]
 label2scores = {label: [] for label in labels}
 for dim_id in range(NUM_DIMS):  # get columns cumulatively
-    for label, y in zip(labels, [y_syn, y_sem]):
+    for label, y in zip(labels, ys):
 
-        # prepare data for LDA
+        # prepare data for LDA (exclude non-probes)
         nonzero_ids = np.where(y != 0)[0]
         x = dims[nonzero_ids, :dim_id + 1]
         y = y[nonzero_ids]
@@ -88,12 +85,13 @@ for dim_id in range(NUM_DIMS):  # get columns cumulatively
 
 
 _, ax = plt.subplots(dpi=192)
-plt.title('')
+plt.title(f'window-size={WINDOW_SIZE}')
 ax.set_ylabel('LDA Accuracy')
 ax.set_xlabel('Number of Singular Dimensions in Training Data')
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
 ax.tick_params(axis='both', which='both', top=False, right=False)
+ax.set_ylim([0, 1.0])
 # plot
 x = np.arange(NUM_DIMS)
 for label, y in label2scores.items():
