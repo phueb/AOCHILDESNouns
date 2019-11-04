@@ -14,7 +14,7 @@ from categoryeval.probestore import ProbeStore
 
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
-from wordplay.svd import make_term_by_window_co_occurrence_mat
+from wordplay.svd import make_term_by_context_co_occurrence_mat
 
 # /////////////////////////////////////////////////////////////////
 
@@ -34,7 +34,7 @@ prep = TrainPrep(docs, **attr.asdict(params))
 
 # /////////////////////////////////////////////////////////////////
 
-WINDOW_SIZE = 2
+CONTEXT_SIZE = 4
 NUM_DIMS = 512
 NORMALIZE = False  # this makes all the difference - this means that the scales of variables are different and matter
 MAX_FREQUENCY = 100 * 1000  # largest value in co-occurrence matrix
@@ -46,8 +46,8 @@ OFFSET = prep.midpoint
 
 # make term_by_window_co_occurrence_mat
 start, end = 0, prep.store.num_tokens
-tw_mat, xws, yws = make_term_by_window_co_occurrence_mat(
-    prep, start=start, end=end, window_size=WINDOW_SIZE, max_frequency=MAX_FREQUENCY, log=LOG_FREQUENCY)
+tw_mat, xws, yws = make_term_by_context_co_occurrence_mat(
+    prep, start=start, end=end, context_size=WINDOW_SIZE, max_frequency=MAX_FREQUENCY, log=LOG_FREQUENCY)
 
 
 # ///////////////////////////////////////////////////////////////// LDA

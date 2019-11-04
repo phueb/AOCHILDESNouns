@@ -14,7 +14,7 @@ the difference between nous and verbs than differences between semantic categori
 """
 
 HUB_MODE = 'sem'
-WINDOW_SIZE = 2
+CONTEXT_SIZE = 2
 NUM_PCS = 512
 Y_MAX = 0.5
 

@@ -2,6 +2,9 @@
 
 Research code for analyzing text corpora with a particular emphasis on complexity and categories.
 
-## To-do
+## Terminology
 
-* separate logic into folders: complexity, categories, SVD
+* Probes: a set of words with known category membership used for testing
+* Window: a multi-word sequence form corpus; consists of a left-context and target word
+* Context: a multi-word sequence (typically up to 6) preceding a target word
+* Term-by-Window Matrix: a matrix containing counts of co-occurrences between a context (rows) and target (columns)

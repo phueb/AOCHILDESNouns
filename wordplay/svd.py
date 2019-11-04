@@ -48,22 +48,23 @@ def plot_category_encoding_dimensions(cat2dim_ids: Dict[str, List[int]],
     plt.show()
 
 
-def make_term_by_window_co_occurrence_mat(prep,
-                                          tokens: Optional[List[str]] = None,
-                                          start: Optional[int] = None,
-                                          end: Optional[int] = None,
-                                          window_size: Optional[int] = 7,
-                                          max_frequency: int = 1000 * 1000,
-                                          log: bool = True,
-                                          probe_store: Optional[ProbeStore] = None):
+def make_term_by_context_co_occurrence_mat(prep,
+                                           tokens: Optional[List[str]] = None,
+                                           start: Optional[int] = None,
+                                           end: Optional[int] = None,
+                                           context_size: Optional[int] = 7,
+                                           max_frequency: int = 1000 * 1000,
+                                           log: bool = True,
+                                           probe_store: Optional[ProbeStore] = None):
     """
-    terms are in cols, windows are in rows.
+    also known as TW matrix (term-by window), but contexts are NOT windows. Window = context + target word.
+    terms are in cols, contexts are in rows.
     y_words are windows, x_words are terms.
     y_words always occur after x_words in the input.
     this format matches that used in TreeTransitions
     """
 
-    print(f'Making term-window matrix'
+    print(f'Making term-context matrix'
           f' from tokens between {start:,} & {end:,}')
 
     # tokens
@@ -82,24 +83,24 @@ def make_term_by_window_co_occurrence_mat(prep,
     num_xws = len(x_words)
     xw2col_id = {t: n for n, t in enumerate(x_words)}
 
-    # windows
-    windows_in_order = get_sliding_windows(window_size, tokens)
-    unique_windows = sorted(set(windows_in_order))
-    num_unique_windows = len(unique_windows)
-    window2row_id = {w: n for n, w in enumerate(unique_windows)}
+    # contexts
+    contexts_in_order = get_sliding_windows(context_size, tokens)
+    unique_contexts = sorted(set(contexts_in_order))
+    num_unique_contexts = len(unique_contexts)
+    context2row_id = {w: n for n, w in enumerate(unique_contexts)}
 
-    # make sparse matrix (y_words in rows, windows in cols)
-    shape = (num_unique_windows, num_xws)
+    # make sparse matrix (y_words in rows, contexts in cols)
+    shape = (num_unique_contexts, num_xws)
     print(f'shape={shape}')
     data = []
     row_ids = []
     cold_ids = []
     mat_loc2freq = {}  # needed to keep track of freq
-    for n, window in enumerate(windows_in_order[:-window_size]):
+    for n, context in enumerate(contexts_in_order[:-context_size]):
         # row_id + col_id
-        row_id = window2row_id[window]
-        next_window = windows_in_order[n + 1]
-        next_word = next_window[-1]  # -1 is correct because windows slide by 1 word
+        row_id = context2row_id[context]
+        next_context = contexts_in_order[n + 1]
+        next_word = next_context[-1]  # -1 is correct because windows slide by 1 word
         try:
             col_id = xw2col_id[next_word]
         except KeyError:  # using probe_store
@@ -123,9 +124,9 @@ def make_term_by_window_co_occurrence_mat(prep,
     # make sparse matrix once (updating it is expensive)
     res = sparse.csr_matrix((data, (row_ids, cold_ids)), shape=shape)
 
-    print('term-by-window co-occurrence matrix has sum={:,}'.format(res.sum()))
+    print('term-by-context co-occurrence matrix has sum={:,}'.format(res.sum()))
 
-    y_words = unique_windows
+    y_words = unique_contexts
     return res, x_words, y_words
 
 
