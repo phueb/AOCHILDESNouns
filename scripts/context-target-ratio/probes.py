@@ -21,6 +21,7 @@ of interest are contexts which contain a probe in the last position.
 import numpy as np
 import matplotlib.pyplot as plt
 import attr
+from tabulate import tabulate
 
 from preppy.legacy import TrainPrep
 from categoryeval.probestore import ProbeStore
@@ -32,7 +33,7 @@ from wordplay.docs import load_docs
 # /////////////////////////////////////////////////////////////////
 
 CORPUS_NAME = 'childes-20180319'
-PROBES_NAME = 'sem-4096'
+PROBES_NAME = 'syn-4096'
 
 SHUFFLE_DOCS = False
 
@@ -49,7 +50,7 @@ probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
 # ///////////////////////////////////////////////////////////////// TW-matrix
 
 LOG_FREQUENCY = False
-CONTEXT_SIZE = 4
+CONTEXT_SIZE = 2
 COLORS = ['C0', 'C1']
 
 start1, end1 = 0, prep.midpoint
@@ -64,6 +65,7 @@ tw_mat2, xws2, yws2 = make_term_by_context_co_occurrence_mat(
 
 part_ids = range(2)
 part_id2ys = {i: [] for i in part_ids}
+table_data = []  # for table
 for part_id, tw_mat, yws, xws in zip(part_ids,
                                      [tw_mat1, tw_mat2],
                                      [yws1, yws2],
@@ -90,6 +92,8 @@ for part_id, tw_mat, yws, xws in zip(part_ids,
         ratio = num_context_types / num_target_types
         part_id2ys[part_id].append(ratio)
 
+        # collect
+        table_data.append((part_id + 1, cat, num_context_types, num_target_types, ratio))
         print(f'{cat:<12} ratio={ratio:.3f} num contexts={num_context_types:>6,} num targets={num_target_types:>6,}')
     print('------------------------------------------------------')
 
@@ -112,3 +116,17 @@ ax.axhline(y=np.mean(y2), label=f'part 2 mean={np.mean(y2):.4f} n={len(y2)}', co
 plt.legend()
 plt.tight_layout()
 plt.show()
+
+
+# print pretty table
+print()
+headers = ['Partition', "Part-of-Speech", "context types", 'target types', "context-target ratio"]
+print(tabulate(table_data,
+               headers=headers,
+               tablefmt='fancy_grid'))
+
+# latex
+print(tabulate(table_data,
+               headers=headers,
+               tablefmt='latex',
+               floatfmt=".4f"))
