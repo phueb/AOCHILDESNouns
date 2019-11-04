@@ -14,7 +14,7 @@ how similar are term-by-window representations of members of a POS category?
 
 HUB_MODE = 'sem'
 CONTEXT_SIZE = 7
-NUM_PCS = 512  # set to None to skip SVD  - memory error when using WINDOW_SIZE > 3
+NUM_PCS = 512  # set to None to skip SVD  - memory error when using CONTEXT_SIZE > 3
 FONTSIZE = 16
 
 POS = 'nouns'
@@ -30,8 +30,8 @@ start1, end1 = 0, hub.midpoint_loc // 1
 start2, end2 = prep.store.num_tokens - end1, prep.store.num_tokens
 label1 = 'partition 1' or 'tokens between\n{:,} & {:,}'.format(start1, end1)
 label2 = 'partition 2' or 'tokens between\n{:,} & {:,}'.format(start2, end2)
-tw_mat1, xws1, yws1 = hub.make_term_by_window_co_occurrence_mat(start=start1, end=end1, window_size=WINDOW_SIZE)
-tw_mat2, xws2, yws2 = hub.make_term_by_window_co_occurrence_mat(start=start2, end=end2, window_size=WINDOW_SIZE)
+tw_mat1, xws1, yws1 = hub.make_term_by_window_co_occurrence_mat(start=start1, end=end1, window_size=CONTEXT_SIZE)
+tw_mat2, xws2, yws2 = hub.make_term_by_window_co_occurrence_mat(start=start2, end=end2, window_size=CONTEXT_SIZE)
 
 
 pos_member_sims = []
@@ -59,7 +59,7 @@ for mat, xws in [(tw_mat1.asfptype(), xws1),
 x = [0, 1]
 fig, ax = plt.subplots(dpi=None, figsize=(8, 8))
 plt.title('Distributional similarity of {}\nwindow size={} and number of SVD modes={}'.format(
-    POS, WINDOW_SIZE, NUM_PCS), fontsize=FONTSIZE)
+    POS, CONTEXT_SIZE, NUM_PCS), fontsize=FONTSIZE)
 ax.set_ylabel('Cosine Similarity', fontsize=FONTSIZE)
 ax.set_xlabel('Partition', fontsize=FONTSIZE)
 ax.set_ylim([0, np.max(pos_member_sims) + 0.01])

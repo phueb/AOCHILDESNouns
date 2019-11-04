@@ -1,6 +1,11 @@
 """
 Research questions:
 1. Do probes in partition 1 have fewer context types, but more context tokens?
+
+Note:
+Contexts are always words to the left of probe.
+Looking at only contexts may not tell the full story.
+Instead looking right-contexts (called targets) may be useful
 """
 
 import numpy as np
@@ -73,7 +78,7 @@ for part_id, tw_mat, yws, xws in zip(part_ids,
 # fig2
 for cat, part_id2ys in cat2part_id2counts.items():
     fig2, ax2 = plt.subplots(figsize=(6, 6), dpi=None)
-    plt.title(f'Distribution of contexts for {cat.upper()}\ncontext-size={CONTEXT_SIZE}',
+    plt.title(f'Distribution of left-contexts for {cat.upper()}\ncontext-size={CONTEXT_SIZE}',
               fontsize=12)
     ax2.set_xlabel('Context Types')
     ax2.set_ylabel('Frequency')
@@ -84,7 +89,7 @@ for cat, part_id2ys in cat2part_id2counts.items():
     for part_id, y in part_id2ys.items():
         label = 'partition={}'.format(part_id + 1)
         ax2.plot(y[:PLOT_MAX_NUM_CONTEXTS],
-                 label=label,
+                 label=label + f' (# contexts={np.count_nonzero(y):>6,})',
                  color=COLORS[part_id])
     ax2.legend(frameon=False, loc='upper right')
     plt.tight_layout()

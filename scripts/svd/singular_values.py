@@ -63,9 +63,9 @@ for cat in ['nouns', 'verbs']:
 start1, end1 = 0, prep.midpoint
 start2, end2 = prep.midpoint, prep.store.num_tokens
 tw_mat1, xws1, yws1 = make_term_by_context_co_occurrence_mat(
-    prep, start=start1, end=end1, context_size=WINDOW_SIZE, max_frequency=MAX_FREQUENCY, log=LOG_FREQUENCY)
+    prep, start=start1, end=end1, context_size=CONTEXT_SIZE, max_frequency=MAX_FREQUENCY, log=LOG_FREQUENCY)
 tw_mat2, xws2, yws2 = make_term_by_context_co_occurrence_mat(
-    prep, start=start2, end=end2, context_size=WINDOW_SIZE, max_frequency=MAX_FREQUENCY, log=LOG_FREQUENCY)
+    prep, start=start2, end=end2, context_size=CONTEXT_SIZE, max_frequency=MAX_FREQUENCY, log=LOG_FREQUENCY)
 
 
 # collect singular values
@@ -104,7 +104,7 @@ s2_noun_dims = [s2[i] if not np.isnan(i) else np.nan for i in noun_dims2]
 
 # figure
 fig, ax = plt.subplots(1, figsize=(5, 5), dpi=None)
-plt.title(f'SVD of AO-CHILDES partitions\nwindow size={WINDOW_SIZE}', fontsize=config.Fig.fontsize)
+plt.title(f'SVD of AO-CHILDES partitions\nwindow size={CONTEXT_SIZE}', fontsize=config.Fig.fontsize)
 ax.set_ylabel('Singular value', fontsize=config.Fig.fontsize)
 ax.set_xlabel('Singular Dimension', fontsize=config.Fig.fontsize)
 ax.spines['right'].set_visible(False)

@@ -61,8 +61,8 @@ start1, end1 = 0, hub.midpoint_loc // 1
 start2, end2 = prep.store.num_tokens - end1, prep.store.num_tokens
 label1 = 'partition 1' or 'tokens between\n{:,} & {:,}'.format(start1, end1)
 label2 = 'partition 2' or 'tokens between\n{:,} & {:,}'.format(start2, end2)
-tw_mat1, xws1, yws1 = hub.make_term_by_window_co_occurrence_mat(start=start1, end=end1, window_size=WINDOW_SIZE)
-tw_mat2, xws2, yws2 = hub.make_term_by_window_co_occurrence_mat(start=start2, end=end2, window_size=WINDOW_SIZE)
+tw_mat1, xws1, yws1 = hub.make_term_by_window_co_occurrence_mat(start=start1, end=end1, window_size=CONTEXT_SIZE)
+tw_mat2, xws2, yws2 = hub.make_term_by_window_co_occurrence_mat(start=start2, end=end2, window_size=CONTEXT_SIZE)
 
 
 noun_verb_sims = []
@@ -135,7 +135,7 @@ for mat, xws in [(tw_mat1.asfptype(), xws1),
 x = [0, 1]
 fig, ax = plt.subplots(dpi=None, figsize=(5, 5))
 plt.title('Distributional similarity of nouns & other POS classes\nn-gram model with size={} and num PCs={}'.format(
-    WINDOW_SIZE, NUM_PCS))
+    CONTEXT_SIZE, NUM_PCS))
 ax.set_ylabel('Cosine Similarity')
 ax.set_xlabel('Partition')
 ax.set_ylim([0, Y_MAX])

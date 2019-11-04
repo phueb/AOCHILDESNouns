@@ -47,7 +47,7 @@ OFFSET = prep.midpoint
 # make term_by_window_co_occurrence_mat
 start, end = 0, prep.store.num_tokens
 tw_mat, xws, yws = make_term_by_context_co_occurrence_mat(
-    prep, start=start, end=end, context_size=WINDOW_SIZE, max_frequency=MAX_FREQUENCY, log=LOG_FREQUENCY)
+    prep, start=start, end=end, context_size=CONTEXT_SIZE, max_frequency=MAX_FREQUENCY, log=LOG_FREQUENCY)
 
 
 # ///////////////////////////////////////////////////////////////// LDA
@@ -85,7 +85,7 @@ for dim_id in range(NUM_DIMS):  # get columns cumulatively
 
 
 _, ax = plt.subplots(dpi=192)
-plt.title(f'window-size={WINDOW_SIZE}')
+plt.title(f'window-size={CONTEXT_SIZE}')
 ax.set_ylabel('LDA Accuracy')
 ax.set_xlabel('Number of Singular Dimensions in Training Data')
 ax.spines['right'].set_visible(False)

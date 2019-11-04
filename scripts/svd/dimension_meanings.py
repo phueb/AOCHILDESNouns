@@ -94,7 +94,7 @@ sem_cat2words['random'] = np.random.choice(probe_store.types, size=30, replace=F
 # make term_by_window_co_occurrence_mats
 start1, end1 = 0, prep.store.num_tokens
 tw_mat1, xws1, yws1 = make_term_by_context_co_occurrence_mat(
-    prep, start=start1, end=end1, context_size=WINDOW_SIZE, max_frequency=MAX_FREQUENCY, log=LOG_FREQUENCY)
+    prep, start=start1, end=end1, context_size=CONTEXT_SIZE, max_frequency=MAX_FREQUENCY, log=LOG_FREQUENCY)
 mat = tw_mat1.T.asfptype()  # transpose so that x-words now index rows (does not affect singular values)
 
 # normalization
@@ -123,12 +123,12 @@ for cat2words, label in zip([syn_cat2words, sem_cat2words], LABELS):
     print(dim_ids)
 
     if SCATTER_PLOT:
-        title = f'Decoding Singular Dimensions\nof {label} term-by-window matrix\nwindow size={WINDOW_SIZE}'
+        title = f'Decoding Singular Dimensions\nof {label} term-by-window matrix\nwindow size={CONTEXT_SIZE}'
         plot_category_encoding_dimensions(cat2dim_ids, NUM_DIMS, title)
 
 # comparing singular values - does syntactic or semantic category account for more?
 _, ax = plt.subplots(dpi=192, figsize=(6, 6))
-ax.set_title(f'Variance explained\nnouns vs. semantics\nwindow size={WINDOW_SIZE}', fontsize=config.Fig.fontsize)
+ax.set_title(f'Variance explained\nnouns vs. semantics\nwindow size={CONTEXT_SIZE}', fontsize=config.Fig.fontsize)
 ax.set_xlabel('Category', fontsize=config.Fig.fontsize)
 ax.set_ylabel('Singular Value', fontsize=config.Fig.fontsize)
 ax.spines['right'].set_visible(False)

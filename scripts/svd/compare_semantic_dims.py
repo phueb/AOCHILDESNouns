@@ -78,9 +78,9 @@ num_categories = len(categories)
 start1, end1 = 0, OFFSET
 start2, end2 = prep.store.num_tokens - OFFSET, prep.store.num_tokens
 tw_mat1, xws1, yws1 = make_term_by_context_co_occurrence_mat(
-    prep, start=start1, end=end1, context_size=WINDOW_SIZE, max_frequency=MAX_FREQUENCY, log=LOG_FREQUENCY)
+    prep, start=start1, end=end1, context_size=CONTEXT_SIZE, max_frequency=MAX_FREQUENCY, log=LOG_FREQUENCY)
 tw_mat2, xws2, yws2 = make_term_by_context_co_occurrence_mat(
-    prep, start=start2, end=end2, context_size=WINDOW_SIZE, max_frequency=MAX_FREQUENCY, log=LOG_FREQUENCY)
+    prep, start=start2, end=end2, context_size=CONTEXT_SIZE, max_frequency=MAX_FREQUENCY, log=LOG_FREQUENCY)
 
 
 # ////////////////////////////////////////////////////////////////////// svd
@@ -120,13 +120,13 @@ for mat, label, x_words in zip([tw_mat1.T.asfptype(), tw_mat2.T.asfptype()],
     print(dim_ids)
 
     if SCATTER_PLOT:
-        title = f'Decoding Singular Dimensions\nof {label} term-by-window matrix\nwindow size={WINDOW_SIZE}'
+        title = f'Decoding Singular Dimensions\nof {label} term-by-window matrix\nwindow size={CONTEXT_SIZE}'
         plot_category_encoding_dimensions(cat2dim_ids, NUM_DIMS, title)
 
 
 # comparing singular values - does syntactic or semantic category account for more?
 _, ax = plt.subplots(dpi=192, figsize=(6, 6))
-ax.set_title(f'Variance explained by {PROBES_NAME}-encoding dimensions\nwindow size={WINDOW_SIZE}', fontsize=config.Fig.fontsize)
+ax.set_title(f'Variance explained by {PROBES_NAME}-encoding dimensions\nwindow size={CONTEXT_SIZE}', fontsize=config.Fig.fontsize)
 ax.set_ylabel('Normalized Singular Value', fontsize=config.Fig.fontsize)
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)

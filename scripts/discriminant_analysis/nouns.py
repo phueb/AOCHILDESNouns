@@ -46,9 +46,9 @@ OFFSET = prep.midpoint
 start1, end1 = 0, OFFSET
 start2, end2 = prep.store.num_tokens - OFFSET, prep.store.num_tokens
 tw_mat1, xws1, yws1 = make_term_by_context_co_occurrence_mat(
-    prep, start=start1, end=end1, context_size=WINDOW_SIZE, max_frequency=MAX_FREQUENCY, log=LOG_FREQUENCY)
+    prep, start=start1, end=end1, context_size=CONTEXT_SIZE, max_frequency=MAX_FREQUENCY, log=LOG_FREQUENCY)
 tw_mat2, xws2, yws2 = make_term_by_context_co_occurrence_mat(
-    prep, start=start2, end=end2, context_size=WINDOW_SIZE, max_frequency=MAX_FREQUENCY, log=LOG_FREQUENCY)
+    prep, start=start2, end=end2, context_size=CONTEXT_SIZE, max_frequency=MAX_FREQUENCY, log=LOG_FREQUENCY)
 
 
 # ///////////////////////////////////////////////////////////////// LDA
