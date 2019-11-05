@@ -1,10 +1,10 @@
 from itertools import chain
 
 
-def term_reordered_locs_dict(self):
-    print('Making term_reordered_locs_dict...')
-    result = {item: [] for item in self.train_terms.types}
-    for loc, term in enumerate(self.reordered_tokens):
+def make_w2location(tokens):
+    print('Making w2location...')
+    result = {item: [] for item in set(tokens)}
+    for loc, term in enumerate(tokens):
         result[term].append(loc)
     return result
 
@@ -19,7 +19,7 @@ def term_unordered_locs_dict(self):  # keep this for fast calculation where orde
 
 def term_avg_reordered_loc_dict(self):
     result = {}
-    for term, locs in self.term_reordered_locs_dict.items():
+    for term, locs in self.w2location.items():
         result[term] = np.mean(locs)
     return result
 

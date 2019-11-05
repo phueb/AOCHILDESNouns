@@ -71,7 +71,7 @@ def reorder_docs_from_midpoint(docs: List[str]
                     range(s, m + 0)[::-1]):
         res += [docs[i], docs[j]]
 
-    assert len(res) == len(docs)
+    assert len(res) >= len(docs) - 1
 
     return res
 

@@ -33,7 +33,7 @@ from wordplay.docs import load_docs
 # /////////////////////////////////////////////////////////////////
 
 CORPUS_NAME = 'childes-20180319'
-PROBES_NAME = 'syn-4096'
+PROBES_NAME = 'sem-4096'
 
 SHUFFLE_DOCS = False
 
@@ -50,7 +50,7 @@ probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
 # ///////////////////////////////////////////////////////////////// TW-matrix
 
 LOG_FREQUENCY = False
-CONTEXT_SIZE = 2
+CONTEXT_SIZE = 1
 COLORS = ['C0', 'C1']
 
 start1, end1 = 0, prep.midpoint
@@ -78,15 +78,13 @@ for part_id, tw_mat, yws, xws in zip(part_ids,
         col_ids = [n for n, xw in enumerate(xws) if xw in probe_store.cat2probes[cat]]
         cols = tw_mat[:, col_ids].toarray()
         context_distribution = np.sum(cols, axis=1, keepdims=False)
-        context_types = np.unique(context_distribution)
-        num_context_types = len(context_types)
+        num_context_types = np.count_nonzero(context_distribution)
 
         # calculate number of targets
         row_ids = [n for n, yw in enumerate(yws) if yw[-1] in probe_store.cat2probes[cat]]
         rows = tw_mat[row_ids, :].toarray()
         target_distribution = np.sum(rows, axis=0, keepdims=False)
-        target_types = np.unique(target_distribution)
-        num_target_types = len(target_types)
+        num_target_types = np.count_nonzero(target_distribution)
 
         # compute ratio
         ratio = num_context_types / num_target_types
@@ -94,19 +92,19 @@ for part_id, tw_mat, yws, xws in zip(part_ids,
 
         # collect
         table_data.append((part_id + 1, cat, num_context_types, num_target_types, ratio))
-        print(f'{cat:<12} ratio={ratio:.3f} num contexts={num_context_types:>6,} num targets={num_target_types:>6,}')
+        print(f'{cat:<12} ratio={ratio:>6.1f} num contexts={num_context_types:>9,} num targets={num_target_types:>6,}')
     print('------------------------------------------------------')
 
 
 # fig
 _, ax = plt.subplots(figsize=(6, 6), dpi=None)
-plt.title(f'context-size={CONTEXT_SIZE}', fontsize=12)
+plt.title(f'{PROBES_NAME}\ncontext-size={CONTEXT_SIZE}', fontsize=12)
 ax.set_ylabel('Context-Target Ratio')
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
 ax.tick_params(axis='both', which='both', top=False, right=False)
 ax.set_xticklabels(['partition 1', 'partition 2'])
-ax.set_ylim(0, 2.0)
+# ax.set_ylim(0, 2.0)
 # plot
 y1 = part_id2ys[0]
 y2 = part_id2ys[1]

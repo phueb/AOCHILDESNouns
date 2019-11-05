@@ -72,7 +72,7 @@ def get_term_set_prop_near_terms(self, terms, dist=1):
 
 def get_terms_near_term(self, term, dist=1):
     result = []
-    for loc in self.term_reordered_locs_dict[term]:
+    for loc in self.w2location[term]:
         try:
             result.append(self.reordered_tokens[loc + dist])
         except IndexError:  # location too early or too late
