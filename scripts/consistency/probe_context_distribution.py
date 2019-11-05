@@ -15,7 +15,7 @@ import attr
 from preppy.legacy import TrainPrep
 from categoryeval.probestore import ProbeStore
 
-from wordplay.svd import make_term_by_context_co_occurrence_mat
+from wordplay.svd import make_context_by_term_matrix
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 
@@ -45,10 +45,10 @@ COLORS = ['C0', 'C1']
 PLOT_MAX_NUM_CONTEXTS = 100
 
 start1, end1 = 0, prep.midpoint
-tw_mat1, xws1, yws1 = make_term_by_context_co_occurrence_mat(
+tw_mat1, xws1, yws1 = make_context_by_term_matrix(
     prep, start=start1, end=end1, context_size=CONTEXT_SIZE, log=LOG_FREQUENCY)
 start2, end2 = prep.midpoint, prep.store.num_tokens
-tw_mat2, xws2, yws2 = make_term_by_context_co_occurrence_mat(
+tw_mat2, xws2, yws2 = make_context_by_term_matrix(
     prep, start=start2, end=end2, context_size=CONTEXT_SIZE, log=LOG_FREQUENCY)
 
 # ////////////////////////////////////////////////////////////

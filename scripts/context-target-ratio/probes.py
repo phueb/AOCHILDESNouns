@@ -26,7 +26,7 @@ from tabulate import tabulate
 from preppy.legacy import TrainPrep
 from categoryeval.probestore import ProbeStore
 
-from wordplay.svd import make_term_by_context_co_occurrence_mat
+from wordplay.svd import make_context_by_term_matrix
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 
@@ -50,14 +50,14 @@ probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
 # ///////////////////////////////////////////////////////////////// TW-matrix
 
 LOG_FREQUENCY = False
-CONTEXT_SIZE = 1
+CONTEXT_SIZE = 6
 COLORS = ['C0', 'C1']
 
 start1, end1 = 0, prep.midpoint
-tw_mat1, xws1, yws1 = make_term_by_context_co_occurrence_mat(
+tw_mat1, xws1, yws1 = make_context_by_term_matrix(
     prep, start=start1, end=end1, context_size=CONTEXT_SIZE, log=LOG_FREQUENCY)
 start2, end2 = prep.midpoint, prep.store.num_tokens
-tw_mat2, xws2, yws2 = make_term_by_context_co_occurrence_mat(
+tw_mat2, xws2, yws2 = make_context_by_term_matrix(
     prep, start=start2, end=end2, context_size=CONTEXT_SIZE, log=LOG_FREQUENCY)
 
 # ////////////////////////////////////////////////////////////
@@ -76,13 +76,13 @@ for part_id, tw_mat, yws, xws in zip(part_ids,
     for cat in probe_store.cats:
         # calculate number of contexts
         col_ids = [n for n, xw in enumerate(xws) if xw in probe_store.cat2probes[cat]]
-        cols = tw_mat[:, col_ids].toarray()
+        cols = tw_mat.tocsc()[:, col_ids].toarray()
         context_distribution = np.sum(cols, axis=1, keepdims=False)
         num_context_types = np.count_nonzero(context_distribution)
 
         # calculate number of targets
         row_ids = [n for n, yw in enumerate(yws) if yw[-1] in probe_store.cat2probes[cat]]
-        rows = tw_mat[row_ids, :].toarray()
+        rows = tw_mat.tocsr()[row_ids, :].toarray()
         target_distribution = np.sum(rows, axis=0, keepdims=False)
         num_target_types = np.count_nonzero(target_distribution)
 

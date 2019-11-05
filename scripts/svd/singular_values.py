@@ -14,7 +14,7 @@ from preppy.legacy import TrainPrep
 
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
-from wordplay.svd import make_term_by_context_co_occurrence_mat
+from wordplay.svd import make_context_by_term_matrix
 from wordplay.svd import decode_singular_dimensions
 from wordplay.pos import load_pos_words
 from wordplay import config
@@ -39,7 +39,6 @@ prep = TrainPrep(docs, **attr.asdict(params))
 CONTEXT_SIZE = 6
 NUM_DIMS = 32
 NORMALIZE = False  # this makes all the difference - this means that the scales of variables are different and matter
-MAX_FREQUENCY = 1000 * 1000  # largest value in co-occurrence matrix
 LOG_FREQUENCY = True  # take log of co-occurrence matrix element-wise
 
 NOM_ALPHA = 0.01  # TODO test
@@ -62,10 +61,10 @@ for cat in ['nouns', 'verbs']:
 # make term_by_window_co_occurrence_mats
 start1, end1 = 0, prep.midpoint
 start2, end2 = prep.midpoint, prep.store.num_tokens
-tw_mat1, xws1, yws1 = make_term_by_context_co_occurrence_mat(
-    prep, start=start1, end=end1, context_size=CONTEXT_SIZE, max_frequency=MAX_FREQUENCY, log=LOG_FREQUENCY)
-tw_mat2, xws2, yws2 = make_term_by_context_co_occurrence_mat(
-    prep, start=start2, end=end2, context_size=CONTEXT_SIZE, max_frequency=MAX_FREQUENCY, log=LOG_FREQUENCY)
+tw_mat1, xws1, yws1 = make_context_by_term_matrix(
+    prep, start=start1, end=end1, context_size=CONTEXT_SIZE, log=LOG_FREQUENCY)
+tw_mat2, xws2, yws2 = make_context_by_term_matrix(
+    prep, start=start2, end=end2, context_size=CONTEXT_SIZE, log=LOG_FREQUENCY)
 
 
 # collect singular values

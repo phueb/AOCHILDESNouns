@@ -21,7 +21,7 @@ from categoryeval.probestore import ProbeStore
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 from wordplay.pos import load_pos_words
-from wordplay.svd import make_term_by_context_co_occurrence_mat
+from wordplay.svd import make_context_by_term_matrix
 from wordplay.svd import decode_singular_dimensions
 from wordplay.svd import plot_category_encoding_dimensions
 from wordplay import config
@@ -49,7 +49,6 @@ probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
 CONTEXT_SIZE = 2
 NUM_DIMS = 256
 NORMALIZE = False
-MAX_FREQUENCY = 1000 * 1000  # largest value in co-occurrence matrix
 LOG_FREQUENCY = True  # take log of co-occurrence matrix element-wise
 
 SYN_CATEGORIES: Optional[Set[str]] = {'nouns', 'verbs'}
@@ -93,8 +92,8 @@ sem_cat2words['random'] = np.random.choice(probe_store.types, size=30, replace=F
 
 # make term_by_window_co_occurrence_mats
 start1, end1 = 0, prep.store.num_tokens
-tw_mat1, xws1, yws1 = make_term_by_context_co_occurrence_mat(
-    prep, start=start1, end=end1, context_size=CONTEXT_SIZE, max_frequency=MAX_FREQUENCY, log=LOG_FREQUENCY)
+tw_mat1, xws1, yws1 = make_context_by_term_matrix(
+    prep, start=start1, end=end1, context_size=CONTEXT_SIZE, log=LOG_FREQUENCY)
 mat = tw_mat1.T.asfptype()  # transpose so that x-words now index rows (does not affect singular values)
 
 # normalization

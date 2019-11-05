@@ -48,23 +48,23 @@ def plot_category_encoding_dimensions(cat2dim_ids: Dict[str, List[int]],
     plt.show()
 
 
-def make_term_by_context_co_occurrence_mat(prep,
-                                           tokens: Optional[List[str]] = None,
-                                           start: Optional[int] = None,
-                                           end: Optional[int] = None,
-                                           context_size: Optional[int] = 7,
-                                           max_frequency: int = 1000 * 1000,
-                                           log: bool = True,
-                                           probe_store: Optional[ProbeStore] = None):
+def make_context_by_term_matrix(prep,
+                                tokens: Optional[List[str]] = None,
+                                start: Optional[int] = None,
+                                end: Optional[int] = None,
+                                context_size: Optional[int] = 7,
+                                log: bool = True,
+                                probe_store: Optional[ProbeStore] = None):
     """
-    also known as TW matrix (term-by window), but contexts are NOT windows. Window = context + target word.
+    also known as TW matrix (term-by window), but contexts are NOT windows.
+     Window = context + target word.
     terms are in cols, contexts are in rows.
     y_words are windows, x_words are terms.
     y_words always occur after x_words in the input.
     this format matches that used in TreeTransitions
     """
 
-    print(f'Making term-context matrix'
+    print(f'Making context-term matrix'
           f' from tokens between {start:,} & {end:,}')
 
     # tokens
@@ -89,13 +89,10 @@ def make_term_by_context_co_occurrence_mat(prep,
     num_unique_contexts = len(unique_contexts)
     context2row_id = {w: n for n, w in enumerate(unique_contexts)}
 
-    # make sparse matrix (y_words in rows, contexts in cols)
-    shape = (num_unique_contexts, num_xws)
-    print(f'shape={shape}')
+    # make sparse matrix (contexts/y-words in rows, targets/x-words in cols)
     data = []
     row_ids = []
     cold_ids = []
-    mat_loc2freq = {}  # needed to keep track of freq
     for n, context in enumerate(contexts_in_order[:-context_size]):
         # row_id + col_id
         row_id = context2row_id[context]
@@ -105,26 +102,19 @@ def make_term_by_context_co_occurrence_mat(prep,
             col_id = xw2col_id[next_word]
         except KeyError:  # using probe_store
             continue
-        # freq
-        try:
-            freq = min(max_frequency, mat_loc2freq[(row_id, col_id)])
-        except KeyError:
-            mat_loc2freq[(row_id, col_id)] = 1
-            freq = 1
-        else:
-            mat_loc2freq[(row_id, col_id)] += 1
         # collect
         row_ids.append(row_id)
         cold_ids.append(col_id)
-        data.append(freq)
+        data.append(1)  # it is okay to append 1s because final value is sum over 1s in same position in matrix
 
     if log:
         data = np.log(data)
 
     # make sparse matrix once (updating it is expensive)
-    res = sparse.csr_matrix((data, (row_ids, cold_ids)), shape=shape)
+    res = sparse.coo_matrix((data, (row_ids, cold_ids)))
 
-    print('term-by-context co-occurrence matrix has sum={:,}'.format(res.sum()))
+    print(f'Co-occurrence matrix has sum={res.sum():,} and shape={res.shape}')
+    assert res.shape == (num_unique_contexts, num_xws)
 
     y_words = unique_contexts
     return res, x_words, y_words
