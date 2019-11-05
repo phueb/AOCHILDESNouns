@@ -1,21 +1,7 @@
 """
 Research questions:
-1. Do probes in partition 1 of AO-CHILDES have a higher context-target-ratio?
-
-Note:
-Contexts are always words to the left of probe.
-Looking at only contexts may not tell the full story.
-Instead looking also at right-contexts (called targets) may be useful.
-it might be best to look at both together:
-For example, what is the average number of contexts per target across all members of some category?
-The hypothesis being tested is:
-The more context types and hte fewer target types (or the higher their ratio) should be be better for category learning.
-Therefore, the ratio should be higher in partition 1 of AO-CHILDES.
-
-a reminder:
-a window consists of a sequence of context-words and a target.
-of interest are contexts which contain a probe in the last position.
-[.., context3, context2, context1, probe] [target]
+1. Are noun-contexts in partition 1 of AO-CHILDES repeated more often than expected due to chance?
+Chance is simply controlling for frequency: The more frequent noun tokens are, the more likely repetition is to occur
 """
 
 import numpy as np
@@ -53,6 +39,8 @@ LOG_FREQUENCY = False
 CONTEXT_SIZE = 6
 COLORS = ['C0', 'C1']
 
+MEASURE_NAME = 'UNNAMED'  # TODO
+
 start1, end1 = 0, prep.midpoint
 tw_mat1, xws1, yws1 = make_context_by_term_matrix(
     prep, start=start1, end=end1, context_size=CONTEXT_SIZE, log=LOG_FREQUENCY)
@@ -80,26 +68,20 @@ for part_id, tw_mat, yws, xws in zip(part_ids,
         context_distribution = np.sum(cols, axis=1, keepdims=False)
         num_context_types = np.count_nonzero(context_distribution)
 
-        # calculate number of targets
-        row_ids = [n for n, yw in enumerate(yws) if yw[-1] in probe_store.cat2probes[cat]]
-        rows = tw_mat.tocsr()[row_ids, :].toarray()
-        target_distribution = np.sum(rows, axis=0, keepdims=False)
-        num_target_types = np.count_nonzero(target_distribution)
-
-        # compute ratio
-        ratio = num_context_types / num_target_types
-        part_id2ys[part_id].append(ratio)
+        # compute measure
+        y = None  # TODO number of types relative to chance
+        part_id2ys[part_id].append(y)
 
         # collect
-        table_data.append((part_id + 1, cat, num_context_types, num_target_types, ratio))
-        print(f'{cat:<12} ratio={ratio:>6.1f} num contexts={num_context_types:>9,} num targets={num_target_types:>6,}')
+        table_data.append((part_id + 1, cat, num_context_types, y))
+        print(f'{cat:<12} ratio={y:>6.1f} num contexts={num_context_types:>9,}')
     print('------------------------------------------------------')
 
 
 # fig
 _, ax = plt.subplots(figsize=(6, 6), dpi=None)
 plt.title(f'{PROBES_NAME}\ncontext-size={CONTEXT_SIZE}', fontsize=12)
-ax.set_ylabel('Context-Target Ratio')
+ax.set_ylabel(MEASURE_NAME)
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
 ax.tick_params(axis='both', which='both', top=False, right=False)
@@ -118,7 +100,7 @@ plt.show()
 
 # print pretty table
 print()
-headers = ['Partition', "Part-of-Speech", "context types", 'target types', "context-target ratio"]
+headers = ['Partition', "Part-of-Speech", "context types", MEASURE_NAME]
 print(tabulate(table_data,
                headers=headers,
                tablefmt='fancy_grid'))
