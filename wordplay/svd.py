@@ -55,7 +55,6 @@ def make_context_by_term_matrix(prep,
                                 end: Optional[int] = None,
                                 shuffle_tokens: bool = False,
                                 context_size: Optional[int] = 7,
-                                log: bool = False,
                                 probe_store: Optional[ProbeStore] = None):
     """
     also known as TW matrix (term-by window), but contexts are NOT windows.
@@ -113,9 +112,6 @@ def make_context_by_term_matrix(prep,
         row_ids.append(row_id)
         cold_ids.append(col_id)
         data.append(1)  # it is okay to append 1s because final value is sum over 1s in same position in matrix
-
-    if log:
-        data = np.log(data)
 
     # make sparse matrix once (updating it is expensive)
     res = sparse.coo_matrix((data, (row_ids, cold_ids)))

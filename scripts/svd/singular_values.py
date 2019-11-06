@@ -31,7 +31,7 @@ docs = load_docs(CORPUS_NAME,
                  num_test_take_random=0,
                  shuffle_docs=SHUFFLE_DOCS)
 
-params = PrepParams()
+params = PrepParams(num_types=None)
 prep = TrainPrep(docs, **attr.asdict(params))
 
 # /////////////////////////////////////////////////////////////////
@@ -39,7 +39,7 @@ prep = TrainPrep(docs, **attr.asdict(params))
 CONTEXT_SIZE = 6
 NUM_DIMS = 32
 NORMALIZE = False  # this makes all the difference - this means that the scales of variables are different and matter
-LOG_FREQUENCY = True  # take log of co-occurrence matrix element-wise
+
 
 NOM_ALPHA = 0.01  # TODO test
 
@@ -62,9 +62,9 @@ for cat in ['nouns', 'verbs']:
 start1, end1 = 0, prep.midpoint
 start2, end2 = prep.midpoint, prep.store.num_tokens
 tw_mat1, xws1, yws1 = make_context_by_term_matrix(
-    prep, start=start1, end=end1, context_size=CONTEXT_SIZE, log=LOG_FREQUENCY)
+    prep, start=start1, end=end1, context_size=CONTEXT_SIZE)
 tw_mat2, xws2, yws2 = make_context_by_term_matrix(
-    prep, start=start2, end=end2, context_size=CONTEXT_SIZE, log=LOG_FREQUENCY)
+    prep, start=start2, end=end2, context_size=CONTEXT_SIZE)
 
 
 # collect singular values

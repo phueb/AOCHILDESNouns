@@ -36,7 +36,7 @@ probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
 
 CONTEXT_SIZE = 3
 NORMALIZE = False  # this makes all the difference - this means that the scales of variables are different and matter
-LOG_FREQUENCY = True  # take log of co-occurrence matrix element-wise
+
 
 OFFSET = prep.midpoint
 

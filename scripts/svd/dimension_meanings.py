@@ -49,7 +49,7 @@ probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
 CONTEXT_SIZE = 2
 NUM_DIMS = 256
 NORMALIZE = False
-LOG_FREQUENCY = True  # take log of co-occurrence matrix element-wise
+
 
 SYN_CATEGORIES: Optional[Set[str]] = {'nouns', 'verbs'}
 SEM_CATEGORIES: Optional[Set[str]] = None
@@ -93,7 +93,7 @@ sem_cat2words['random'] = np.random.choice(probe_store.types, size=30, replace=F
 # make term_by_window_co_occurrence_mats
 start1, end1 = 0, prep.store.num_tokens
 tw_mat1, xws1, yws1 = make_context_by_term_matrix(
-    prep, start=start1, end=end1, context_size=CONTEXT_SIZE, log=LOG_FREQUENCY)
+    prep, start=start1, end=end1, context_size=CONTEXT_SIZE)
 mat = tw_mat1.T.asfptype()  # transpose so that x-words now index rows (does not affect singular values)
 
 # normalization

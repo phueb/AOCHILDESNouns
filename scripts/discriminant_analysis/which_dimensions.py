@@ -37,7 +37,7 @@ prep = TrainPrep(docs, **attr.asdict(params))
 CONTEXT_SIZE = 4
 NUM_DIMS = 512
 NORMALIZE = False  # this makes all the difference - this means that the scales of variables are different and matter
-LOG_FREQUENCY = True  # take log of co-occurrence matrix element-wise
+
 
 OFFSET = prep.midpoint
 
@@ -46,7 +46,7 @@ OFFSET = prep.midpoint
 # make term_by_window_co_occurrence_mat
 start, end = 0, prep.store.num_tokens
 tw_mat, xws, yws = make_context_by_term_matrix(
-    prep, start=start, end=end, context_size=CONTEXT_SIZE, log=LOG_FREQUENCY)
+    prep, start=start, end=end, context_size=CONTEXT_SIZE)
 
 
 # ///////////////////////////////////////////////////////////////// LDA

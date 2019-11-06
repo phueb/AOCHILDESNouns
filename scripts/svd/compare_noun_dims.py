@@ -30,12 +30,11 @@ docs = load_docs(CORPUS_NAME,
 params = PrepParams()
 prep = TrainPrep(docs, **attr.asdict(params))
 
-# /////////////////////////////////////////////////////////////////
+# ///////////////////////////////////////////////////////////////// parameters
 
 CONTEXT_SIZE = 1
 NUM_DIMS = 256
 NORMALIZE = False  # this makes all the difference - this means that the scales of variables are different and matter
-LOG_FREQUENCY = True  # take log of co-occurrence matrix element-wise
 
 NOM_ALPHA = 0.05
 
@@ -59,9 +58,9 @@ num_categories = len(categories)
 start1, end1 = 0, OFFSET
 start2, end2 = prep.store.num_tokens - OFFSET, prep.store.num_tokens
 tw_mat1, xws1, yws1 = make_context_by_term_matrix(
-    prep, start=start1, end=end1, context_size=CONTEXT_SIZE, log=LOG_FREQUENCY)
+    prep, start=start1, end=end1, context_size=CONTEXT_SIZE)
 tw_mat2, xws2, yws2 = make_context_by_term_matrix(
-    prep, start=start2, end=end2, context_size=CONTEXT_SIZE, log=LOG_FREQUENCY)
+    prep, start=start2, end=end2, context_size=CONTEXT_SIZE)
 
 
 # ////////////////////////////////////////////////////////////////////// svd
