@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import pyprind
 import seaborn as sns
 from sortedcontainers import SortedSet
+import random
 
 from categoryeval.probestore import ProbeStore
 
@@ -52,8 +53,9 @@ def make_context_by_term_matrix(prep,
                                 tokens: Optional[List[str]] = None,
                                 start: Optional[int] = None,
                                 end: Optional[int] = None,
+                                shuffle_tokens: bool = False,
                                 context_size: Optional[int] = 7,
-                                log: bool = True,
+                                log: bool = False,
                                 probe_store: Optional[ProbeStore] = None):
     """
     also known as TW matrix (term-by window), but contexts are NOT windows.
@@ -73,6 +75,11 @@ def make_context_by_term_matrix(prep,
             tokens = prep.store.tokens[start:end]
         else:
             raise ValueError('Need either "tokens" or "start" and "end".')
+
+    # shuffle
+    if shuffle_tokens:
+        print('WARNING: Shuffling tokens')
+        random.shuffle(tokens)
 
     # x_words
     if probe_store is not None:

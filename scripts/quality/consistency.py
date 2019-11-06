@@ -14,7 +14,7 @@ To compute consistency:
 4) sort contexts by the number of noun-fillers
 5) for each class of contexts (class is determined by number of noun-fillers), plot :
     a. scatter: x= frequency of nouns in a set of contexts, y = avg frequency of non-noun fillers in set of contexts
-    b. best fit line: the smaller the slope the better the quality of the noun-contexts
+    b. best fit line: the smaller the slope the higher the consistency of the noun-contexts
 
 """
 
@@ -103,7 +103,7 @@ context2is_pos2freq2 = make_context2is_filler_pos2freq(start_loc=prep.midpoint,
 
 # fig
 _, ax = plt.subplots(figsize=(6, 6))
-ax.set_title(f'{POS} use consistency\ncontext-size={CONTEXT_SIZE}', fontsize=12)
+ax.set_title(f'{POS} consistency\ncontext-size={CONTEXT_SIZE}', fontsize=12)
 ax.set_ylabel(f'Avg. number of non-{POS} in context', fontsize=12)
 ax.set_xlabel(f'Number of {POS} in context', fontsize=12)
 ax.spines['right'].set_visible(False)
