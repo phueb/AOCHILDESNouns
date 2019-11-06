@@ -6,7 +6,7 @@ We are interested in how consistently the same multi-word context co-occurs with
 If we were to simply compare the type token ratio of noun contexts in part 1 vs 2 of AO-CHILDES,
 the ratio for part 1 would be inflated simply due to greater noun token frequency.
 As a remedy, the same type token ratio is computed, but for tokens shuffled within a partition,
-and the ratio computed on the intact partition is divided by this ratio.
+and this ratio is divided by the ratio computed for the intact (not shuffled) tokens
 """
 
 import numpy as np
@@ -73,14 +73,6 @@ for part_id, tw_mat_observed, tw_mat_chance, xws_observed, xws_chance in zip(par
     # compute selectivity for each category
     for cat in probe_store.cats:
 
-        # cttr_observed
-        col_ids = [n for n, xw in enumerate(xws_observed) if xw in probe_store.cat2probes[cat]]
-        cols = tw_mat_observed.tocsc()[:, col_ids].toarray()
-        context_distribution = np.sum(cols, axis=1, keepdims=False)
-        num_context_types = np.count_nonzero(context_distribution)
-        num_context_tokens = np.sum(context_distribution)
-        cttr_observed = num_context_types / num_context_tokens
-
         # cttr_chance
         col_ids = [n for n, xw in enumerate(xws_chance) if xw in probe_store.cat2probes[cat]]
         cols = tw_mat_chance.tocsc()[:, col_ids].toarray()
@@ -89,13 +81,21 @@ for part_id, tw_mat_observed, tw_mat_chance, xws_observed, xws_chance in zip(par
         num_context_tokens = np.sum(context_distribution)
         cttr_chance = num_context_types / num_context_tokens
 
-        # y = cttr_observed / cttr_chance
-        y = cttr_observed / cttr_chance
+        # cttr_observed
+        col_ids = [n for n, xw in enumerate(xws_observed) if xw in probe_store.cat2probes[cat]]
+        cols = tw_mat_observed.tocsc()[:, col_ids].toarray()
+        context_distribution = np.sum(cols, axis=1, keepdims=False)
+        num_context_types = np.count_nonzero(context_distribution)
+        num_context_tokens = np.sum(context_distribution)
+        cttr_observed = num_context_types / num_context_tokens
+
+        # compute ratio such that the higher the better (the more selective)
+        y = cttr_chance / cttr_observed
         part_id2ys[part_id].append(y)
 
         part_id2cat2y[part_id][cat] = y
 
-        print(f'{cat:<12} cttr-observed={cttr_observed:>.2f} cttr-chance={cttr_chance:>.2f} y={y:>.2f} ')
+        print(f'{cat:<12} cttr-chance={cttr_chance:>.2f}  cttr-observed={cttr_observed:>.2f} y={y:>.2f} ')
     print('------------------------------------------------------')
 
 
@@ -107,7 +107,7 @@ ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
 ax.tick_params(axis='both', which='both', top=False, right=False)
 ax.set_xticklabels(['partition 1', 'partition 2'])
-ax.set_ylim(0, 1.0)
+ax.set_ylim(0, 5.0)
 # plot
 y1 = part_id2ys[0]
 y2 = part_id2ys[1]

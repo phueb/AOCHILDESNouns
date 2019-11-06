@@ -20,7 +20,7 @@ PROBES_NAME = 'sem-4096'
 REVERSE = False
 NUM_PARTS = 32  # z-score does not make sense with num_parts=2
 SHUFFLE_DOCS = False
-NUM_MID_TEST_DOCS = 100
+NUM_MID_TEST_DOCS = 0
 
 docs = load_docs(CORPUS_NAME,
                  num_test_take_from_mid=NUM_MID_TEST_DOCS,
@@ -32,7 +32,7 @@ prep = TrainPrep(docs, **attr.asdict(params))
 
 # /////////////////////////////////////////////////////////////////
 
-POS_LIST = ['noun']
+POS_LIST = ['verb']
 
 for pos in POS_LIST or sorted(pos2tags.keys()):
 

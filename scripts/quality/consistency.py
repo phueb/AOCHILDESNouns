@@ -24,6 +24,7 @@ import numpy as np
 from cytoolz import itertoolz
 import attr
 
+from categoryeval.probestore import ProbeStore
 from preppy.legacy import TrainPrep
 
 from wordplay.params import PrepParams
@@ -35,6 +36,7 @@ from wordplay.utils import fit_line
 # /////////////////////////////////////////////////////////////////
 
 CORPUS_NAME = 'childes-20180319'
+PROBES_NAME = 'sem-4096'
 
 SHUFFLE_DOCS = False
 
@@ -47,25 +49,28 @@ docs = load_docs(CORPUS_NAME,
 params = PrepParams()
 prep = TrainPrep(docs, **attr.asdict(params))
 
-# /////////////////////////////////////////////////////////////////
+probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
 
-POS = 'nouns+plurals'
-CONTEXT_SIZE = 4
+# ///////////////////////////////////////////////////////////////// parameters
+
+POS = PROBES_NAME or 'nouns'
+CONTEXT_SIZE = 3
 
 MAX_CONTEXT_CLASS = 50000  # too small -> program does not work, too large -> waste memory
 MIN_SUM = 0     # only affects figure and best-fit line
-MAX_SUM = 1000  # only affects figure and best-fit line
+MAX_SUM = 10000  # only affects figure and best-fit line
 
 assert MAX_SUM <= MAX_CONTEXT_CLASS
 
+# /////////////////////////////////////////////////////////////////
 
-pos_words = load_pos_words(f'{CORPUS_NAME}-{POS}')  # TODO try all semantic probe words
+pos_words = probe_store.types or load_pos_words(f'{CORPUS_NAME}-{POS}')
 
 # get locations
 locations = []
 w2location = make_w2location(prep.store.tokens)
 for w in pos_words:
-    locations += w2location[w]  # TODO not all nouns are found
+    locations += w2location[w]
 
 
 def make_context2is_filler_pos2freq(start_loc, end_loc):

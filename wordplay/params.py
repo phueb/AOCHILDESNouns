@@ -4,7 +4,7 @@ import attr
 @attr.s
 class PrepParams(object):
     reverse = attr.ib(default=False)
-    num_types = attr.ib(default=4096)
+    num_types = attr.ib(default=None)  # None results in all types included in vocabulary
     num_parts = attr.ib(default=2)
     num_iterations = attr.ib(default=([1, 1]))
     batch_size = attr.ib(default=1)
