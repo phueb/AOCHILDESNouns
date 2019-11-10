@@ -18,7 +18,7 @@ from wordplay.docs import load_docs
 # /////////////////////////////////////////////////////////////////
 
 CORPUS_NAME = 'childes-20180319'
-PROBES_NAME = 'sem-4096'
+PROBES_NAME = 'sem-all'
 
 CONTEXT_SIZE = 3  # 3
 NUM_PARTS = 2

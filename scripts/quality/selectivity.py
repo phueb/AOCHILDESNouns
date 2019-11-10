@@ -46,15 +46,25 @@ MEASURE_NAME = 'Context-Selectivity'  # the ratio of two context type-token rati
 
 # ////////////////////////////////////////////////////////////////// co-occurrence matrix
 
-tw_mat1_observed, xws1_observed, _ = make_context_by_term_matrix(prep, start=0, end=prep.midpoint,
+tw_mat1_observed, xws1_observed, _ = make_context_by_term_matrix(prep.store.tokens,
+                                                                 start=0,
+                                                                 end=prep.midpoint,
                                                                  context_size=CONTEXT_SIZE)
-tw_mat2_observed, xws2_observed, _ = make_context_by_term_matrix(prep, start=prep.midpoint, end=prep.store.num_tokens,
+tw_mat2_observed, xws2_observed, _ = make_context_by_term_matrix(prep.store.tokens,
+                                                                 start=prep.midpoint,
+                                                                 end=prep.store.num_tokens,
                                                                  context_size=CONTEXT_SIZE)
 
-tw_mat1_chance, xws1_chance, _ = make_context_by_term_matrix(prep, start=0, end=prep.midpoint,
-                                                             context_size=CONTEXT_SIZE, shuffle_tokens=True)
-tw_mat2_chance, xws2_chance, _ = make_context_by_term_matrix(prep, start=prep.midpoint, end=prep.store.num_tokens,
-                                                             context_size=CONTEXT_SIZE, shuffle_tokens=True)
+tw_mat1_chance, xws1_chance, _ = make_context_by_term_matrix(prep.store.tokens,
+                                                             start=0,
+                                                             end=prep.midpoint,
+                                                             context_size=CONTEXT_SIZE,
+                                                             shuffle_tokens=True)
+tw_mat2_chance, xws2_chance, _ = make_context_by_term_matrix(prep.store.tokens,
+                                                             start=prep.midpoint,
+                                                             end=prep.store.num_tokens,
+                                                             context_size=CONTEXT_SIZE,
+                                                             shuffle_tokens=True)
 
 # //////////////////////////////////////////////////////////// compute measure
 

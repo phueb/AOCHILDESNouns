@@ -23,7 +23,7 @@ from wordplay.svo import subject_verb_object_triples
 # /////////////////////////////////////////////////////////////////
 
 CORPUS_NAME = 'childes-20180319'
-PROBES_NAME = 'sem-4096'
+PROBES_NAME = 'sem-all'
 
 REVERSE = False
 NUM_PARTS = 32  # z-score does not make sense with num_parts=2

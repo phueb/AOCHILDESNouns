@@ -36,7 +36,7 @@ from wordplay.utils import fit_line
 # /////////////////////////////////////////////////////////////////
 
 CORPUS_NAME = 'childes-20180319'
-PROBES_NAME = 'sem-4096'
+PROBES_NAME = 'sem-all'
 
 SHUFFLE_DOCS = False
 
@@ -54,7 +54,7 @@ probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
 # ///////////////////////////////////////////////////////////////// parameters
 
 POS = PROBES_NAME or 'nouns'
-CONTEXT_SIZE = 3
+CONTEXT_SIZE = 2
 
 MAX_CONTEXT_CLASS = 50000  # too small -> program does not work, too large -> waste memory
 MIN_SUM = 0     # only affects figure and best-fit line

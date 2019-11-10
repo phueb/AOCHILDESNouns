@@ -12,7 +12,7 @@ from wordplay.utils import split
 # /////////////////////////////////////////////////////////////////
 
 CORPUS_NAME = 'childes-20180319'  # _tags
-PROBES_NAME = 'sem-4096'
+PROBES_NAME = 'sem-all'
 
 NUM_PARTS = 32  # z-scoring doesn't make sense when num-parts=2
 SHUFFLE_DOCS = False

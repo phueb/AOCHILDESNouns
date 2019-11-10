@@ -20,10 +20,10 @@ from wordplay.stats import calc_kl_divergence
 # /////////////////////////////////////////////////////////////////
 
 CORPUS_NAME = 'childes-20180319'
-PROBES_NAME = 'sem-4096'
+PROBES_NAME = 'sem-all'
 
 SHUFFLE_DOCS = False
-NUM_MID_TEST_DOCS = 100
+NUM_MID_TEST_DOCS = 0
 
 docs = load_docs(CORPUS_NAME,
                  num_test_take_from_mid=NUM_MID_TEST_DOCS,
@@ -40,7 +40,7 @@ probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
 
 MIN_CONTEXT_FREQ = 10
 MIN_CAT_FREQ = 1
-CONTEXT_DISTANCES = [3]
+CONTEXT_DISTANCES = [1, 2, 3]
 Y_MAX = 0.5
 
 

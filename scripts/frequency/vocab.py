@@ -12,7 +12,7 @@ from wordplay.docs import load_docs
 # /////////////////////////////////////////////////////////////////
 
 CORPUS_NAME = 'childes-20180319'  # _tags
-PROBES_NAME = 'sem-4096'
+PROBES_NAME = 'sem-all'
 
 REVERSE = False
 NUM_PARTS = 8

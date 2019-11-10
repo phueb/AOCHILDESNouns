@@ -49,31 +49,26 @@ def plot_category_encoding_dimensions(cat2dim_ids: Dict[str, List[int]],
     plt.show()
 
 
-def make_context_by_term_matrix(prep,
-                                tokens: Optional[List[str]] = None,
+def make_context_by_term_matrix(tokens: List[str],
                                 start: Optional[int] = None,
                                 end: Optional[int] = None,
                                 shuffle_tokens: bool = False,
                                 context_size: Optional[int] = 7,
                                 probe_store: Optional[ProbeStore] = None):
     """
-    also known as TW matrix (term-by window), but contexts are NOT windows.
-     Window = context + target word.
     terms are in cols, contexts are in rows.
-    y_words are windows, x_words are terms.
+    y_words are contexts, x_words are terms.
     y_words always occur after x_words in the input.
     this format matches that used in TreeTransitions
     """
 
-    print(f'Making context-term matrix'
-          f' from tokens between {start:,} & {end:,}')
+    print('Making context-term matrix')
+    if start and end:
+        print(f'from tokens between {start:,} & {end:,}')
 
     # tokens
-    if tokens is None:
-        if start is not None and end is not None:
-            tokens = prep.store.tokens[start:end]
-        else:
-            raise ValueError('Need either "tokens" or "start" and "end".')
+    if start is not None and end is not None:
+        tokens = tokens[start:end]
 
     # shuffle
     if shuffle_tokens:
@@ -106,7 +101,7 @@ def make_context_by_term_matrix(prep,
         next_word = next_context[-1]  # -1 is correct because windows slide by 1 word
         try:
             col_id = xw2col_id[next_word]
-        except KeyError:  # using probe_store
+        except KeyError:  # when probe_store is passed, only probes are n xw2col_id
             continue
         # collect
         row_ids.append(row_id)
@@ -117,7 +112,9 @@ def make_context_by_term_matrix(prep,
     res = sparse.coo_matrix((data, (row_ids, cold_ids)))
 
     print(f'Co-occurrence matrix has sum={res.sum():,} and shape={res.shape}')
-    assert res.shape == (num_unique_contexts, num_xws)
+    expected_shape = (num_unique_contexts, num_xws)
+    if res.shape != expected_shape and not probe_store:
+        raise SystemExit(f'Result does not match expected shape={expected_shape}')
 
     y_words = unique_contexts
     return res, x_words, y_words

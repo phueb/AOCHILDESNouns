@@ -45,9 +45,9 @@ OFFSET = prep.midpoint
 start1, end1 = 0, OFFSET
 start2, end2 = prep.store.num_tokens - OFFSET, prep.store.num_tokens
 tw_mat1, xws1, yws1 = make_context_by_term_matrix(
-    prep, start=start1, end=end1, context_size=CONTEXT_SIZE)
+    prep.store.tokens, start=start1, end=end1, context_size=CONTEXT_SIZE)
 tw_mat2, xws2, yws2 = make_context_by_term_matrix(
-    prep, start=start2, end=end2, context_size=CONTEXT_SIZE)
+    prep.store.tokens, start=start2, end=end2, context_size=CONTEXT_SIZE)
 
 
 # ///////////////////////////////////////////////////////////////// LDA

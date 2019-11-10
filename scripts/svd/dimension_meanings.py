@@ -29,7 +29,7 @@ from wordplay import config
 # /////////////////////////////////////////////////////////////////
 
 CORPUS_NAME = 'childes-20180319'
-PROBES_NAME = 'sem-4096'
+PROBES_NAME = 'sem-all'
 
 SHUFFLE_DOCS = False
 NUM_MID_TEST_DOCS = 100
@@ -91,9 +91,8 @@ sem_cat2words['random'] = np.random.choice(probe_store.types, size=30, replace=F
 # /////////////////////////////////////////////////////////////////////////// SVD
 
 # make term_by_window_co_occurrence_mats
-start1, end1 = 0, prep.store.num_tokens
-tw_mat1, xws1, yws1 = make_context_by_term_matrix(
-    prep, start=start1, end=end1, context_size=CONTEXT_SIZE)
+tw_mat1, xws1, yws1 = make_context_by_term_matrix(prep.store.tokens,
+                                                  context_size=CONTEXT_SIZE)
 mat = tw_mat1.T.asfptype()  # transpose so that x-words now index rows (does not affect singular values)
 
 # normalization

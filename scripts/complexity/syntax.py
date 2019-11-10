@@ -21,7 +21,7 @@ from wordplay.sentences import get_sentences_from_tokens
 # /////////////////////////////////////////////////////////////////
 
 CORPUS_NAME = 'childes-20180319_tags'  # must have spacy tags
-PROBES_NAME = 'sem-4096'
+PROBES_NAME = 'sem-all'
 
 REVERSE = False
 NUM_PARTS = 8  # z-score does not make sense with num_parts=2

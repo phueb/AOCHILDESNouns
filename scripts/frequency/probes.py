@@ -13,7 +13,7 @@ from wordplay.utils import roll_mean
 # /////////////////////////////////////////////////////////////////
 
 CORPUS_NAME = 'childes-20180319'
-PROBES_NAME = 'sem-4096'
+PROBES_NAME = 'sem-all'
 
 REVERSE = False
 NUM_PARTS = 8
@@ -55,3 +55,8 @@ y_rolled = roll_mean(y, 20)
 ax.plot(x, y_rolled, '-')
 fig.tight_layout()
 plt.show()
+
+# show frequency by type
+for p, f in sorted(((p, prep.store.w2f[p]) for p in probe_store.types),
+                   key=lambda i: i[1]):
+    print(p, f)

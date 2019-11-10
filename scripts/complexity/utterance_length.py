@@ -11,7 +11,7 @@ from wordplay.stats import calc_utterance_lengths
 # /////////////////////////////////////////////////////////////////
 
 CORPUS_NAME = 'childes-20180319'
-PROBES_NAME = 'sem-4096'
+PROBES_NAME = 'sem-all'
 
 SHUFFLE_DOCS = False
 NUM_MID_TEST_DOCS = 0

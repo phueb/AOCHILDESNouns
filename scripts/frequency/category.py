@@ -14,7 +14,7 @@ from wordplay.utils import roll_mean
 # /////////////////////////////////////////////////////////////////
 
 CORPUS_NAME = 'childes-20180319'
-PROBES_NAME = 'sem-4096'
+PROBES_NAME = 'sem-all'
 
 REVERSE = False
 NUM_PARTS = 32

@@ -46,7 +46,7 @@ OFFSET = prep.midpoint
 # make term_by_window_co_occurrence_mat
 start, end = 0, prep.store.num_tokens
 tw_mat, xws, yws = make_context_by_term_matrix(
-    prep, start=start, end=end, context_size=CONTEXT_SIZE)
+    prep.store.tokens, start=start, end=end, context_size=CONTEXT_SIZE)
 
 
 # ///////////////////////////////////////////////////////////////// LDA

@@ -28,7 +28,7 @@ from wordplay import config
 # /////////////////////////////////////////////////////////////////
 
 CORPUS_NAME = 'childes-20180319'
-PROBES_NAME = 'sem-4096'
+PROBES_NAME = 'sem-all'
 
 SHUFFLE_DOCS = False
 NUM_MID_TEST_DOCS = 0
@@ -76,10 +76,8 @@ num_categories = len(categories)
 # make term_by_window_co_occurrence_mats
 start1, end1 = 0, OFFSET
 start2, end2 = prep.store.num_tokens - OFFSET, prep.store.num_tokens
-tw_mat1, xws1, yws1 = make_context_by_term_matrix(
-    prep, start=start1, end=end1, context_size=CONTEXT_SIZE)
-tw_mat2, xws2, yws2 = make_context_by_term_matrix(
-    prep, start=start2, end=end2, context_size=CONTEXT_SIZE)
+tw_mat1, xws1, yws1 = make_context_by_term_matrix(prep.store.tokens, start=start1, end=end1, context_size=CONTEXT_SIZE)
+tw_mat2, xws2, yws2 = make_context_by_term_matrix(prep.store.tokens, start=start2, end=end2, context_size=CONTEXT_SIZE)
 
 
 # ////////////////////////////////////////////////////////////////////// svd
