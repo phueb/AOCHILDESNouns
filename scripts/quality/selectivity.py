@@ -17,7 +17,7 @@ from tabulate import tabulate
 from preppy.legacy import TrainPrep
 from categoryeval.probestore import ProbeStore
 
-from wordplay.svd import make_context_by_term_matrix
+from wordplay.representation import make_context_by_term_matrix
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 

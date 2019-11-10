@@ -11,7 +11,7 @@ from categoryeval.probestore import ProbeStore
 
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
-from wordplay.svd import make_context_by_term_matrix
+from wordplay.representation import make_context_by_term_matrix
 from wordplay.memory import set_memory_limit
 
 # /////////////////////////////////////////////////////////////////

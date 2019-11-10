@@ -11,7 +11,7 @@ from preppy.legacy import TrainPrep
 
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
-from wordplay.svd import make_context_by_term_matrix
+from wordplay.representation import make_context_by_term_matrix
 from wordplay.pos import load_pos_words
 from wordplay.memory import set_memory_limit
 

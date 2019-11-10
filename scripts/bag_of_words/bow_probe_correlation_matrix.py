@@ -35,12 +35,14 @@ prep = TrainPrep(docs, **attr.asdict(params))
 
 probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
 
-# /////////////////////////////////////////////////////////////////
+# ///////////////////////////////////////////////////////////////// parameters
 
 DIRECTION = -1  # context is left if -1, context is right if +1  # -1
-N_COMPONENTS = 512  # 512
 NORM = 'l1'  # l1
+N_COMPONENTS = 512  # 512
 PART_IDS = [0, 1]  # this is useful because clustering of second corr_mat is based on dg0 and dg1 of first
+
+# ////////////////////////////////////////////////////////////////
 
 dg0, dg1 = None, None
 for part_id in PART_IDS:
