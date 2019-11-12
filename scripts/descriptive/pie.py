@@ -49,7 +49,8 @@ style = DefaultStyle(plot_background='white',
                      opacity='1.0')
 chart = pygal.Pie(inner_radius=0.5,
                   human_readable=True,
-                  style=style)
+                  style=style,
+                  print_values=True)
 for pos, y in pos2y.items():
     chart.add(pos, y)
 chart.render_to_png('pie-test.png')
