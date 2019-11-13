@@ -5,8 +5,7 @@ from collections import Counter
 import matplotlib.pyplot as plt
 import numpy as np
 
-from childeshub.hub import Hub
-# pip install git+https://github.com/phueb/CHILDESHub.git
+
 from wordplay.utils import plot_best_fit_line
 
 CORPUS_NAME = 'childes-20180319'

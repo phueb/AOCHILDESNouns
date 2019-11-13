@@ -15,6 +15,7 @@ def split_probes_by_loc(w2avg_location, probe_store, num_splits):
     probe_loc_pairs = [(w, loc) for w, loc in w2avg_location.items()
                        if w in probe_store.types]
     sorted_probe_loc_pairs = sorted(probe_loc_pairs, key=lambda i: i[1])
+
     num_in_split = probe_store.num_probes // num_splits
     for split_id in range(num_splits):
         start = num_in_split * split_id
