@@ -41,20 +41,6 @@ def get_sliding_windows(window_size, tokens):
     return res
 
 
-def reorder_parts_from_midpoint(parts: np.ndarray
-                                ) -> np.ndarray:
-    """
-    deterministically reorder partitions such that the first partitions
-    are guaranteed to be mid-partitions
-    """
-    # roll such that both matrices start at midpoints, and then get every other row
-    a = np.roll(parts, len(parts) // 2, axis=0)[::-2]
-    b = np.roll(parts, len(parts) // 2, axis=0)[::+2]
-    # interleave rows of a and b
-    res = np.hstack((a, b)).reshape(parts.shape)
-    assert len(res) == len(parts)
-    return res
-
 
 def to_corr_mat(data_mat):
     mns = data_mat.mean(axis=1, keepdims=True)

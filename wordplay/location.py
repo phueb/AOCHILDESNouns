@@ -24,20 +24,8 @@ def term_avg_reordered_loc_dict(self):
     return result
 
 
-def term_avg_unordered_loc_dict(self):
-    result = {}
-    for term, locs in self.term_unordered_locs_dict.items():
-        result[term] = np.mean(locs)
-    return result
-
-
 def calc_avg_reordered_loc(self, term):
     result = int(self.term_avg_reordered_loc_dict[term])
-    return result
-
-
-def calc_avg_unordered_loc(self, term):
-    result = int(self.term_avg_unordered_loc_dict[term])
     return result
 
 
@@ -70,22 +58,6 @@ def probes_reordered_loc(self):
             n_sum += n
             num_ns += 1
     result = n_sum / num_ns
-    return result
-
-
-def probes_unordered_loc(self):
-    loc_sum = 0
-    num_locs = 0
-    for loc, term in enumerate(self.train_terms.tokens):
-        if term in self.probe_store.types:
-            loc_sum += loc
-            num_locs += 1
-    result = loc_sum / num_locs
-    return result
-
-
-def midpoint_loc(self):
-    result = self.train_terms.num_tokens // 2
     return result
 
 

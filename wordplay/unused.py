@@ -34,16 +34,6 @@ def probe_context_overlap_list(self):
     return result
 
 
-def probe_context_terms_dict(self):
-    print('Making probe_context_terms_dict...')
-    result = {probe: [] for probe in self.probe_store.types}
-    for n, t in enumerate(self.train_terms.tokens):
-        if t in self.probe_store.types:
-            context = [term for term in self.train_terms.tokens[n - self.params.window_size:n]]
-            result[t] += context
-    return result
-
-
 def get_terms_related_to_cat(self, cat):
     cat_probes = self.probe_store.cat_probe_list_dict[cat]
     term_hit_dict = {term: 0 for term in self.train_terms.types}

@@ -1,10 +1,10 @@
 import random
-
 import numpy as np
 from categoryeval.probestore import ProbeStore
 from scipy import sparse
 from sklearn.preprocessing import normalize
 from typing import Set, List, Optional
+from sortedcontainers import SortedSet
 
 from wordplay.utils import get_sliding_windows
 
@@ -67,9 +67,8 @@ def make_context_by_term_matrix(tokens: List[str],
                                 probe_store: Optional[ProbeStore] = None):
     """
     terms are in cols, contexts are in rows.
-    y_words are contexts, x_words are terms.
-    y_words always occur after x_words in the input.
-    this format matches that used in TreeTransitions
+    y_words are contexts (possibly multi-word), x_words are targets (always single-word).
+    a context precedes a target.
     """
 
     print('Making context-term matrix')
@@ -90,15 +89,15 @@ def make_context_by_term_matrix(tokens: List[str],
         print('WARNING: Using only probes as x-words')
         x_words = probe_store.types
     else:
-        x_words = sorted(set(tokens))
+        x_words = SortedSet(tokens)
     num_xws = len(x_words)
     xw2col_id = {t: n for n, t in enumerate(x_words)}
 
     # contexts
     contexts_in_order = get_sliding_windows(context_size, tokens)
-    unique_contexts = sorted(set(contexts_in_order))
+    unique_contexts = SortedSet(contexts_in_order)
     num_unique_contexts = len(unique_contexts)
-    context2row_id = {w: n for n, w in enumerate(unique_contexts)}
+    context2row_id = {c: n for n, c in enumerate(unique_contexts)}
 
     # make sparse matrix (contexts/y-words in rows, targets/x-words in cols)
     data = []

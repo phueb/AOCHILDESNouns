@@ -26,8 +26,8 @@ CORPUS_NAME = 'childes-20191112'
 PROBES_NAME = 'syn-4096'
 AGE_STEP = 100
 CONTEXT_SIZE = 3
-NUM_TOKENS_PER_BIN = 100 * 1000  # 100K is good with AGE_STEP=100
-POS = 'NOUN'
+NUM_TOKENS_PER_BIN = 50 * 1000  # 100K is good with AGE_STEP=100
+POS = 'VERB'
 
 # ///////////////////////////////////////////////////////////////// combine docs by age
 
@@ -43,7 +43,8 @@ nlp = spacy.load("en_core_web_sm", disable=['ner'])
 
 x = []
 y = []
-for age_bin in age_bin2word_tokens.keys():
+age_bins = []
+for age_bin in age_bin2tag_tokens.keys():
 
     word_tokens = age_bin2word_tokens[age_bin]
     tag_tokens = age_bin2tag_tokens[age_bin]
@@ -51,14 +52,14 @@ for age_bin in age_bin2word_tokens.keys():
     assert len(word_tokens) == len(tag_tokens)
     assert word_tokens != tag_tokens
 
-    # nouns
+    # pos_words
     w2id = {w: n for n, w in enumerate(set(word_tokens))}
     probe_store = ProbeStore('childes-20180319', PROBES_NAME, w2id)
-    nouns = probe_store.cat2probes[POS]
-    print(len(nouns))
+    pos_words = probe_store.cat2probes[POS]
+    print(len(pos_words))
 
     # get same number of tokens at each bin
-    if not len(word_tokens) > NUM_TOKENS_PER_BIN:
+    if len(word_tokens) < NUM_TOKENS_PER_BIN:
         print(f'WARNING: Number of tokens at age_bin={age_bin} < NUM_TOKENS_PER_BIN')
         continue
     else:
@@ -67,13 +68,12 @@ for age_bin in age_bin2word_tokens.keys():
     # compute num SVO triples as measure of semantic complexity
     sentences = get_sentences_from_tokens(word_tokens, punctuation={'.', '!', '?'})
     texts = [' '.join(s) for s in sentences]
-    triples_in_part = []
+    unique_triples = set()
     for doc in nlp.pipe(texts):
-        triples = [t for t in subject_verb_object_triples(doc)]  # only returns triples, not partial triples
-        triples_in_part += triples
-    num_triples_in_part = len(triples_in_part)
-    num_unique_triples_in_part = len(set(triples_in_part))  # this is the same as num_tuples_in_part
-    comp = num_unique_triples_in_part / 1.0
+        for t in subject_verb_object_triples(doc):  # only returns triples, not partial triples
+            unique_triples.add(t)
+    num_unique_triples_in_part = len(unique_triples)
+    comp = num_unique_triples_in_part
 
     # co-occurrence matrix
     tw_mat_observed, xws_observed, _ = make_context_by_term_matrix(word_tokens,
@@ -88,13 +88,14 @@ for age_bin in age_bin2word_tokens.keys():
                                                        tw_mat_observed,
                                                        xws_chance,
                                                        xws_observed,
-                                                       nouns)
+                                                       pos_words)
     print(f'age_bin={age_bin} selectivity={sel} semantic-complexity={comp}')
     print()
 
     # collect
     x.append(comp)
     y.append(sel)
+    age_bins.append(age_bin)
 
 # figure
 fig, ax = plt.subplots(1, figsize=(7, 7), dpi=192)
@@ -106,5 +107,9 @@ ax.tick_params(axis='both', which='both', top=False, right=False)
 # plot
 ax.scatter(x, y, color='black')
 plot_best_fit_line(ax, x, y, fontsize=12, x_pos=0.75, y_pos=0.75)
+for xi, yi, age_bin in zip(x, y, age_bins):
+    s = f'days=\n{age_bin}-{age_bin + AGE_STEP}'
+    ax.text(xi + 10, yi, s, fontsize=10)
+
 plt.tight_layout()
 plt.show()
