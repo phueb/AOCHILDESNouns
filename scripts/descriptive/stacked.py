@@ -3,7 +3,7 @@ from pygal.style import DefaultStyle
 
 
 from wordplay.pos import pos2tags
-from wordplay.binned import get_binned
+from wordplay.binned import make_age_bin2tokens
 
 # ///////////////////////////////////////////////////////////////// parameters
 
@@ -16,8 +16,8 @@ BAR = True
 
 # ///////////////////////////////////////////////////////////////// combine docs by age
 
-age_bins, tags_by_binned_age = get_binned(CORPUS_NAME, AGE_STEP, suffix='_tags')
-print(f'Number of bins={len(tags_by_binned_age)}')
+age_bin2tags = make_age_bin2tokens(CORPUS_NAME, AGE_STEP, suffix='_tags')
+print(f'Number of bins={len(age_bin2tags)}')
 
 # /////////////////////////////////////////////////////////////////
 
@@ -30,7 +30,7 @@ for pos in pos_list:
 
     requested_tags = set(pos2tags[pos])
 
-    for tags in tags_by_binned_age:
+    for tags in age_bin2tags.values():
         ones = [1 for tag in tags if tag in requested_tags]
         num = len(ones)
         pos2y[pos].append(num)
@@ -40,7 +40,7 @@ for pos in pos_list:
 # add remaining categories not included above
 print(f'Counting number of {OTHER} words...')
 pos2y[OTHER] = []
-for tags in tags_by_binned_age:
+for tags in age_bin2tags.values():
     ones = [1 for tag in tags if tag not in used_tags]
     num = len(ones)
     pos2y[OTHER].append(num)
@@ -69,5 +69,5 @@ chart = Bar(fill=True,
             style=style)
 for pos, y in pos2y.items():
     chart.add(pos, y)
-chart.x_labels = age_bins
+chart.x_labels = [str(age_bin) for age_bin in age_bin2tags.keys()]
 chart.render_to_png('test.png')

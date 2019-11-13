@@ -1,5 +1,6 @@
 import numpy as np
 from itertools import groupby
+from typing import List, Dict
 
 from wordplay import config
 
@@ -10,10 +11,10 @@ age information is not available for childes-20180319
 """
 
 
-def get_binned(corpus_name: str,
-               age_step: int,
-               suffix: str = '_terms',
-               ) -> tuple:
+def make_age_bin2tokens(corpus_name: str,
+                        age_step: int,
+                        suffix: str = '_terms',
+                        ) -> Dict[float, List[str]]:
 
     ages_path = config.Dirs.corpora / f'{corpus_name}_ages.txt'
     ages_text = ages_path.read_text(encoding='utf-8')
@@ -27,14 +28,12 @@ def get_binned(corpus_name: str,
     ages_binned = ages_binned.astype(np.int)
     data = zip(ages_binned, tags_by_doc)
 
-    tokens_by_binned_age = []
-    labels = []
-    for binned_age, data_group in groupby(data, lambda d: d[0]):
+    age_bin2tokens = {}
+    for age_bin, data_group in groupby(data, lambda d: d[0]):
         docs = [d[1] for d in data_group]
-        tags = list(np.concatenate(docs))
-        print(f'Found {len(docs)} transcripts for age-bin={binned_age}')
+        tokens = list(np.concatenate(docs))
+        print(f'Found {len(docs)} transcripts for age-bin={age_bin}')
 
-        tokens_by_binned_age.append(tags)
-        labels.append(str(binned_age))
+        age_bin2tokens[age_bin] = tokens
 
-    return labels, tokens_by_binned_age
+    return age_bin2tokens

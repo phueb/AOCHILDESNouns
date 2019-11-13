@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 
 from categoryeval.probestore import ProbeStore
 
-from wordplay.binned import get_binned
+from wordplay.binned import make_age_bin2tokens
 from wordplay.representation import make_context_by_term_matrix
 from wordplay.measures import calc_selectivity
 from wordplay.sentences import get_sentences_from_tokens
@@ -25,22 +25,26 @@ CORPUS_NAME = 'childes-20191112'
 PROBES_NAME = 'syn-4096'
 AGE_STEP = 100
 CONTEXT_SIZE = 3
-NUM_TOKENS_PER_BIN = 100 * 1000  # 100K is good with AGE_STEP=100
-POS = 'NOUN'
+NUM_TOKENS_PER_BIN = 50 * 1000  # 100K is good with AGE_STEP=100
+POS = 'DET'
 
 # ///////////////////////////////////////////////////////////////// combine docs by age
 
-age_bins, tokens_by_binned_age = get_binned(CORPUS_NAME, AGE_STEP)
-_, tags_by_binned_age = get_binned(CORPUS_NAME, AGE_STEP, suffix='_tags')
+age_bin2word_tokens = make_age_bin2tokens(CORPUS_NAME, AGE_STEP)
+age_bin2tag_tokens = make_age_bin2tokens(CORPUS_NAME, AGE_STEP, suffix='_tags')
 
-for word_tokens in tokens_by_binned_age:  # this is used to determine maximal NUM_TOKENS_PER_BIN
+for word_tokens in age_bin2word_tokens.values():  # this is used to determine maximal NUM_TOKENS_PER_BIN
     print(f'{len(word_tokens):,}')
 
 # /////////////////////////////////////////////////////////////////
 
 x = []
 y = []
-for age_bin, word_tokens, tag_tokens in zip(age_bins, tokens_by_binned_age, tags_by_binned_age):
+age_bins = []
+for age_bin in age_bin2tag_tokens.keys():
+
+    word_tokens = age_bin2word_tokens[age_bin]
+    tag_tokens = age_bin2tag_tokens[age_bin]
 
     assert len(word_tokens) == len(tag_tokens)
     assert word_tokens != tag_tokens
@@ -85,6 +89,7 @@ for age_bin, word_tokens, tag_tokens in zip(age_bins, tokens_by_binned_age, tags
     # collect
     x.append(comp)
     y.append(sel)
+    age_bins.append(age_bin)
 
 # figure
 fig, ax = plt.subplots(1, figsize=(7, 7), dpi=192)
@@ -96,5 +101,9 @@ ax.tick_params(axis='both', which='both', top=False, right=False)
 # plot
 ax.scatter(x, y, color='black')
 plot_best_fit_line(ax, x, y, fontsize=12, x_pos=0.75, y_pos=0.75)
+for xi, yi, age_bin in zip(x, y, age_bins):
+    s = f'days=\n{age_bin}-{age_bin + AGE_STEP}'
+    ax.text(xi + 0.01, yi, s, fontsize=10)
+
 plt.tight_layout()
 plt.show()

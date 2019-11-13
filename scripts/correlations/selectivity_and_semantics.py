@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 
 from categoryeval.probestore import ProbeStore
 
-from wordplay.binned import get_binned
+from wordplay.binned import make_age_bin2tokens
 from wordplay.representation import make_context_by_term_matrix
 from wordplay.measures import calc_selectivity
 from wordplay.sentences import get_sentences_from_tokens
@@ -31,10 +31,10 @@ POS = 'NOUN'
 
 # ///////////////////////////////////////////////////////////////// combine docs by age
 
-age_bins, tokens_by_binned_age = get_binned(CORPUS_NAME, AGE_STEP)
-_, tags_by_binned_age = get_binned(CORPUS_NAME, AGE_STEP, suffix='_tags')
+age_bin2word_tokens = make_age_bin2tokens(CORPUS_NAME, AGE_STEP)
+age_bin2tag_tokens = make_age_bin2tokens(CORPUS_NAME, AGE_STEP, suffix='_tags')
 
-for word_tokens in tokens_by_binned_age:  # this is used to determine maximal NUM_TOKENS_PER_BIN
+for word_tokens in age_bin2word_tokens.values():  # this is used to determine maximal NUM_TOKENS_PER_BIN
     print(f'{len(word_tokens):,}')
 
 # /////////////////////////////////////////////////////////////////
@@ -43,7 +43,10 @@ nlp = spacy.load("en_core_web_sm", disable=['ner'])
 
 x = []
 y = []
-for age_bin, word_tokens, tag_tokens in zip(age_bins, tokens_by_binned_age, tags_by_binned_age):
+for age_bin in age_bin2word_tokens.keys():
+
+    word_tokens = age_bin2word_tokens[age_bin]
+    tag_tokens = age_bin2tag_tokens[age_bin]
 
     assert len(word_tokens) == len(tag_tokens)
     assert word_tokens != tag_tokens
