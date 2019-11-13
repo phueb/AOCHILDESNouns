@@ -6,8 +6,8 @@ from preppy.legacy import TrainPrep
 
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
-from wordplay.stats import calc_entropy
-from wordplay.stats import mtld
+from wordplay.measures import calc_entropy
+from wordplay.measures import mtld
 
 # /////////////////////////////////////////////////////////////////
 

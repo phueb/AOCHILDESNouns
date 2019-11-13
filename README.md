@@ -2,6 +2,11 @@
 
 Research code for analyzing text corpora with a particular emphasis on complexity and categories.
 
+## Custom Dependencies
+
+* https://github.com/phueb/Preppy
+* https://github.com/phueb/CategoryEval
+
 ## Terminology
 
 * Probes: a set of words with known category membership used for testing

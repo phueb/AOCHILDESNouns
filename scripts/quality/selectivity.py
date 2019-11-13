@@ -20,6 +20,7 @@ from categoryeval.probestore import ProbeStore
 from wordplay.representation import make_context_by_term_matrix
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
+from wordplay.measures import calc_selectivity
 
 # /////////////////////////////////////////////////////////////////
 
@@ -40,11 +41,14 @@ probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
 
 # ///////////////////////////////////////////////////////////////// parameters
 
-CONTEXT_SIZE = 3
+CONTEXT_SIZE = 2
 MEASURE_NAME = 'Context-Selectivity'  # the ratio of two context type-token ratios
 
 
 # ////////////////////////////////////////////////////////////////// co-occurrence matrix
+
+# WARNING: prep.store.tokens are shuffled.
+# Do NOT shuffle BEFORE calculating matrix for un-shuffled tokens
 
 tw_mat1_observed, xws1_observed, _ = make_context_by_term_matrix(prep.store.tokens,
                                                                  start=0,
@@ -55,6 +59,7 @@ tw_mat2_observed, xws2_observed, _ = make_context_by_term_matrix(prep.store.toke
                                                                  end=prep.store.num_tokens,
                                                                  context_size=CONTEXT_SIZE)
 
+# now it is safe to shuffle tokens
 tw_mat1_chance, xws1_chance, _ = make_context_by_term_matrix(prep.store.tokens,
                                                              start=0,
                                                              end=prep.midpoint,
@@ -82,31 +87,14 @@ for part_id, tw_mat_observed, tw_mat_chance, xws_observed, xws_chance in zip(par
 
     # compute selectivity for each category
     for cat in probe_store.cats:
-
-        # cttr_chance
-        col_ids = [n for n, xw in enumerate(xws_chance) if xw in probe_store.cat2probes[cat]]
-        cols = tw_mat_chance.tocsc()[:, col_ids].toarray()
-        context_distribution = np.sum(cols, axis=1, keepdims=False)
-        num_context_types = np.count_nonzero(context_distribution)
-        num_context_tokens = np.sum(context_distribution)
-        cttr_chance = num_context_types / num_context_tokens
-
-        # cttr_observed
-        col_ids = [n for n, xw in enumerate(xws_observed) if xw in probe_store.cat2probes[cat]]
-        cols = tw_mat_observed.tocsc()[:, col_ids].toarray()
-        context_distribution = np.sum(cols, axis=1, keepdims=False)
-        num_context_types = np.count_nonzero(context_distribution)
-        num_context_tokens = np.sum(context_distribution)
-        cttr_observed = num_context_types / num_context_tokens
-
-        # compute ratio such that the higher the better (the more selective)
-        y = cttr_chance / cttr_observed
+        y = calc_selectivity(tw_mat_chance,
+                             tw_mat_observed,
+                             xws_chance,
+                             xws_observed,
+                             probe_store.cat2probes[cat])
+        # collect
         part_id2ys[part_id].append(y)
-
         part_id2cat2y[part_id][cat] = y
-
-        print(f'{cat:<12} cttr-chance={cttr_chance:>.2f}  cttr-observed={cttr_observed:>.2f} y={y:>.2f} ')
-    print('------------------------------------------------------')
 
 
 # fig

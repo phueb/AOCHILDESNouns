@@ -1,6 +1,38 @@
 import numpy as np
 import pandas as pd
 from collections import Counter
+from scipy.sparse import coo_matrix
+
+from typing import List, Set
+
+
+def calc_selectivity(tw_mat_chance: coo_matrix,
+                     tw_mat_observed: coo_matrix,
+                     xws_chance: List[str],
+                     xws_observed: List[str],
+                     words: Set[str]
+                     ):
+    # cttr_chance
+    col_ids = [n for n, xw in enumerate(xws_chance) if xw in words]
+    cols = tw_mat_chance.tocsc()[:, col_ids].toarray()
+    context_distribution = np.sum(cols, axis=1, keepdims=False)
+    num_context_types = np.count_nonzero(context_distribution)
+    num_context_tokens = np.sum(context_distribution)
+    cttr_chance = num_context_types / num_context_tokens
+
+    # cttr_observed
+    col_ids = [n for n, xw in enumerate(xws_observed) if xw in words]
+    cols = tw_mat_observed.tocsc()[:, col_ids].toarray()
+    context_distribution = np.sum(cols, axis=1, keepdims=False)
+    num_context_types = np.count_nonzero(context_distribution)
+    num_context_tokens = np.sum(context_distribution)
+    cttr_observed = num_context_types / num_context_tokens
+
+    print(f'cttr_chance={cttr_chance:>6.2f} cttr_observed={cttr_observed:>6.2f}')
+
+    # compute ratio such that the higher the better (the more selective)
+    y = cttr_chance / cttr_observed
+    return y
 
 
 def calc_utterance_lengths(items, is_avg, w_size=10000):

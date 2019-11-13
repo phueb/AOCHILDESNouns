@@ -73,16 +73,16 @@ def make_context_by_term_matrix(tokens: List[str],
     """
 
     print('Making context-term matrix')
-    if start and end:
-        print(f'from tokens between {start:,} & {end:,}')
 
     # tokens
-    if start is not None and end is not None:
+    if start and end:
+        print(f'from tokens between {start:,} & {end:,}')
         tokens = tokens[start:end]
 
     # shuffle
     if shuffle_tokens:
         print('WARNING: Shuffling tokens')
+        tokens = tokens.copy()
         random.shuffle(tokens)
 
     # x_words

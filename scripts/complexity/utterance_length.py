@@ -6,7 +6,7 @@ from preppy.legacy import TrainPrep
 
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
-from wordplay.stats import calc_utterance_lengths
+from wordplay.measures import calc_utterance_lengths
 
 # /////////////////////////////////////////////////////////////////
 

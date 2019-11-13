@@ -15,7 +15,7 @@ from categoryeval.probestore import ProbeStore
 
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
-from wordplay.stats import calc_kl_divergence
+from wordplay.measures import calc_kl_divergence
 
 # /////////////////////////////////////////////////////////////////
 
