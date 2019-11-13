@@ -87,11 +87,11 @@ for part_id, tw_mat_observed, tw_mat_chance, xws_observed, xws_chance in zip(par
 
     # compute selectivity for each category
     for cat in probe_store.cats:
-        y = calc_selectivity(tw_mat_chance,
-                             tw_mat_observed,
-                             xws_chance,
-                             xws_observed,
-                             probe_store.cat2probes[cat])
+        cttr_chance, cttr_observed, y = calc_selectivity(tw_mat_chance,
+                                                         tw_mat_observed,
+                                                         xws_chance,
+                                                         xws_observed,
+                                                         probe_store.cat2probes[cat])
         # collect
         part_id2ys[part_id].append(y)
         part_id2cat2y[part_id][cat] = y

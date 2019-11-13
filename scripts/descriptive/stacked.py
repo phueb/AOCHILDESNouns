@@ -16,9 +16,7 @@ BAR = True
 
 # ///////////////////////////////////////////////////////////////// combine docs by age
 
-binned_ages, tags_by_binned_age = get_binned(CORPUS_NAME, AGE_STEP)
-
-
+age_bins, tags_by_binned_age = get_binned(CORPUS_NAME, AGE_STEP, suffix='_tags')
 print(f'Number of bins={len(tags_by_binned_age)}')
 
 # /////////////////////////////////////////////////////////////////
@@ -71,5 +69,5 @@ chart = Bar(fill=True,
             style=style)
 for pos, y in pos2y.items():
     chart.add(pos, y)
-chart.x_labels = binned_ages
+chart.x_labels = age_bins
 chart.render_to_png('test.png')

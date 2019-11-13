@@ -12,12 +12,13 @@ age information is not available for childes-20180319
 
 def get_binned(corpus_name: str,
                age_step: int,
+               suffix: str = '_terms',
                ) -> tuple:
 
     ages_path = config.Dirs.corpora / f'{corpus_name}_ages.txt'
     ages_text = ages_path.read_text(encoding='utf-8')
     ages = np.array(ages_text.split(), dtype=np.float)
-    tags_path = config.Dirs.corpora / f'{corpus_name}_tags.txt'
+    tags_path = config.Dirs.corpora / f'{corpus_name}{suffix}.txt'
     tags_text = tags_path.read_text(encoding='utf-8')
     tags_by_doc = [doc.split() for doc in tags_text.split('\n')[:-1]]
     ages_binned = ages - np.mod(ages, age_step)

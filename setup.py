@@ -23,7 +23,8 @@ setup(
         'matplotlib',
         'spacy',
         'pandas',
-        'cytoolz'
+        'cytoolz',
+        'pygal',
     ],
     url='https://github.com/phueb/Wordplay',
     license='',

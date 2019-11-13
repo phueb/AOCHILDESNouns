@@ -5,6 +5,8 @@ from scipy.signal import lfilter
 from cytoolz import itertoolz
 from typing import Optional, Set
 
+from scipy.stats import linregress
+
 
 def smooth(l, strength):
     b = [1.0 / strength] * strength
@@ -96,3 +98,27 @@ def cluster(mat: np.ndarray,
         row_labels = np.array(original_row_words)[dg0['leaves']]
         col_labels = np.array(original_col_words)[dg1['leaves']]
         return res, row_labels, col_labels, dg0, dg1
+
+
+def plot_best_fit_line(ax, x, y, fontsize, color='red', zorder=3, x_pos=0.75, y_pos=0.75, plot_p=True):
+    try:
+        best_fit_fxn = np.polyfit(x, y, 1, full=True)
+    except Exception as e:  # cannot fit line
+        print('rnnlab: Cannot fit line.', e)
+        return
+    slope = best_fit_fxn[0][0]
+    intercept = best_fit_fxn[0][1]
+    xl = [min(x), max(x)]
+    yl = [slope * xx + intercept for xx in xl]
+    # plot line
+    ax.plot(xl, yl, linewidth=2, c=color, zorder=zorder)
+    # plot rsqrd
+    variance = np.var(y)
+    residuals = np.var([(slope * xx + intercept - yy) for xx, yy in zip(x, y)])
+    Rsqr = np.round(1 - residuals / variance, decimals=3)
+    if Rsqr > 0.5:
+        fontsize += 5
+    ax.text(x_pos, y_pos, '$R^2$ = {}'.format(Rsqr), transform=ax.transAxes, fontsize=fontsize)
+    if plot_p:
+        p = np.round(linregress(x, y)[3], decimals=8)
+        ax.text(x_pos, y_pos - 0.05, 'p = {}'.format(p), transform=ax.transAxes, fontsize=fontsize - 2)

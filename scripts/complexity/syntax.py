@@ -13,7 +13,6 @@ from preppy.legacy import TrainPrep
 
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
-from wordplay.pos import pos2tags
 from wordplay.utils import fit_line
 from wordplay.utils import split
 from wordplay.sentences import get_sentences_from_tokens

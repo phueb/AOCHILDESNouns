@@ -3,7 +3,7 @@ import pandas as pd
 from collections import Counter
 from scipy.sparse import coo_matrix
 
-from typing import List, Set
+from typing import List, Set, Tuple
 
 
 def calc_selectivity(tw_mat_chance: coo_matrix,
@@ -11,7 +11,7 @@ def calc_selectivity(tw_mat_chance: coo_matrix,
                      xws_chance: List[str],
                      xws_observed: List[str],
                      words: Set[str]
-                     ):
+                     ) -> Tuple[float, float, float]:
     # cttr_chance
     col_ids = [n for n, xw in enumerate(xws_chance) if xw in words]
     cols = tw_mat_chance.tocsc()[:, col_ids].toarray()
@@ -31,8 +31,8 @@ def calc_selectivity(tw_mat_chance: coo_matrix,
     print(f'cttr_chance={cttr_chance:>6.2f} cttr_observed={cttr_observed:>6.2f}')
 
     # compute ratio such that the higher the better (the more selective)
-    y = cttr_chance / cttr_observed
-    return y
+    sel = cttr_chance / cttr_observed
+    return cttr_chance, cttr_observed, sel
 
 
 def calc_utterance_lengths(items, is_avg, w_size=10000):
