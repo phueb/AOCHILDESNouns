@@ -21,8 +21,8 @@ from wordplay.representation import make_context_by_term_matrix
 
 # /////////////////////////////////////////////////////////////////
 
-CORPUS_NAME = 'childes-20180319'  # must have spacy tags
-PROBES_NAME = 'syn-4096'
+CORPUS_NAME = 'childes-20180319'
+PROBES_NAME = 'syn-nva'
 
 REVERSE = False
 NUM_PARTS = 2
@@ -41,11 +41,11 @@ probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
 
 # ///////////////////////////////////////////////////////////////// parameters
 
-CONTEXT_SIZE = 2
+CONTEXT_SIZE = 3
 NUM_DIMS_LIST = [2, 4, 8, 16, 32, 64, 128]
 POS_LIST = [] or probe_store.cats
 
-START1, END1 = 0, prep.midpoint // 2
+START1, END1 = 0, prep.midpoint // 1
 START2, END2 = prep.store.num_tokens - END1, prep.store.num_tokens
 
 # ////////////////////////////////////////////////////////////////
