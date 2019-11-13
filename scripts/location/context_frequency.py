@@ -7,6 +7,7 @@ Research questions:
 import numpy as np
 import matplotlib.pyplot as plt
 import attr
+import math
 
 from preppy.legacy import TrainPrep
 from categoryeval.probestore import ProbeStore
@@ -24,7 +25,7 @@ PROBES_NAME = 'syn-4096'
 
 REVERSE = False
 NUM_PARTS = 8
-SHUFFLE_DOCS = True  # TODO
+SHUFFLE_DOCS = False
 
 docs = load_docs(CORPUS_NAME,
                  num_test_take_from_mid=0,
@@ -101,8 +102,9 @@ ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
 ax.tick_params(axis='both', which='both', top=False, right=False)
 ax.yaxis.grid(True, alpha=0.1)
+plt.grid(True, which='both', axis='y', alpha=0.2)
 max_y = np.max(np.concatenate((y1, y2)))
-ax.set_ylim([0, max_y])
+ax.set_ylim([0, math.ceil(max_y)])
 # plot
 ax.plot(y1, label='first contexts')
 ax.plot(y2, label='last contexts')
