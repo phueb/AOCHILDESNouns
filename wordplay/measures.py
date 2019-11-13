@@ -35,25 +35,34 @@ def calc_selectivity(tw_mat_chance: coo_matrix,
     return cttr_chance, cttr_observed, sel
 
 
-def calc_utterance_lengths(items, is_avg, w_size=10000):
+def calc_utterance_lengths(tokens: List[str],
+                           rolling_avg: bool = False,
+                           rolling_std: bool = False,
+                           window_size: int = 1000,
+                           ) -> np.ndarray:
+
+    assert not(rolling_avg and rolling_std)
+
     # make sent_lengths
     last_period = 0
     sent_lengths = []
-    for n, item in enumerate(items):
+    for n, item in enumerate(tokens):
         if item in ['.', '!', '?']:
             sent_length = n - last_period - 1
             sent_lengths.append(sent_length)
             last_period = n
 
     # rolling window
-    df = pd.Series(sent_lengths)
-    if is_avg:
+    if rolling_avg:
+        df = pd.Series(sent_lengths)
         print('Making sentence length rolling average...')
-        result = df.rolling(w_size).std().values
-    else:
+        return df.rolling(window_size).std().values
+    elif rolling_std:
+        df = pd.Series(sent_lengths)
         print('Making sentence length rolling std...')
-        result = df.rolling(w_size).mean().values
-    return result
+        return df.rolling(window_size).mean().values
+    else:
+        return np.array(sent_lengths)
 
 
 def calc_entropy(words):

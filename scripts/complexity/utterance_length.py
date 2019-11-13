@@ -39,8 +39,8 @@ PAD = 0.2
 LW = 0.5
 
 # xys
-ys = [calc_utterance_lengths(prep.store.tokens, is_avg=True),
-      calc_utterance_lengths(prep.store.tokens, is_avg=False)]
+ys = [calc_utterance_lengths(prep.store.tokens, rolling_avg=True, window_size=1000),
+      calc_utterance_lengths(prep.store.tokens, rolling_avg=False, window_size=1000)]
 
 # fig
 y_labels = ['Mean Utterance\nLength', 'Std Utterance\nLength']

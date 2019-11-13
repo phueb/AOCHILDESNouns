@@ -49,18 +49,18 @@ for age_bin in age_bin2tag_tokens.keys():
     assert len(word_tokens) == len(tag_tokens)
     assert word_tokens != tag_tokens
 
-    # nouns
-    w2id = {w: n for n, w in enumerate(set(word_tokens))}
-    probe_store = ProbeStore('childes-20180319', PROBES_NAME, w2id)
-    nouns = probe_store.cat2probes[POS]
-    print(len(nouns))
-
     # get same number of tokens at each bin
     if not len(word_tokens) > NUM_TOKENS_PER_BIN:
         print(f'WARNING: Number of tokens at age_bin={age_bin} < NUM_TOKENS_PER_BIN')
         continue
     else:
         word_tokens = word_tokens[:NUM_TOKENS_PER_BIN]
+
+    # nouns
+    w2id = {w: n for n, w in enumerate(set(word_tokens))}
+    probe_store = ProbeStore('childes-20180319', PROBES_NAME, w2id)
+    nouns = probe_store.cat2probes[POS]
+    print(len(nouns))
 
     # compute num unique tag-sequences as measure of syn complexity
     sentences = get_sentences_from_tokens(tag_tokens, punctuation={'.'})

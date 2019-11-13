@@ -14,6 +14,7 @@ age information is not available for childes-20180319
 def make_age_bin2tokens(corpus_name: str,
                         age_step: int,
                         suffix: str = '_terms',
+                        verbose: bool = False,
                         ) -> Dict[float, List[str]]:
 
     ages_path = config.Dirs.corpora / f'{corpus_name}_ages.txt'
@@ -32,7 +33,8 @@ def make_age_bin2tokens(corpus_name: str,
     for age_bin, data_group in groupby(data, lambda d: d[0]):
         docs = [d[1] for d in data_group]
         tokens = list(np.concatenate(docs))
-        print(f'Found {len(docs)} transcripts for age-bin={age_bin}')
+        if verbose:
+            print(f'Found {len(docs)} transcripts for age-bin={age_bin}')
 
         age_bin2tokens[age_bin] = tokens
 
