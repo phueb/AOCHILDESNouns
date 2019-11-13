@@ -30,7 +30,7 @@ from preppy.legacy import TrainPrep
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 from wordplay.pos import load_pos_words
-from wordplay.location import make_w2location
+from wordplay.location import make_w2locations
 from wordplay.utils import fit_line
 
 # /////////////////////////////////////////////////////////////////
@@ -68,9 +68,9 @@ pos_words = probe_store.types or load_pos_words(f'{CORPUS_NAME}-{POS}')
 
 # get locations
 locations = []
-w2location = make_w2location(prep.store.tokens)
+w2locations = make_w2locations(prep.store.tokens)
 for w in pos_words:
-    locations += w2location[w]
+    locations += w2locations[w]
 
 
 def make_context2is_filler_pos2freq(start_loc, end_loc):

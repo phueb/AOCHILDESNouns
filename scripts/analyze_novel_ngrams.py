@@ -6,6 +6,7 @@ from matplotlib.ticker import FormatStrFormatter
 
 from childeshub.hub import Hub
 
+from wordplay.utils import human_format
 
 NUM_BINS = 64
 NGRAM_SIZES = [1, 2, 3, 6]
@@ -24,13 +25,6 @@ WPAD = 0.0
 HPAD = 0.0
 PAD = 0.2
 
-
-def human_format(num, pos):  # pos is required
-    magnitude = 0
-    while abs(num) >= 1000:
-        magnitude += 1
-        num /= 1000.0
-    return '{}{}'.format(num, ['', 'K', 'M', 'G', 'T', 'P'][magnitude])
 
 def make_novel_xys(ngrams_list, num_bins=NUM_BINS):
     """

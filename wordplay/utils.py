@@ -106,3 +106,11 @@ def plot_best_fit_line(ax, x, y, fontsize, color='red', zorder=3, x_pos=0.75, y_
     if plot_p:
         p = np.round(linregress(x, y)[3], decimals=8)
         ax.text(x_pos, y_pos - 0.05, 'p = {}'.format(p), transform=ax.transAxes, fontsize=fontsize - 2)
+
+
+def human_format(num, pos):  # pos is required
+    magnitude = 0
+    while abs(num) >= 1000:
+        magnitude += 1
+        num /= 1000.0
+    return '{}{}'.format(num, ['', 'K', 'M', 'G', 'T', 'P'][magnitude])
