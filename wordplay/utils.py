@@ -116,8 +116,6 @@ def plot_best_fit_line(ax, x, y, fontsize, color='red', zorder=3, x_pos=0.75, y_
     variance = np.var(y)
     residuals = np.var([(slope * xx + intercept - yy) for xx, yy in zip(x, y)])
     Rsqr = np.round(1 - residuals / variance, decimals=3)
-    if Rsqr > 0.5:
-        fontsize += 5
     ax.text(x_pos, y_pos, '$R^2$ = {}'.format(Rsqr), transform=ax.transAxes, fontsize=fontsize)
     if plot_p:
         p = np.round(linregress(x, y)[3], decimals=8)

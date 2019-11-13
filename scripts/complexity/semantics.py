@@ -55,11 +55,9 @@ for tokens in split(prep.store.tokens, prep.num_tokens_in_part):
     for doc in nlp.pipe(texts):
         triples = [t for t in subject_verb_object_triples(doc)]  # only returns triples, not partial triples
         triples_in_part += triples
-
-    print(triples_in_part)
-
     num_triples_in_part = len(triples_in_part)
-    num_unique_triples_in_part = len(set(triples_in_part))  # TODO this does not work
+    num_unique_triples_in_part = len(set(triples_in_part))
+
     if VERBOSE:
         print(f'Found {num_triples_in_part:>12,} SVO triples')
         print(f'Found {num_unique_triples_in_part:>12,} unique SVO triples')

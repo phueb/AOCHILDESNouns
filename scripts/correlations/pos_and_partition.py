@@ -1,3 +1,12 @@
+"""
+Research questions:
+1. Does the density of nouns, verb, adjectives, etc. vary with partition in AO-CHILDES?
+
+Caveat:
+This is similar to asking whether density of nouns, verbs, adjectives, etc vary with age,
+but it is NOT the same, because a partition may include speech to children at different ages
+"""
+
 from scipy import stats
 import numpy as np
 import attr
