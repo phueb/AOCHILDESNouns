@@ -23,8 +23,8 @@ CORPUS_NAME = 'childes-20180319'
 PROBES_NAME = 'syn-4096'
 
 REVERSE = False
-NUM_PARTS = 32
-SHUFFLE_DOCS = False
+NUM_PARTS = 8
+SHUFFLE_DOCS = True  # TODO
 
 docs = load_docs(CORPUS_NAME,
                  num_test_take_from_mid=0,
@@ -38,8 +38,10 @@ probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
 
 # /////////////////////////////////////////////////////////////////
 
-CONTEXT_SIZE = 3
-POS = 'NOUN'
+CONTEXT_SIZE = 2
+POS = 'VERB'
+NUM_CONTEXTS = 10 * 1000  # number of first and last unique contexts
+MEDIAN_SPLIT = False
 
 # pos_words
 pos_words = probe_store.cat2probes[POS]
@@ -51,6 +53,7 @@ for contexts in w2contexts.values():
     for c in contexts:
         unique_contexts.add(c)
 num_contexts = len(unique_contexts)
+print(list(unique_contexts)[:20])
 print(f'Found {num_contexts} {POS} contexts with size={CONTEXT_SIZE}')
 
 # get locations of contexts
@@ -62,9 +65,18 @@ for loc, c in enumerate(contexts_in_order):
 
 # split contexts into early and late
 print('Splitting contexts into early and late')
-sorted_contexts = sorted(unique_contexts, key=lambda c: np.mean(context2locations[c]))
-contexts1 = set(sorted_contexts[:num_contexts // 2])   # earliest
-contexts2 = set(sorted_contexts[-num_contexts // 2:])  # latest
+if MEDIAN_SPLIT:
+    sorted_contexts = sorted(unique_contexts, key=lambda c: np.mean(context2locations[c]))
+    contexts1 = set(sorted_contexts[:num_contexts // 2])   # earliest
+    contexts2 = set(sorted_contexts[-num_contexts // 2:])  # latest
+    title = f'Median-split of contexts\ncontext-size={CONTEXT_SIZE}'
+else:
+    # get first N and last N unique contexts
+    contexts1 = set(list(dict.fromkeys(contexts_in_order))[:NUM_CONTEXTS])
+    contexts2 = set(list(dict.fromkeys(contexts_in_order[::-1]))[:NUM_CONTEXTS])
+    title = f'First and last {NUM_CONTEXTS} contexts\ncontext-size={CONTEXT_SIZE}'
+
+assert len(contexts1) == len(contexts2)
 
 # count early and late contexts in parts
 y1 = []
@@ -81,7 +93,7 @@ for part_id, tokens in enumerate(split(prep.store.tokens, prep.num_tokens_in_par
 
 # fig
 fig, ax = plt.subplots(dpi=192)
-plt.title(f'context-size={CONTEXT_SIZE}')
+plt.title(title + f' shuffle docs={SHUFFLE_DOCS}')
 x = np.arange(NUM_PARTS)
 ax.set_xlabel('Partition')
 ax.set_ylabel(f'{POS} Context Token Frequency')
@@ -89,10 +101,12 @@ ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
 ax.tick_params(axis='both', which='both', top=False, right=False)
 ax.yaxis.grid(True, alpha=0.1)
+max_y = np.max(np.concatenate((y1, y2)))
+ax.set_ylim([0, max_y])
 # plot
-ax.plot(y1, label='early contexts')
-ax.plot(y2, label='late contexts')
+ax.plot(y1, label='first contexts')
+ax.plot(y2, label='last contexts')
 
-ax.legend(frameon=False)
+ax.legend(frameon=False, loc='lower left')
 fig.tight_layout()
 plt.show()
