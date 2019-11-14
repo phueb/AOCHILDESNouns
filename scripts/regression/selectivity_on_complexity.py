@@ -14,6 +14,7 @@ import numpy as np
 import attr
 import pingouin as pg
 from pingouin import mediation_analysis
+from sklearn.preprocessing import StandardScaler
 import pandas as pd
 
 from preppy.legacy import TrainPrep
@@ -53,9 +54,9 @@ probe_store = ProbeStore('childes-20180319', PROBES_NAME, prep.store.w2id)
 
 CORPUS_NAME = 'childes-20191112'
 PROBES_NAME = 'syn-4096'
-AGE_STEP = 100
-CONTEXT_SIZE = 2
-NUM_TOKENS_PER_BIN = 100 * 1000  # 100K is good with AGE_STEP=100
+AGE_STEP = 25  # the smaller, the more power, 25 is good
+CONTEXT_SIZE = 3
+NUM_TOKENS_PER_BIN = 100 * 1000  # 100K is good with AGE_STEP < 100
 POS = 'NOUN'
 
 MIN_NUM_POS_WORDS = 100
@@ -162,6 +163,7 @@ for age_bin in age_bin2tag_tokens.keys():
 
 # regress selectivity on mlu + sem-complexity
 x = pd.DataFrame(data={'mlu': mlu, 'sem-comp': sem_complexity})
+x[x.columns] = StandardScaler().fit_transform(x)
 y = pd.Series(selectivity)
 y.name = f'{POS}-selectivity'
 summary = regress(x, y)  # reduces same results as sklearn with intercept + normalization
@@ -169,6 +171,7 @@ print(summary)
 
 # regress selectivity on mlu + syn-complexity
 x = pd.DataFrame(data={'mlu': mlu, 'syn-comp': syn_complexity})
+x[x.columns] = StandardScaler().fit_transform(x)
 y = pd.Series(selectivity)
 y.name = f'{POS}-selectivity'
 summary = regress(x, y)  # reduces same results as sklearn with intercept + normalization
@@ -176,6 +179,7 @@ print(summary)
 
 # correlation matrix
 x_all = pd.DataFrame(data={'mlu': mlu, 'syn-comp': syn_complexity, 'sem-comp': sem_complexity})
+x_all[x_all.columns] = StandardScaler().fit_transform(x_all)
 correlations = x_all.corr()
 print(correlations.round(3))
 
@@ -207,3 +211,7 @@ print(res2)
 
 
 # TODO mediation analysis
+res = mediation_analysis(data=xy, x='mlu', m='sem-comp', y=f'{POS}-selectivity')
+print(res)
+res = mediation_analysis(data=xy, x='mlu', m='syn-comp', y=f'{POS}-selectivity')
+print(res)
