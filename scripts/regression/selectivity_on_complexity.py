@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import spacy
 import numpy as np
 import attr
+import pingouin as pg
 import pandas as pd
 
 from preppy.legacy import TrainPrep
@@ -20,6 +21,7 @@ from categoryeval.probestore import ProbeStore
 from wordplay.regression import regress
 from wordplay.docs import load_docs
 from wordplay.params import PrepParams
+from wordplay.binned import make_age_bin2tokens_with_min_size
 from wordplay.binned import make_age_bin2tokens
 from wordplay.representation import make_context_by_term_matrix
 from wordplay.measures import calc_selectivity
@@ -57,13 +59,20 @@ POS = 'NOUN'
 
 MIN_NUM_POS_WORDS = 100
 
-# ///////////////////////////////////////////////////////////////// combine docs by age
+# ///////////////////////////////////////////////////////////////// bin documents by age
 
 age_bin2word_tokens = make_age_bin2tokens(CORPUS_NAME, AGE_STEP)
 age_bin2tag_tokens = make_age_bin2tokens(CORPUS_NAME, AGE_STEP, suffix='_tags')
 
 for age_bin, word_tokens in age_bin2word_tokens.items():  # this is used to determine maximal NUM_TOKENS_PER_BIN
-    print(f'Number of words at age_bin={age_bin:>6} is {len(word_tokens):>6,}')
+    print(f'Number of words at age_bin={age_bin:>9} is {len(word_tokens):>9,}')
+
+# combine small bins to prevent exclusion later
+age_bin2word_tokens = make_age_bin2tokens_with_min_size(age_bin2word_tokens, NUM_TOKENS_PER_BIN)
+age_bin2tag_tokens = make_age_bin2tokens_with_min_size(age_bin2tag_tokens, NUM_TOKENS_PER_BIN)
+
+for age_bin, word_tokens in age_bin2word_tokens.items():
+    assert len(word_tokens) == NUM_TOKENS_PER_BIN
 
 # /////////////////////////////////////////////////////////////////
 
@@ -150,22 +159,19 @@ for age_bin in age_bin2tag_tokens.keys():
     sem_complexity.append(sem_complexity_i)
     included_age_bins.append(age_bin)
 
-# TODO nonlinear reg? log?
-
-# regression
+# regress selectivity on mlu + sem-complexity
 x = pd.DataFrame(data={'mlu': mlu, 'sem-comp': sem_complexity})
 y = pd.Series(selectivity)
 y.name = f'{POS}-selectivity'
 summary = regress(x, y)  # reduces same results as sklearn with intercept + normalization
 print(summary)
 
-# regression
+# regress selectivity on mlu + syn-complexity
 x = pd.DataFrame(data={'mlu': mlu, 'syn-comp': syn_complexity})
 y = pd.Series(selectivity)
 y.name = f'{POS}-selectivity'
 summary = regress(x, y)  # reduces same results as sklearn with intercept + normalization
 print(summary)
-
 
 # correlation matrix
 x_all = pd.DataFrame(data={'mlu': mlu, 'syn-comp': syn_complexity, 'sem-comp': sem_complexity})
@@ -176,13 +182,27 @@ print(correlations.round(3))
 
 # scatter
 xy = pd.concat((x_all, y), axis=1)
-ax1 = xy.plot(kind='scatter', x='sem-comp', y=f'{POS}-selectivity')  # nonlinear effect
-plt.show()
-ax2 = xy.plot(kind='scatter', x='syn-comp', y=f'{POS}-selectivity')  # nonlinear effect
-plt.show()
-ax3 = xy.plot(kind='scatter', x='mlu', y=f'{POS}-selectivity')  # nonlinear effect
+_, ax1 = plt.subplots()
+_, ax2 = plt.subplots()
+_, ax3 = plt.subplots()
+xy.plot(kind='scatter', x='sem-comp', y=f'{POS}-selectivity', ax=ax1)  # nonlinear effect
+xy.plot(kind='scatter', x='syn-comp', y=f'{POS}-selectivity', ax=ax2)  # nonlinear effect
+xy.plot(kind='scatter', x='mlu', y=f'{POS}-selectivity', ax=ax3)  # nonlinear effect
 plt.show()
 
 print('age bins included:')
-for age_bin in included_age_bins:
-    print(age_bin)
+for age_bin in age_bin2tag_tokens.keys():
+    print(f'age bin={age_bin:>9,} {"included" if age_bin in included_age_bins else ""}')
+print()
+
+
+# partial correlation (controlling for mlu)
+res1 = pg.partial_corr(data=xy, x='sem-comp', y=f'{POS}-selectivity', covar='mlu')
+print('Partial Correlation between sem-comp and selectivity controlling for mlu')
+print(res1)
+res2 = pg.partial_corr(data=xy, x='syn-comp', y=f'{POS}-selectivity', covar='mlu')
+print('Partial Correlation between syn-comp and selectivity controlling for mlu')
+print(res2)
+
+
+# TODO mediation analysis

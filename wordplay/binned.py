@@ -39,3 +39,26 @@ def make_age_bin2tokens(corpus_name: str,
         age_bin2tokens[age_bin] = tokens
 
     return age_bin2tokens
+
+
+def make_age_bin2tokens_with_min_size(age_bin2tokens: Dict[float, List[str]],
+                                      min_num_tokens: int,
+                                      ):
+    """
+    return dictionary similar to age_bin2tokens but with a constant number of tokens per age_bin.
+    combine bins when a bin is too small.
+    remove content from bin when a bin is too small
+    """
+    res = {}
+    buffer = []
+    for age_bin, tokens in age_bin2tokens.items():
+
+        buffer += tokens
+
+        if len(buffer) > min_num_tokens:
+            res[age_bin] = buffer[-min_num_tokens:]
+            buffer = []
+        else:
+            continue
+
+    return res
