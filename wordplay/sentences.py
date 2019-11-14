@@ -1,9 +1,9 @@
 from typing import List, Set
 
 
-def get_sentences_from_tokens(tokens: List[str],
-                              punctuation: Set[str],
-                              ) -> List[List[str]]:
+def split_into_sentences(tokens: List[str],
+                         punctuation: Set[str],
+                         ) -> List[List[str]]:
     assert isinstance(punctuation, set)
 
     res = [[]]

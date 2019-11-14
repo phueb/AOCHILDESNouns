@@ -23,13 +23,13 @@ from preppy.legacy import TrainPrep
 from categoryeval.probestore import ProbeStore
 
 from wordplay.regression import regress
-from wordplay.docs import load_docs
+from wordplay.load import load_docs
 from wordplay.params import PrepParams
 from wordplay.utils import split
 from wordplay.representation import make_context_by_term_matrix
 from wordplay.measures import calc_selectivity
 from wordplay.measures import calc_utterance_lengths
-from wordplay.sentences import get_sentences_from_tokens
+from wordplay.sentences import split_into_sentences
 from wordplay.svo import subject_verb_object_triples
 
 # /////////////////////////////////////////////////////////////////
@@ -38,36 +38,51 @@ CORPUS_NAME = 'childes-20180319'
 PROBES_NAME = 'syn-4096'
 
 REVERSE = False
-NUM_PARTS = 32
+NUM_PARTS = 64  # approx. 30-50
 SHUFFLE_DOCS = False
+SHUFFLE_SENTENCES = False  # this is the only way to completely remove age-structure (also within documents)
 
-docs = load_docs(CORPUS_NAME,
-                 num_test_take_from_mid=0,
-                 num_test_take_random=0,
-                 shuffle_docs=SHUFFLE_DOCS)
+docs1 = load_docs(CORPUS_NAME,
+                  num_test_take_from_mid=0,
+                  num_test_take_random=0,
+                  shuffle_sentences=SHUFFLE_SENTENCES,
+                  shuffle_docs=SHUFFLE_DOCS)
 
-params = PrepParams(num_parts=NUM_PARTS, reverse=REVERSE)
-prep1 = TrainPrep(docs, **attr.asdict(params))
+params1 = PrepParams(num_parts=NUM_PARTS, reverse=REVERSE)
+prep1 = TrainPrep(docs1, **attr.asdict(params1))
 
-docs = load_docs(CORPUS_NAME + '_tags',
-                 num_test_take_from_mid=0,
-                 num_test_take_random=0,
-                 shuffle_docs=SHUFFLE_DOCS)
+docs2 = load_docs(CORPUS_NAME + '_tags',
+                  num_test_take_from_mid=0,
+                  num_test_take_random=0,
+                  shuffle_sentences=SHUFFLE_SENTENCES,
+                  shuffle_docs=SHUFFLE_DOCS)
 
-params = PrepParams(num_parts=NUM_PARTS, reverse=REVERSE)
-prep2 = TrainPrep(docs, **attr.asdict(params))
+params2 = PrepParams(num_parts=NUM_PARTS, reverse=REVERSE)
+prep2 = TrainPrep(docs2, **attr.asdict(params2))
 
 probe_store = ProbeStore('childes-20180319', PROBES_NAME, prep1.store.w2id)
 
 # ///////////////////////////////////////////////////////////////// parameters
 
-CONTEXT_SIZE = 2
+CONTEXT_SIZE = 3
 POS = 'NOUN'
+ADD_SEM_PROBES = True  # set to True
+
+# names
+MLU = 'MLU'
+SEM_COMPLEXITY = 'sem-complexity'
+SYN_COMPLEXITY = 'syn-complexity'
+SELECTIVITY = f'{POS}-context-selectivity'
 
 # /////////////////////////////////////////////////////////////////
 
-# get a subset of pos_words which occur in ALL parts of corpus
 pos_words = probe_store.cat2probes[POS].copy()
+
+if ADD_SEM_PROBES:
+    added_probes = ProbeStore('childes-20180319', 'sem-all', prep1.store.w2id).types.copy()
+    pos_words.update(added_probes)
+
+# get a subset of pos_words which occur in ALL parts of corpus
 for tokens in split(prep1.store.tokens, prep1.num_tokens_in_part):
     types_in_part = set(tokens)
     pos_words.intersection_update(types_in_part)
@@ -96,15 +111,15 @@ for word_tokens, tag_tokens in zip(split(prep1.store.tokens, prep1.num_tokens_in
 
     # /////////////////////////////////// calc syntactic complexity
 
-    sentences = get_sentences_from_tokens(tag_tokens, punctuation={'.', '!', '?'})
-    unique_sentences = np.unique(sentences)
-    syn_complexity_i = len(unique_sentences) / len(sentences)
+    tag_sentences = split_into_sentences(tag_tokens, punctuation={'.', '!', '?'})
+    unique_sentences = np.unique(tag_sentences)
+    syn_complexity_i = len(unique_sentences) / len(tag_sentences)
 
     # /////////////////////////////////// calc semantic complexity
 
     # compute num SVO triples as measure of semantic complexity
-    sentences = get_sentences_from_tokens(word_tokens, punctuation={'.', '!', '?'})
-    texts = [' '.join(s) for s in sentences]
+    word_sentences = split_into_sentences(word_tokens, punctuation={'.', '!', '?'})
+    texts = [' '.join(s) for s in word_sentences]
     unique_triples = set()
     for doc in nlp.pipe(texts):
         for t in subject_verb_object_triples(doc):  # only returns triples, not partial triples
@@ -142,23 +157,41 @@ for word_tokens, tag_tokens in zip(split(prep1.store.tokens, prep1.num_tokens_in
     sem_complexity.append(sem_complexity_i)
 
 # regress selectivity on mlu + sem-complexity
-x = pd.DataFrame(data={'mlu': mlu, 'sem-comp': sem_complexity})
+x = pd.DataFrame(data={MLU: mlu, SEM_COMPLEXITY: sem_complexity})
 x[x.columns] = StandardScaler().fit_transform(x)
 y = pd.Series(selectivity)
-y.name = f'{POS}-selectivity'
+y.name = SELECTIVITY
 summary = regress(x, y)  # reduces same results as sklearn with intercept + normalization
 print(summary)
 
 # regress selectivity on mlu + syn-complexity
-x = pd.DataFrame(data={'mlu': mlu, 'syn-comp': syn_complexity})
+x = pd.DataFrame(data={MLU: mlu, SEM_COMPLEXITY: sem_complexity})
+x['mlu*sen-comp'] = x[MLU] * x[SEM_COMPLEXITY]  # TODO Test the interaction
 x[x.columns] = StandardScaler().fit_transform(x)
 y = pd.Series(selectivity)
-y.name = f'{POS}-selectivity'
+y.name = SELECTIVITY
+summary = regress(x, y)  # reduces same results as sklearn with intercept + normalization
+print(summary)
+
+# regress selectivity on mlu + syn-complexity
+x = pd.DataFrame(data={MLU: mlu, SYN_COMPLEXITY: syn_complexity})
+x[x.columns] = StandardScaler().fit_transform(x)
+y = pd.Series(selectivity)
+y.name = SELECTIVITY
+summary = regress(x, y)  # reduces same results as sklearn with intercept + normalization
+print(summary)
+
+# regress selectivity on mlu + syn-complexity
+x = pd.DataFrame(data={MLU: mlu, SYN_COMPLEXITY: syn_complexity})
+x['mlu*syn-comp'] = x[MLU] * x[SYN_COMPLEXITY]  # TODO Test the interaction
+x[x.columns] = StandardScaler().fit_transform(x)
+y = pd.Series(selectivity)
+y.name = SELECTIVITY
 summary = regress(x, y)  # reduces same results as sklearn with intercept + normalization
 print(summary)
 
 # correlation matrix
-x_all = pd.DataFrame(data={'mlu': mlu, 'syn-comp': syn_complexity, 'sem-comp': sem_complexity})
+x_all = pd.DataFrame(data={MLU: mlu, SYN_COMPLEXITY: syn_complexity, SEM_COMPLEXITY: sem_complexity})
 x_all[x_all.columns] = StandardScaler().fit_transform(x_all)
 correlations = x_all.corr()
 print(correlations.round(3))
@@ -166,23 +199,23 @@ print(correlations.round(3))
 # scatter
 xy = pd.concat((x_all, y), axis=1)
 _, ax1 = plt.subplots()
-xy.plot(kind='scatter', x='sem-comp', y=f'{POS}-selectivity', ax=ax1)  # nonlinear effect
+xy.plot(kind='scatter', x=SEM_COMPLEXITY, y=SELECTIVITY, ax=ax1)  # nonlinear effect
 plt.show()
 _, ax2 = plt.subplots()
-xy.plot(kind='scatter', x='syn-comp', y=f'{POS}-selectivity', ax=ax2)  # nonlinear effect
+xy.plot(kind='scatter', x=SYN_COMPLEXITY, y=SELECTIVITY, ax=ax2)  # nonlinear effect
 plt.show()
 _, ax3 = plt.subplots()
-xy.plot(kind='scatter', x='mlu', y=f'{POS}-selectivity', ax=ax3)  # nonlinear effect
+xy.plot(kind='scatter', x=MLU, y=SELECTIVITY, ax=ax3)  # nonlinear effect
 plt.show()
 
 # partial correlation (controlling for mlu)
-res1 = pg.partial_corr(data=xy, x='sem-comp', y=f'{POS}-selectivity', covar='mlu')
+res1 = pg.partial_corr(data=xy, x=SEM_COMPLEXITY, y=SELECTIVITY, covar=MLU)
 print('Partial Correlation between sem-comp and selectivity controlling for mlu')
 print(res1)
-res2 = pg.partial_corr(data=xy, x='syn-comp', y=f'{POS}-selectivity', covar='mlu')
+res2 = pg.partial_corr(data=xy, x=SYN_COMPLEXITY, y=SELECTIVITY, covar=MLU)
 print('Partial Correlation between syn-comp and selectivity controlling for mlu')
 print(res2)
 
 # mediation analysis
-res = mediation_analysis(data=xy, x='mlu', m=['syn-comp', 'sem-comp'], y=f'{POS}-selectivity')
+res = mediation_analysis(data=xy, x=MLU, m=[SYN_COMPLEXITY, SEM_COMPLEXITY], y=SELECTIVITY)
 print(res)

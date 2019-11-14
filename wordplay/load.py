@@ -3,10 +3,13 @@ from typing import List
 from sortedcontainers import SortedSet
 
 from wordplay import config
+from wordplay.sentences import split_into_sentences
+from wordplay.utils import split
 
 
 def load_docs(corpus_name: str,
               shuffle_docs: bool = False,
+              shuffle_sentences: bool = False,
               num_test_take_from_mid: int = 0,
               num_test_take_random: int = 100,
               start_at_midpoint: bool = False,
@@ -15,8 +18,36 @@ def load_docs(corpus_name: str,
               shuffle_seed: int = 20,  # 20 results in pretty even probe distribution
               ) -> List[str]:
 
+    """
+    A "document" has type string. It is not tokenized.
+
+    WARNING:
+    Always use a seed for random operations.
+    For example when loading tags and words using this function twice, they won't align if no seed is set
+
+    WARNING:
+    shuffling the documents does not remove all age-structure,
+    because utterances associated with teh same age are still clustered within documents.
+    """
+
     p = config.Dirs.corpora / f'{corpus_name}.txt'
-    docs = p.read_text().split('\n')
+    text_in_file = p.read_text()
+
+    # shuffle at sentence-lelve (as opposed to document-level)
+    # this remove clustering of same-age utterances within documents
+    if shuffle_sentences:
+        random.seed(shuffle_seed)
+        print('WARNING: Shuffling sentences')
+        tokens = text_in_file.replace('\n', ' ').split()
+        sentences = split_into_sentences(tokens, punctuation={'.', '!', '?'})
+        random.shuffle(sentences)
+        tokens_new = [t for sentence in sentences for t in sentence]
+        num_original_docs = len(text_in_file.split('\n'))
+        size = len(tokens_new) // num_original_docs
+        docs = [' '.join(tokens) for tokens in split(tokens_new, size)]  # convert back to strings
+    else:
+        docs = text_in_file.split('\n')
+
     num_docs = len(docs)
     print(f'Loaded {num_docs} documents from {corpus_name}')
 
