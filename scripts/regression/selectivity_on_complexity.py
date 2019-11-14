@@ -5,8 +5,9 @@ Research questions:
 
 A caveat:
 The context-selectivity measure is extremely sensitive to the number of tokens.
-THis means that comparing selectivity at age bins,
- care must be taken to sample an equal number of words at each bin
+This means that comparing selectivity at age bins,
+ care must be taken to sample an equal number of words at each bin.
+In fact, this script partitions the corpus without considering that partitions neatly fit into a single age
 
 """
 import matplotlib.pyplot as plt
@@ -24,8 +25,7 @@ from categoryeval.probestore import ProbeStore
 from wordplay.regression import regress
 from wordplay.docs import load_docs
 from wordplay.params import PrepParams
-from wordplay.binned import make_age_bin2tokens_with_min_size
-from wordplay.binned import make_age_bin2tokens
+from wordplay.utils import split
 from wordplay.representation import make_context_by_term_matrix
 from wordplay.measures import calc_selectivity
 from wordplay.measures import calc_utterance_lengths
@@ -38,7 +38,7 @@ CORPUS_NAME = 'childes-20180319'
 PROBES_NAME = 'syn-4096'
 
 REVERSE = False
-NUM_PARTS = 1
+NUM_PARTS = 32
 SHUFFLE_DOCS = False
 
 docs = load_docs(CORPUS_NAME,
@@ -47,37 +47,31 @@ docs = load_docs(CORPUS_NAME,
                  shuffle_docs=SHUFFLE_DOCS)
 
 params = PrepParams(num_parts=NUM_PARTS, reverse=REVERSE)
-prep = TrainPrep(docs, **attr.asdict(params))
+prep1 = TrainPrep(docs, **attr.asdict(params))
 
-probe_store = ProbeStore('childes-20180319', PROBES_NAME, prep.store.w2id)
+docs = load_docs(CORPUS_NAME + '_tags',
+                 num_test_take_from_mid=0,
+                 num_test_take_random=0,
+                 shuffle_docs=SHUFFLE_DOCS)
+
+params = PrepParams(num_parts=NUM_PARTS, reverse=REVERSE)
+prep2 = TrainPrep(docs, **attr.asdict(params))
+
+probe_store = ProbeStore('childes-20180319', PROBES_NAME, prep1.store.w2id)
 
 # ///////////////////////////////////////////////////////////////// parameters
 
-CORPUS_NAME = 'childes-20191112'
-PROBES_NAME = 'syn-4096'
-AGE_STEP = 25  # the smaller, the more power, 25 is good
-CONTEXT_SIZE = 3
-NUM_TOKENS_PER_BIN = 100 * 1000  # 100K is good with AGE_STEP < 100
+CONTEXT_SIZE = 2
 POS = 'NOUN'
 
-MIN_NUM_POS_WORDS = 100
-
-# ///////////////////////////////////////////////////////////////// bin documents by age
-
-age_bin2word_tokens = make_age_bin2tokens(CORPUS_NAME, AGE_STEP)
-age_bin2tag_tokens = make_age_bin2tokens(CORPUS_NAME, AGE_STEP, suffix='_tags')
-
-for age_bin, word_tokens in age_bin2word_tokens.items():  # this is used to determine maximal NUM_TOKENS_PER_BIN
-    print(f'Number of words at age_bin={age_bin:>9} is {len(word_tokens):>9,}')
-
-# combine small bins to prevent exclusion later
-age_bin2word_tokens = make_age_bin2tokens_with_min_size(age_bin2word_tokens, NUM_TOKENS_PER_BIN)
-age_bin2tag_tokens = make_age_bin2tokens_with_min_size(age_bin2tag_tokens, NUM_TOKENS_PER_BIN)
-
-for age_bin, word_tokens in age_bin2word_tokens.items():
-    assert len(word_tokens) == NUM_TOKENS_PER_BIN
-
 # /////////////////////////////////////////////////////////////////
+
+# get a subset of pos_words which occur in ALL parts of corpus
+pos_words = probe_store.cat2probes[POS].copy()
+for tokens in split(prep1.store.tokens, prep1.num_tokens_in_part):
+    types_in_part = set(tokens)
+    pos_words.intersection_update(types_in_part)
+print(f'Number of {POS} words that occur in all partitions = {len(pos_words)}')
 
 nlp = spacy.load("en_core_web_sm", disable=['ner'])
 
@@ -85,28 +79,15 @@ mlu = []
 syn_complexity = []
 sem_complexity = []
 selectivity = []
-included_age_bins = []
-for age_bin in age_bin2tag_tokens.keys():
-
-    word_tokens = age_bin2word_tokens[age_bin]
-    tag_tokens = age_bin2tag_tokens[age_bin]
+for word_tokens, tag_tokens in zip(split(prep1.store.tokens, prep1.num_tokens_in_part),
+                                   split(prep2.store.tokens, prep2.num_tokens_in_part)):
 
     assert len(word_tokens) == len(tag_tokens)
     assert word_tokens != tag_tokens
 
-    # get same number of tokens at each bin
-    if len(word_tokens) < NUM_TOKENS_PER_BIN:
-        print(f'WARNING: Number of tokens ={len(word_tokens):>12,} < NUM_TOKENS_PER_BIN = {NUM_TOKENS_PER_BIN:>12,}')
-        continue
-    else:
-        word_tokens = word_tokens[:NUM_TOKENS_PER_BIN]
-
     # check
-    pos_words = probe_store.cat2probes[POS]
     num_pos_words_at_bin = len([w for w in pos_words if w in word_tokens])
-    if num_pos_words_at_bin < MIN_NUM_POS_WORDS:
-        print(f'WARNING: Number of {POS} words = {num_pos_words_at_bin} < {MIN_NUM_POS_WORDS}')
-        continue
+    print(f'Using {num_pos_words_at_bin} probes to compute selectivity')
 
     # /////////////////////////////////// calc MLU
 
@@ -148,8 +129,7 @@ for age_bin in age_bin2tag_tokens.keys():
                                                                  xws_observed,
                                                                  pos_words)
 
-    print(f'age_bin={age_bin}\n'
-          f'selectivity={selectivity_i}\n'
+    print(f'selectivity={selectivity_i}\n'
           f'mlu={mlu_i}\n'
           f'syn-complexity={syn_complexity_i}\n'
           f'sem-complexity={sem_complexity_i}\n')
@@ -160,7 +140,6 @@ for age_bin in age_bin2tag_tokens.keys():
     mlu.append(mlu_i)
     syn_complexity.append(syn_complexity_i)
     sem_complexity.append(sem_complexity_i)
-    included_age_bins.append(age_bin)
 
 # regress selectivity on mlu + sem-complexity
 x = pd.DataFrame(data={'mlu': mlu, 'sem-comp': sem_complexity})
@@ -196,12 +175,6 @@ _, ax3 = plt.subplots()
 xy.plot(kind='scatter', x='mlu', y=f'{POS}-selectivity', ax=ax3)  # nonlinear effect
 plt.show()
 
-print('age bins included:')
-for age_bin in age_bin2tag_tokens.keys():
-    print(f'age bin={age_bin:>9,} {"included" if age_bin in included_age_bins else ""}')
-print()
-
-
 # partial correlation (controlling for mlu)
 res1 = pg.partial_corr(data=xy, x='sem-comp', y=f'{POS}-selectivity', covar='mlu')
 print('Partial Correlation between sem-comp and selectivity controlling for mlu')
@@ -210,9 +183,6 @@ res2 = pg.partial_corr(data=xy, x='syn-comp', y=f'{POS}-selectivity', covar='mlu
 print('Partial Correlation between syn-comp and selectivity controlling for mlu')
 print(res2)
 
-
-# TODO mediation analysis
-res = mediation_analysis(data=xy, x='mlu', m='sem-comp', y=f'{POS}-selectivity')
-print(res)
-res = mediation_analysis(data=xy, x='mlu', m='syn-comp', y=f'{POS}-selectivity')
+# mediation analysis
+res = mediation_analysis(data=xy, x='mlu', m=['syn-comp', 'sem-comp'], y=f'{POS}-selectivity')
 print(res)

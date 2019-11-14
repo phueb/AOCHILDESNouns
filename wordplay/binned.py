@@ -3,6 +3,7 @@ from itertools import groupby
 from typing import List, Dict
 
 from wordplay import config
+from wordplay.utils import split
 
 
 """
@@ -43,12 +44,20 @@ def make_age_bin2tokens(corpus_name: str,
 
 def make_age_bin2tokens_with_min_size(age_bin2tokens: Dict[float, List[str]],
                                       min_num_tokens: int,
+                                      no_binning: bool,
                                       ):
     """
     return dictionary similar to age_bin2tokens but with a constant number of tokens per age_bin.
     combine bins when a bin is too small.
     remove content from bin when a bin is too small
     """
+
+    if no_binning:
+        print('WARNING: Not binning by age')
+        all_tokens = np.concatenate(list(age_bin2tokens.values()))
+        return {n: list(tokens) for n, tokens in enumerate(split(all_tokens, split_size=min_num_tokens))
+                if len(tokens) == min_num_tokens}
+
     res = {}
     buffer = []
     for age_bin, tokens in age_bin2tokens.items():
