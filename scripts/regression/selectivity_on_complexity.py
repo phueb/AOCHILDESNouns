@@ -1,6 +1,7 @@
 """
 Research questions:
-1. How well does noun-context selectivity correlate with semantic complexity?
+1. How well does does semantic and syntactic complexity predict noun-context selectivity controlling for MLU?
+2. Is the effect of MLU on noun-context-selectivity mediated via semantic or syntactic complexity or both?
 
 A caveat:
 The context-selectivity measure is extremely sensitive to the number of tokens.
