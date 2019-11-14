@@ -24,7 +24,7 @@ setup(
         'spacy',
         'pandas',
         'cytoolz',
-        'pygal',
+        'pygal', 'pingouin'
     ],
     url='https://github.com/phueb/Wordplay',
     license='',

@@ -25,7 +25,7 @@ docs = load_docs(CORPUS_NAME,
                  num_test_take_random=0,
                  shuffle_docs=SHUFFLE_DOCS)
 
-params = PrepParams(num_parts=NUM_PARTS, reverse=REVERSE, num_types=4096)
+params = PrepParams(num_parts=NUM_PARTS, reverse=REVERSE)
 prep = TrainPrep(docs, **attr.asdict(params))
 
 

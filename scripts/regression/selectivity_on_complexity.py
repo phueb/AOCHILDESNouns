@@ -13,6 +13,7 @@ import spacy
 import numpy as np
 import attr
 import pingouin as pg
+from pingouin import mediation_analysis
 import pandas as pd
 
 from preppy.legacy import TrainPrep
@@ -43,7 +44,7 @@ docs = load_docs(CORPUS_NAME,
                  num_test_take_random=0,
                  shuffle_docs=SHUFFLE_DOCS)
 
-params = PrepParams(num_parts=NUM_PARTS, reverse=REVERSE, num_types=4096)
+params = PrepParams(num_parts=NUM_PARTS, reverse=REVERSE)
 prep = TrainPrep(docs, **attr.asdict(params))
 
 probe_store = ProbeStore('childes-20180319', PROBES_NAME, prep.store.w2id)
@@ -52,7 +53,7 @@ probe_store = ProbeStore('childes-20180319', PROBES_NAME, prep.store.w2id)
 
 CORPUS_NAME = 'childes-20191112'
 PROBES_NAME = 'syn-4096'
-AGE_STEP = 50
+AGE_STEP = 100
 CONTEXT_SIZE = 2
 NUM_TOKENS_PER_BIN = 100 * 1000  # 100K is good with AGE_STEP=100
 POS = 'NOUN'
@@ -178,15 +179,15 @@ x_all = pd.DataFrame(data={'mlu': mlu, 'syn-comp': syn_complexity, 'sem-comp': s
 correlations = x_all.corr()
 print(correlations.round(3))
 
-# TODO to include more bins - combine bins which are excluded (those age bins at the very start and end
-
 # scatter
 xy = pd.concat((x_all, y), axis=1)
 _, ax1 = plt.subplots()
-_, ax2 = plt.subplots()
-_, ax3 = plt.subplots()
 xy.plot(kind='scatter', x='sem-comp', y=f'{POS}-selectivity', ax=ax1)  # nonlinear effect
+plt.show()
+_, ax2 = plt.subplots()
 xy.plot(kind='scatter', x='syn-comp', y=f'{POS}-selectivity', ax=ax2)  # nonlinear effect
+plt.show()
+_, ax3 = plt.subplots()
 xy.plot(kind='scatter', x='mlu', y=f'{POS}-selectivity', ax=ax3)  # nonlinear effect
 plt.show()
 
