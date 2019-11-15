@@ -26,7 +26,7 @@ PROBES_NAME = 'sem-all'
 
 SHUFFLE_DOCS = False
 NUM_MID_TEST_DOCS = 0
-NUM_PARTS = 128  # spearman correlation requires more than just 2
+NUM_PARTS = 64  # spearman correlation requires more than just 2
 
 docs = load_docs(CORPUS_NAME,
                  num_test_take_from_mid=NUM_MID_TEST_DOCS,
@@ -38,17 +38,7 @@ prep = TrainPrep(docs, **attr.asdict(params))
 
 # /////////////////////////////////////////////////////////////////
 
-POS_LIST = [
-    'noun',
-    'verb',
-    'adjective',
-    'adverb',
-    'conjunction',
-    'preposition',
-    'pronoun',
-    'punctuation',
-    'interjection',  # TODO is not significant - perhaps spacy tags are not very accurate
-]
+POS_LIST = set([pos for pos in tag2pos.values() if pos.isupper()])
 
 # collect counts
 pos2counts = {pos: [] for pos in POS_LIST}
@@ -65,11 +55,12 @@ for tags in split(prep.store.tokens, prep.num_tokens_in_part):
 
 # calculate Spearman's correlation
 data = []
-a = np.arange(NUM_PARTS)  # TODO don't just correlate with position in corpus - use the actual age value
+a = np.arange(NUM_PARTS)
 for pos in POS_LIST:
     b = np.array(pos2counts[pos]) / prep.num_tokens_in_part
     rho, p = stats.spearmanr(a, b)
     print(f'{pos:<12} rho={rho:+.2f} p={p:.4f}')
+
     # collect for pretty-printed table
     data.append((pos, rho, p))
 
@@ -80,7 +71,7 @@ print(tabulate(data,
 print(f'Number of corpus partitions={NUM_PARTS}')
 
 # latex
-print(tabulate(data,
+print(tabulate(sorted(data, key=lambda d: d[0]),
                headers=["Part-of-Speech", "Spearman's Rho", "p-value"],
                tablefmt='latex',
                floatfmt=".4f"))

@@ -1,12 +1,9 @@
 """
 Research questions:
-1. How well does noun-context selectivity correlate with semantic complexity?
+1. Does the density of nouns, verb, adjectives, etc. vary with age (not partition) in AO-CHILDES?
 
-A caveat:
-The context-selectivity measure is extremely sensitive to the number of tokens.
-THis means that comparing selectivity at age bins,
- care must be taken to sample an equal number of words at each bin
-
+Caveat:
+Because age bins contain an unequal number of tokens, care must be taken this does not influence results
 """
 import spacy
 import matplotlib.pyplot as plt
@@ -14,11 +11,7 @@ import matplotlib.pyplot as plt
 from categoryeval.probestore import ProbeStore
 
 from wordplay.binned import make_age_bin2tokens
-from wordplay.representation import make_context_by_term_matrix
-from wordplay.measures import calc_selectivity
-from wordplay.sentences import get_sentences_from_tokens
-from wordplay.utils import plot_best_fit_line
-from wordplay.svo import subject_verb_object_triples
+from wordplay.binned import make_age_bin2tokens_with_min_size
 
 # ///////////////////////////////////////////////////////////////// parameters
 
@@ -36,6 +29,9 @@ age_bin2tag_tokens = make_age_bin2tokens(CORPUS_NAME, AGE_STEP, suffix='_tags')
 
 for word_tokens in age_bin2word_tokens.values():  # this is used to determine maximal NUM_TOKENS_PER_BIN
     print(f'{len(word_tokens):,}')
+
+
+make_age_bin2tokens_with_min_size(age_bin2word_tokens)  # TODO use this to combine smaller bins
 
 # /////////////////////////////////////////////////////////////////
 

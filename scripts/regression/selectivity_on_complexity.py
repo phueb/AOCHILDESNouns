@@ -23,7 +23,7 @@ from preppy.legacy import TrainPrep
 from categoryeval.probestore import ProbeStore
 
 from wordplay.regression import regress
-from wordplay.load import load_docs
+from wordplay.docs import load_docs
 from wordplay.params import PrepParams
 from wordplay.utils import split
 from wordplay.representation import make_context_by_term_matrix
@@ -35,7 +35,7 @@ from wordplay.svo import subject_verb_object_triples
 # /////////////////////////////////////////////////////////////////
 
 CORPUS_NAME = 'childes-20180319'
-PROBES_NAME = 'syn-4096'
+PROBES_NAME = 'syn-nva'
 
 REVERSE = False
 NUM_PARTS = 64  # approx. 30-50
@@ -64,15 +64,15 @@ probe_store = ProbeStore('childes-20180319', PROBES_NAME, prep1.store.w2id)
 
 # ///////////////////////////////////////////////////////////////// parameters
 
-CONTEXT_SIZE = 3
+CONTEXT_SIZE = 2
 POS = 'NOUN'
-ADD_SEM_PROBES = True  # set to True
+ADD_SEM_PROBES = True if POS == 'NOUN' else False  # set to True when POS = 'NOUN'
 
 # names
 MLU = 'MLU'
-SEM_COMPLEXITY = 'sem-complexity'
-SYN_COMPLEXITY = 'syn-complexity'
-SELECTIVITY = f'{POS}-context-selectivity'
+SEM_COMPLEXITY = 'semantic complexity'
+SYN_COMPLEXITY = 'syntactic complexity'
+SELECTIVITY = f'{POS}-context selectivity'
 
 # /////////////////////////////////////////////////////////////////
 
@@ -165,25 +165,7 @@ summary = regress(x, y)  # reduces same results as sklearn with intercept + norm
 print(summary)
 
 # regress selectivity on mlu + syn-complexity
-x = pd.DataFrame(data={MLU: mlu, SEM_COMPLEXITY: sem_complexity})
-x['mlu*sen-comp'] = x[MLU] * x[SEM_COMPLEXITY]  # TODO Test the interaction
-x[x.columns] = StandardScaler().fit_transform(x)
-y = pd.Series(selectivity)
-y.name = SELECTIVITY
-summary = regress(x, y)  # reduces same results as sklearn with intercept + normalization
-print(summary)
-
-# regress selectivity on mlu + syn-complexity
 x = pd.DataFrame(data={MLU: mlu, SYN_COMPLEXITY: syn_complexity})
-x[x.columns] = StandardScaler().fit_transform(x)
-y = pd.Series(selectivity)
-y.name = SELECTIVITY
-summary = regress(x, y)  # reduces same results as sklearn with intercept + normalization
-print(summary)
-
-# regress selectivity on mlu + syn-complexity
-x = pd.DataFrame(data={MLU: mlu, SYN_COMPLEXITY: syn_complexity})
-x['mlu*syn-comp'] = x[MLU] * x[SYN_COMPLEXITY]  # TODO Test the interaction
 x[x.columns] = StandardScaler().fit_transform(x)
 y = pd.Series(selectivity)
 y.name = SELECTIVITY
@@ -197,15 +179,32 @@ correlations = x_all.corr()
 print(correlations.round(3))
 
 # scatter
+LABEL_FONT_SIZE = 20
 xy = pd.concat((x_all, y), axis=1)
 _, ax1 = plt.subplots()
-xy.plot(kind='scatter', x=SEM_COMPLEXITY, y=SELECTIVITY, ax=ax1)  # nonlinear effect
+xy.plot(kind='scatter', x=SEM_COMPLEXITY, y=SELECTIVITY, ax=ax1, color='black')
+ax1.xaxis.label.set_size(LABEL_FONT_SIZE)
+ax1.yaxis.label.set_size(LABEL_FONT_SIZE)
 plt.show()
 _, ax2 = plt.subplots()
-xy.plot(kind='scatter', x=SYN_COMPLEXITY, y=SELECTIVITY, ax=ax2)  # nonlinear effect
+xy.plot(kind='scatter', x=SYN_COMPLEXITY, y=SELECTIVITY, ax=ax2, color='black')
+ax2.xaxis.label.set_size(LABEL_FONT_SIZE)
+ax2.yaxis.label.set_size(LABEL_FONT_SIZE)
 plt.show()
 _, ax3 = plt.subplots()
-xy.plot(kind='scatter', x=MLU, y=SELECTIVITY, ax=ax3)  # nonlinear effect
+xy.plot(kind='scatter', x=MLU, y=SELECTIVITY, ax=ax3, color='black')
+ax3.xaxis.label.set_size(LABEL_FONT_SIZE)
+ax3.yaxis.label.set_size(LABEL_FONT_SIZE)
+plt.show()
+_, ax4 = plt.subplots()
+xy.plot(kind='scatter', x=SEM_COMPLEXITY, y=MLU, ax=ax4, color='black')
+ax4.xaxis.label.set_size(LABEL_FONT_SIZE)
+ax4.yaxis.label.set_size(LABEL_FONT_SIZE)
+plt.show()
+_, ax5 = plt.subplots()
+xy.plot(kind='scatter', x=SYN_COMPLEXITY, y=MLU, ax=ax5, color='black')
+ax5.xaxis.label.set_size(LABEL_FONT_SIZE)
+ax5.yaxis.label.set_size(LABEL_FONT_SIZE)
 plt.show()
 
 # partial correlation (controlling for mlu)

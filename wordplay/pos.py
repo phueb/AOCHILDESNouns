@@ -7,59 +7,59 @@ from wordplay import config
 nlp = spacy.load('en_core_web_sm', disable=['parser', 'ner'])
 
 pos2tags = {
-    'noun': {'NN', 'NNS'},
-    'verb': {'MD', 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ'},
-    'adjective': {'AFX', 'JJ', 'JJR', 'JJS'},
-    'proper-noun': {'NNP', 'NNPS'},
-    'adverb': {'RB', 'RBR', 'RBS', 'WRB'},
-    'pronoun': {'PRP', 'PRP$', 'WP', 'WP$', 'EX'},
-    'preposition': {'IN'},
-    'conjunction': {'CC'},
-    'interjection': {'UH'},
-    'determiner': {'DT', 'PDT', 'WDT'},
+    'NOUN': {'NN', 'NNS'},
+    'VERB': {'MD', 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ'},
+    'ADJ': {'AFX', 'JJ', 'JJR', 'JJS'},
+    'P-NOUN': {'NNP', 'NNPS'},
+    'ADV': {'RB', 'RBR', 'RBS', 'WRB'},
+    'PRON': {'PRP', 'PRP$', 'WP', 'WP$', 'EX'},
+    'ADP': {'IN'},
+    'CCONJ': {'CC'},
+    'INTJ': {'UH'},
+    'DET': {'DT', 'PDT', 'WDT'},
     'particle': {'POS', 'RP', 'TO'},
     'punctuation': {',', ':', '.', "''", 'HYPH', 'NFP'},
 }
 
 tag2pos = {
 
-    'NN': 'noun',
-    'NNS': 'noun',
+    'NN': 'NOUN',
+    'NNS': 'NOUN',
 
-    'MD': 'verb',
-    'VB': 'verb',
-    'VBD': 'verb',
-    'VBG': 'verb',
-    'VBN': 'verb',
-    'VBP': 'verb',
-    'VBZ': 'verb',
+    'MD': 'VERB',
+    'VB': 'VERB',
+    'VBD': 'VERB',
+    'VBG': 'VERB',
+    'VBN': 'VERB',
+    'VBP': 'VERB',
+    'VBZ': 'VERB',
 
-    'AFX': 'adjective',
-    'JJ': 'adjective',
-    'JJR': 'adjective',
-    'JJS': 'adjective',
+    'AFX': 'ADJ',
+    'JJ': 'ADJ',
+    'JJR': 'ADJ',
+    'JJS': 'ADJ',
 
-    'NNP': 'proper-noun',
-    'NNPS': 'proper-noun',
+    'NNP': 'P-NOUN',
+    'NNPS': 'P-NOUN',
 
-    'RB': 'adverb',
-    'RBR': 'adverb',
-    'RBS': 'adverb',
-    'WRB': 'adverb',
+    'RB': 'ADV',
+    'RBR': 'ADV',
+    'RBS': 'ADV',
+    'WRB': 'ADV',
 
-    'PRP': 'pronoun',
-    'PRP$': 'pronoun',
-    'WP': 'pronoun',
-    'WP$': 'pronoun',
-    'EX': 'pronoun',
+    'PRP': 'PRON',
+    'PRP$': 'PRON',
+    'WP': 'PRON',
+    'WP$': 'PRON',
+    'EX': 'PRON',
 
-    'IN': 'preposition',
-    'CC': 'conjunction',
-    'UH': 'interjection',
+    'IN': 'ADP',
+    'CC': 'CCONJ',
+    'UH': 'INTJ',
 
-    'PDT': 'determiner',
-    'WDT': 'determine',
-    'DT': 'determiner',
+    'PDT': 'DET',
+    'WDT': 'DET',
+    'DT': 'DET',
 
     'POS': 'particle',
     'RP': 'particle',
@@ -76,12 +76,6 @@ tag2pos = {
 
 }
 
-pos2pos_ = {'noun': 'NOUN',
-            'verb': 'VERB',
-            'preposition': 'ADP',
-            'conjunction': 'CCONJ',
-            'adjective': 'ADJ',
-            }
 
 excluded_set = set(string.printable.split() + config.Symbols.all)
 
@@ -93,7 +87,7 @@ def make_pos_words(vocab: List[str],
     res = set()
     for w in vocab:
         pos_ = nlp(w)[0].pos_
-        if pos_ == pos2pos_[pos] and w not in excluded_set:
+        if pos_ == pos and w not in excluded_set:
             res.add(w)
 
     assert len(res) != 0
