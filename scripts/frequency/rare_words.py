@@ -5,6 +5,8 @@ from scipy import stats
 
 from preppy.legacy import TrainPrep
 
+from wordplay import config
+from wordplay import config
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 from wordplay.utils import split

@@ -12,6 +12,7 @@ import attr
 from preppy.legacy import TrainPrep
 from preppy.legacy import make_windows_mat
 
+from wordplay import config
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 

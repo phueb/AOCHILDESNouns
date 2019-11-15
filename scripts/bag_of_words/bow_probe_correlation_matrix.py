@@ -13,6 +13,7 @@ from categoryeval.probestore import ProbeStore
 from wordplay.figs import plot_heatmap
 from wordplay.representation import make_bow_probe_representations
 from wordplay.utils import to_corr_mat, cluster
+from wordplay import config
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 

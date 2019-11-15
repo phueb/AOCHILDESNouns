@@ -16,4 +16,7 @@ class Symbols:
 
 
 class Fig:
-    fontsize = 12
+    ax_fontsize = 20
+    leg_fontsize = 12
+    dpi = 163
+    fig_size = (6, 6)

@@ -7,6 +7,7 @@ import attr
 
 from preppy.legacy import TrainPrep
 
+from wordplay import config
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 from wordplay.representation import make_context_by_term_matrix
@@ -103,8 +104,8 @@ for mat, label, x_words in zip([tw_mat1.T.asfptype(), tw_mat2.T.asfptype()],
 
 # comparing singular values - does syntactic or semantic category account for more?
 _, ax = plt.subplots(dpi=192, figsize=(6, 6))
-ax.set_title(f'Variance explained by NOUN-encoding dimensions\nwindow size={CONTEXT_SIZE}', fontsize=config.Fig.fontsize)
-ax.set_ylabel('Normalized Singular Value', fontsize=config.Fig.fontsize)
+ax.set_title(f'Variance explained by NOUN-encoding dimensions\nwindow size={CONTEXT_SIZE}', fontsize=config.Fig.ax_fontsize)
+ax.set_ylabel('Normalized Singular Value', fontsize=config.Fig.ax_fontsize)
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
 ax.tick_params(axis='both', which='both', top=False, right=False)

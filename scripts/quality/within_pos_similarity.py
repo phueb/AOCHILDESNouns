@@ -12,6 +12,7 @@ import attr
 from categoryeval.probestore import ProbeStore
 from preppy.legacy import TrainPrep
 
+from wordplay import config
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 from wordplay.representation import make_context_by_term_matrix

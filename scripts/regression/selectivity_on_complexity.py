@@ -24,6 +24,7 @@ from categoryeval.probestore import ProbeStore
 
 from wordplay.regression import regress
 from wordplay.docs import load_docs
+from wordplay import config
 from wordplay.params import PrepParams
 from wordplay.utils import split
 from wordplay.representation import make_context_by_term_matrix

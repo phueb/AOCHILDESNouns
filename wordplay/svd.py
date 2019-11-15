@@ -19,9 +19,9 @@ def plot_category_encoding_dimensions(cat2dim_ids: Dict[str, List[int]],
 
     # scatter plot
     _, ax = plt.subplots(dpi=192, figsize=(6, 6))
-    ax.set_title(title, fontsize=config.Fig.fontsize)
+    ax.set_title(title, fontsize=config.Fig.ax_fontsize)
     # axis
-    ax.set_xlabel('Singular Dimension', fontsize=config.Fig.fontsize)
+    ax.set_xlabel('Singular Dimension', fontsize=config.Fig.ax_fontsize)
     ax.spines['right'].set_visible(False)
     ax.spines['left'].set_visible(False)
     ax.spines['top'].set_visible(False)

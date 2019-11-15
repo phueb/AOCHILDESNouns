@@ -27,6 +27,7 @@ import attr
 from categoryeval.probestore import ProbeStore
 from preppy.legacy import TrainPrep
 
+from wordplay import config
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 from wordplay.pos import load_pos_words

@@ -12,6 +12,7 @@ import numpy as np
 
 from preppy.legacy import TrainPrep
 
+from wordplay import config
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 from wordplay.representation import make_context_by_term_matrix
@@ -103,9 +104,9 @@ s2_noun_dims = [s2[i] if not np.isnan(i) else np.nan for i in noun_dims2]
 
 # figure
 fig, ax = plt.subplots(1, figsize=(5, 5), dpi=None)
-plt.title(f'SVD of AO-CHILDES partitions\nwindow size={CONTEXT_SIZE}', fontsize=config.Fig.fontsize)
-ax.set_ylabel('Singular value', fontsize=config.Fig.fontsize)
-ax.set_xlabel('Singular Dimension', fontsize=config.Fig.fontsize)
+plt.title(f'SVD of AO-CHILDES partitions\nwindow size={CONTEXT_SIZE}', fontsize=config.Fig.ax_fontsize)
+ax.set_ylabel('Singular value', fontsize=config.Fig.ax_fontsize)
+ax.set_xlabel('Singular Dimension', fontsize=config.Fig.ax_fontsize)
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
 ax.tick_params(axis='both', which='both', top=False, right=False)
@@ -117,6 +118,6 @@ x = np.arange(NUM_DIMS)
 
 ax.scatter(x, s1_noun_dims[::-1], label='NOUN dimension', color='C0', zorder=3)
 ax.scatter(x, s2_noun_dims[::-1], label='NOUN dimension', color='C1', zorder=3)
-ax.legend(loc='upper right', frameon=False, fontsize=config.Fig.fontsize)
+ax.legend(loc='upper right', frameon=False, fontsize=config.Fig.ax_fontsize)
 plt.tight_layout()
 plt.show()

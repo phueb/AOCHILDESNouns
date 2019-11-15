@@ -1,6 +1,20 @@
 """
 Research questions:
-1. Are same-category probe words more substitutable in the first or second half of the input?
+1. Do contexts in partition 1 of AO-CHILDES cover category members more uniformly?
+2. Are same-category members more substitutable in contexts that occur in partition 1?
+
+This measure was previously called within-category substitutability.
+
+
+How it works:
+Each context type is assigned a KL divergence reflecting its "coverage" across the entire corpus.
+To obtain a coverage specific to a particular partition,
+ the coverage value of each context token which occurs in the partition is obtained, and their values averaged.
+
+Why not compute coverage for each partition separately?
+Because this would result in each partition being evaluated on the coverage on a dramatically different set of contexts.
+Computing coverage for different sets of contexts would make it difficult to compare coverage between partitions.
+
 """
 
 import matplotlib.pyplot as plt
@@ -13,6 +27,7 @@ import seaborn as sns
 from preppy.legacy import TrainPrep
 from categoryeval.probestore import ProbeStore
 
+from wordplay import config
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 from wordplay.measures import calc_kl_divergence
@@ -20,7 +35,7 @@ from wordplay.measures import calc_kl_divergence
 # /////////////////////////////////////////////////////////////////
 
 CORPUS_NAME = 'childes-20180319'
-PROBES_NAME = 'sem-all'
+PROBES_NAME = 'syn-4096'  # TODO what about syntactic categories?
 
 SHUFFLE_DOCS = False
 NUM_MID_TEST_DOCS = 0
@@ -40,7 +55,7 @@ probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
 
 MIN_CONTEXT_FREQ = 10
 MIN_CAT_FREQ = 1
-CONTEXT_DISTANCES = [1, 2, 3]
+CONTEXT_DISTANCES = [1, 2, 3, 4]
 Y_MAX = 0.5
 
 
@@ -105,11 +120,10 @@ for context_dist in CONTEXT_DISTANCES:
     kld2locations = make_kld2locations(probe_store, prep.store.tokens, context_dist)
 
     # fig
-    fontsize = 16
-    _, ax = plt.subplots(figsize=(6, 6))
-    ax.set_title('context-size={}'.format(context_dist), fontsize=fontsize)
-    ax.set_ylabel('Probability', fontsize=fontsize)
-    ax.set_xlabel('KL Divergence', fontsize=fontsize)
+    _, ax = plt.subplots(figsize=config.Fig.fig_size, dpi=config.Fig.dpi)
+    ax.set_title('context-size={}'.format(context_dist), fontsize=config.Fig.ax_fontsize)
+    ax.set_ylabel('Probability', fontsize=config.Fig.ax_fontsize)
+    ax.set_xlabel('KL Divergence', fontsize=config.Fig.ax_fontsize)
     ax.spines['right'].set_visible(False)
     ax.spines['top'].set_visible(False)
     ax.tick_params(axis='both', which='both', top=False, right=False)
@@ -130,10 +144,6 @@ for context_dist in CONTEXT_DISTANCES:
                               bins=num_bins, range=[0, 12], zorder=3)
     y2binned, x2, _ = ax.hist(y2, density=True, label='partition 2', color=colors[1], histtype='step',
                               bins=num_bins, range=[0, 12], zorder=3)
-    ax.text(0.02, 0.7, 'partition 1:\nmean={:.2f}+/-{:.1f}\nn={:,}'.format(
-        np.mean(y1), np.std(y1), len(y1)), transform=ax.transAxes, fontsize=fontsize - 2)
-    ax.text(0.02, 0.55, 'partition 2:\nmean={:.2f}+/-{:.1f}\nn={:,}'.format(
-        np.mean(y2), np.std(y2), len(y2)), transform=ax.transAxes, fontsize=fontsize - 2)
     #  fill between the lines (highlighting the difference between the two histograms)
     for i, x1i in enumerate(x1[:-1]):
         y1line = [y1binned[i], y1binned[i]]
@@ -146,9 +156,13 @@ for context_dist in CONTEXT_DISTANCES:
                         alpha=0.5,
                         zorder=2)
     #
-    plt.legend(frameon=False, loc='upper left', fontsize=fontsize)
+    plt.legend(frameon=False, loc='upper left', fontsize=config.Fig.leg_fontsize)
     plt.tight_layout()
     plt.show()
+
+    # console
+    print(f'partition 1: mean={np.mean(y1):.2f}+/-{np.std(y1):.1f}\nn={len(y1):,}')
+    print(f'partition 2: mean={np.mean(y2):.2f}+/-{np.std(y2):.1f}\nn={len(y2):,}')
 
     # t test
     t, prob = ttest_ind(y1, y2, equal_var=False)

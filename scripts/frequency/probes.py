@@ -5,6 +5,7 @@ import attr
 from preppy.legacy import TrainPrep
 from categoryeval.probestore import ProbeStore
 
+from wordplay import config
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 from wordplay.utils import fit_line

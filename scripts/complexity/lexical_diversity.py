@@ -4,6 +4,7 @@ import attr
 
 from preppy.legacy import TrainPrep
 
+from wordplay import config
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 from wordplay.measures import calc_entropy
