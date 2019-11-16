@@ -43,7 +43,7 @@ from wordplay.memory import set_memory_limit
 # /////////////////////////////////////////////////////////////////
 
 CORPUS_NAME = 'childes-20180319'
-PROBES_NAME = 'sem-all'
+PROBES_NAME = 'syn-4096'
 
 SHUFFLE_DOCS = False
 NUM_MID_TEST_DOCS = 0
@@ -151,9 +151,7 @@ for cat in probe_store.cats:
         y1 = np.array(y1)
         y2 = np.array(y2)
 
-        # convert kld to coverage
-        y1 = 1.0 / y1
-        y2 = 1.0 / y2
+
 
         # fig
         if SHOW_HISTOGRAM:
@@ -163,7 +161,7 @@ for cat in probe_store.cats:
             _, ax = plt.subplots(figsize=config.Fig.fig_size, dpi=config.Fig.dpi)
             ax.set_title('context-size={}'.format(context_size), fontsize=config.Fig.ax_fontsize)
             ax.set_ylabel('Probability', fontsize=config.Fig.ax_fontsize)
-            ax.set_xlabel('Coverage = 1 / KL Divergence', fontsize=config.Fig.ax_fontsize)
+            ax.set_xlabel('KL Divergence', fontsize=config.Fig.ax_fontsize)
             ax.spines['right'].set_visible(False)
             ax.spines['top'].set_visible(False)
             ax.tick_params(axis='both', which='both', top=False, right=False)
@@ -190,28 +188,31 @@ for cat in probe_store.cats:
             plt.tight_layout()
             plt.show()
 
-        # t test
+        # t test - operates on kl divergences, not coverage
         t, prob = ttest_ind(y1, y2, equal_var=True)
         cat2context_size2p[cat][context_size] = prob
         print('t={}'.format(t))
         print('p={:.6f}'.format(prob))
         print()
 
+        # convert kld to coverage
+        coverage1 = 1.0 / np.mean(y1)
+        coverage2 = 1.0 / np.mean(y2)
+
         # populate tabular data
-        for name, di in zip(headers, (cat, 1, context_size, np.mean(y1), len(y1))):
+        for name, di in zip(headers, (cat, 1, context_size, coverage1, len(y1))):
             name2col[name].append(di)
-        for name, di in zip(headers, (cat, 2, context_size, np.mean(y2), len(y2))):
+        for name, di in zip(headers, (cat, 2, context_size, coverage2, len(y2))):
             name2col[name].append(di)
 
 # data frame
 df = pd.DataFrame(name2col)
 
 # plot difference between partitions including all context-sizes
-ax = pg.plot_paired(data=df, dv='mean', within='partition', subject='Category', dpi=config.Fig.dpi)
+ax = pg.plot_paired(data=df, dv='coverage', within='partition', subject='Category', dpi=config.Fig.dpi)
 ax.set_title(f'context-sizes={CONTEXT_SIZES}')
-ax.set_ylabel('Mean KL Divergence')
+ax.set_ylabel('Coverage')
 plt.show()
-
 
 # aggregate over context_sizes and build easily readable table
 dfs = []
@@ -219,7 +220,13 @@ for context_size in CONTEXT_SIZES:
     # filter by context size
     df_at_context_size = df[df['context-size'] == context_size]
 
-    # convert kld to coverage by computing coverage = 1 / kld
+    # quick comparison
+    comparison = df_at_context_size.groupby(['Category', 'partition'])\
+        .mean().reset_index().sort_values('coverage', ascending=False)
+    print(comparison)
+    print()
+
+    # concatenate data from part 1 and 2 horizontally
     df1 = df_at_context_size.set_index('Category').groupby('Category')[['coverage', 'n']].first()
     df2 = df_at_context_size.set_index('Category').groupby('Category')[['coverage', 'n']].last()
     df1 = df1.rename(columns={'coverage': 'mean-coverage-1'})
@@ -230,11 +237,11 @@ for context_size in CONTEXT_SIZES:
     dfs.append(df_concat)
 
     # pairwise t-test between means associated with each category - pairwise has more power in this case
-    res = pg.pairwise_ttests(data=df_at_context_size, dv='mean', within='partition', subject='Category')
+    res = pg.pairwise_ttests(data=df_at_context_size, dv='coverage', within='partition', subject='Category')
     print(res)
 
     # plot difference between partitions
-    ax = pg.plot_paired(data=df_at_context_size, dv='mean', within='partition', subject='Category',
+    ax = pg.plot_paired(data=df_at_context_size, dv='coverage', within='partition', subject='Category',
                         dpi=config.Fig.dpi)
     ax.set_title(f'context-size={context_size}')
     ax.set_ylabel('Mean Coverage')
@@ -247,4 +254,4 @@ df_master = df_master.drop('overall-mean', axis=1)
 
 print(tabulate(df_master,
                tablefmt='latex',
-               floatfmt=".4f"))
+               floatfmt=".3f"))
