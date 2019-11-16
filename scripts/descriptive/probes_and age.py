@@ -26,7 +26,7 @@ w2id = {}
 for tokens in age_bin2tokens.values():
     for w in set(tokens):
         w2id[w] = len(w2id)
-probe_store = ProbeStore('childes-20180319', PROBES_NAME, w2id)
+probe_store = ProbeStore('childes-20180319', PROBES_NAME, w2id, excluded=excluded)
 
 # count
 cat2y = {pos: [] for pos in probe_store.cats}

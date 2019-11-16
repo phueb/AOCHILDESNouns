@@ -14,11 +14,12 @@ import pyprind
 from preppy.legacy import TrainPrep
 
 from wordplay import config
+from wordplay.word_sets import excluded
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 from wordplay.utils import fit_line
 from wordplay.utils import split
-from wordplay.sentences import get_sentences_from_tokens
+from wordplay.sentences import split_into_sentences
 from wordplay.svo import subject_verb_object_triples
 
 # /////////////////////////////////////////////////////////////////
@@ -49,7 +50,7 @@ nlp = spacy.load("en_core_web_sm", disable=['ner'])
 y = []
 pbar = pyprind.ProgBar(NUM_PARTS, stream=2) if not VERBOSE else None
 for tokens in split(prep.store.tokens, prep.num_tokens_in_part):
-    sentences = get_sentences_from_tokens(tokens, punctuation={'.', '!', '?'})
+    sentences = split_into_sentences(tokens, punctuation={'.', '!', '?'})
     texts = [' '.join(s) for s in sentences]
 
     triples_in_part = []
@@ -69,7 +70,7 @@ for tokens in split(prep.store.tokens, prep.num_tokens_in_part):
 
 
 # fig
-_, ax = plt.subplots(dpi=192)
+_, ax = plt.subplots(dpi=config.Fig.dpi)
 plt.title('SVO-triples')
 ax.set_ylabel('Num unique SVO-triples')
 ax.set_xlabel('Partition')
@@ -84,7 +85,7 @@ ax.plot(x, y_fitted, '-')
 plt.show()
 
 # fig
-_, ax = plt.subplots(dpi=192)
+_, ax = plt.subplots(dpi=config.Fig.dpi)
 plt.title('SVO-triples')
 ax.set_ylabel(f'Z-scored Num unique SVO-triples')
 ax.set_xlabel('Partition')

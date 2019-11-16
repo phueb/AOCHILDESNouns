@@ -3,6 +3,7 @@ from typing import List
 from sortedcontainers import SortedSet
 
 from wordplay import config
+from wordplay.word_sets import excluded
 from wordplay.sentences import split_into_sentences
 from wordplay.utils import split
 

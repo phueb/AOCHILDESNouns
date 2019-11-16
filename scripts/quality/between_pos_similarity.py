@@ -15,6 +15,7 @@ from categoryeval.probestore import ProbeStore
 from preppy.legacy import TrainPrep
 
 from wordplay import config
+from wordplay.word_sets import excluded
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 from wordplay.representation import make_context_by_term_matrix
@@ -38,7 +39,7 @@ docs = load_docs(CORPUS_NAME,
 params = PrepParams(num_parts=NUM_PARTS, reverse=REVERSE)
 prep = TrainPrep(docs, **attr.asdict(params))
 
-probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
+probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id, excluded=excluded)
 
 # ///////////////////////////////////////////////////////////////// parameters
 

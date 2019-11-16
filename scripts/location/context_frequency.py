@@ -13,6 +13,7 @@ from preppy.legacy import TrainPrep
 from categoryeval.probestore import ProbeStore
 
 from wordplay import config
+from wordplay.word_sets import excluded
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 from wordplay.utils import get_sliding_windows
@@ -36,7 +37,7 @@ docs = load_docs(CORPUS_NAME,
 params = PrepParams(num_parts=NUM_PARTS, reverse=REVERSE)
 prep = TrainPrep(docs, **attr.asdict(params))
 
-probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
+probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id, excluded=excluded)
 
 # /////////////////////////////////////////////////////////////////
 
@@ -94,7 +95,7 @@ for part_id, tokens in enumerate(split(prep.store.tokens, prep.num_tokens_in_par
     y2.append(y2i)
 
 # fig
-fig, ax = plt.subplots(dpi=192)
+fig, ax = plt.subplots(dpi=config.Fig.dpi)
 plt.title(title + f' shuffle docs={SHUFFLE_DOCS}')
 x = np.arange(NUM_PARTS)
 ax.set_xlabel('Partition')

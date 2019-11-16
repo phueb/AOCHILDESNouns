@@ -16,7 +16,7 @@ from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 from wordplay.utils import fit_line
 from wordplay.utils import split
-from wordplay.sentences import get_sentences_from_tokens
+from wordplay.sentences import split_into_sentences
 
 # /////////////////////////////////////////////////////////////////
 
@@ -41,7 +41,7 @@ prep = TrainPrep(docs, **attr.asdict(params))
 y = []
 for tags in split(prep.store.tokens, prep.num_tokens_in_part):
 
-    sentences = get_sentences_from_tokens(tags, punctuation={'.'})
+    sentences = split_into_sentences(tags, punctuation={'.'})
     unique_sentences = np.unique(sentences)
     print(f'Found {len(sentences):>12,} total sentences in part')
     print(f'Found {len(unique_sentences):>12,} unique sentences in part')
@@ -50,7 +50,7 @@ for tags in split(prep.store.tokens, prep.num_tokens_in_part):
 
 
 # fig
-_, ax = plt.subplots(dpi=192)
+_, ax = plt.subplots(dpi=config.Fig.dpi)
 plt.title('')
 ax.set_ylabel('Num unique tag-sequences')
 ax.set_xlabel('Partition')
@@ -65,7 +65,7 @@ ax.plot(x, y_fitted, '-')
 plt.show()
 
 # fig
-_, ax = plt.subplots(dpi=192)
+_, ax = plt.subplots(dpi=config.Fig.dpi)
 plt.title('Syntactic Complexity')
 ax.set_ylabel(f'Z-scored Num unique tag-sequences')
 ax.set_xlabel('Partition')

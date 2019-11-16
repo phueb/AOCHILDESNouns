@@ -7,6 +7,7 @@ import seaborn as sns
 from sortedcontainers import SortedSet
 
 from wordplay import config
+from wordplay.word_sets import excluded
 
 
 def plot_category_encoding_dimensions(cat2dim_ids: Dict[str, List[int]],
@@ -18,7 +19,7 @@ def plot_category_encoding_dimensions(cat2dim_ids: Dict[str, List[int]],
     num_categories = len(categories)
 
     # scatter plot
-    _, ax = plt.subplots(dpi=192, figsize=(6, 6))
+    _, ax = plt.subplots(dpi=config.Fig.dpi, figsize=config.Fig.fig_size)
     ax.set_title(title, fontsize=config.Fig.ax_fontsize)
     # axis
     ax.set_xlabel('Singular Dimension', fontsize=config.Fig.ax_fontsize)
@@ -47,7 +48,7 @@ def plot_category_encoding_dimensions(cat2dim_ids: Dict[str, List[int]],
 def inspect_loadings(x_words, dimension, category_words, random_words, dim_id):
     num_x = len(x_words)
 
-    _, ax = plt.subplots(dpi=192, figsize=(6, 6))
+    _, ax = plt.subplots(dpi=config.Fig.dpi, figsize=config.Fig.fig_size)
     ax.set_title(f'Singular dimension {dim_id}')
     x = np.arange(num_x)
     ax.scatter(x, dimension, color='grey')
@@ -56,7 +57,7 @@ def inspect_loadings(x_words, dimension, category_words, random_words, dim_id):
     ax.axhline(y=np.nanmean(loadings), color='red', zorder=3)
     plt.show()
 
-    _, ax = plt.subplots(dpi=192, figsize=(6, 6))
+    _, ax = plt.subplots(dpi=config.Fig.dpi, figsize=config.Fig.fig_size)
     ax.set_title(f'Singular dimension {dim_id}')
     x = np.arange(num_x)
     ax.scatter(x, dimension, color='grey')

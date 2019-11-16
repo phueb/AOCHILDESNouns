@@ -18,6 +18,7 @@ from preppy.legacy import TrainPrep
 from categoryeval.probestore import ProbeStore
 
 from wordplay import config
+from wordplay.word_sets import excluded
 from wordplay.params import PrepParams
 from wordplay.pos import load_pos_words
 from wordplay.docs import load_docs
@@ -61,7 +62,7 @@ SCATTER_PLOT = True
 nouns = load_pos_words(f'{CORPUS_NAME}-nouns')
 
 # make semantic categories for probing
-probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
+probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id, excluded=excluded)
 cat2words = {}
 for cat in probe_store.cats:
     category_words = probe_store.cat2probes[cat]
@@ -123,7 +124,7 @@ for mat, label, x_words in zip([tw_mat1.T.asfptype(), tw_mat2.T.asfptype()],
 
 
 # comparing singular values - does syntactic or semantic category account for more?
-_, ax = plt.subplots(dpi=192, figsize=(6, 6))
+_, ax = plt.subplots(dpi=config.Fig.dpi, figsize=config.Fig.fig_size)
 ax.set_title(f'Variance explained by {PROBES_NAME}-encoding dimensions\nwindow size={CONTEXT_SIZE}', fontsize=config.Fig.ax_fontsize)
 ax.set_ylabel('Normalized Singular Value', fontsize=config.Fig.ax_fontsize)
 ax.spines['right'].set_visible(False)

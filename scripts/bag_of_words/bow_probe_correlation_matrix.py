@@ -14,6 +14,7 @@ from wordplay.figs import plot_heatmap
 from wordplay.representation import make_bow_probe_representations
 from wordplay.utils import to_corr_mat, cluster
 from wordplay import config
+from wordplay.word_sets import excluded
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 
@@ -34,7 +35,7 @@ docs = load_docs(CORPUS_NAME,
 params = PrepParams(num_parts=NUM_PARTS, context_size=CONTEXT_SIZE)
 prep = TrainPrep(docs, **attr.asdict(params))
 
-probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
+probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id, excluded=excluded)
 
 # ///////////////////////////////////////////////////////////////// parameters
 

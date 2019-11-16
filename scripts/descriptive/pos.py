@@ -4,6 +4,7 @@ from pygal.style import DefaultStyle
 
 from wordplay.pos import pos2tags
 from wordplay import config
+from wordplay.word_sets import excluded
 
 # ///////////////////////////////////////////////////////////////// parameters
 

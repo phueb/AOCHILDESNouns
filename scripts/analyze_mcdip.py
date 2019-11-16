@@ -46,7 +46,7 @@ for t, cts in target2context_tokens.items():
 
 
 def plot(xs, ys, xlabel, ylabel, annotations=None):
-    fig, ax = plt.subplots(1, figsize=(7, 7), dpi=192)
+    fig, ax = plt.subplots(1, figsize=config.Fig.fig_size, dpi=config.Fig.dpi)
     ax.set_xlabel(xlabel, fontsize=12)
     ax.set_ylabel(ylabel, fontsize=12)
     ax.spines['right'].set_visible(False)

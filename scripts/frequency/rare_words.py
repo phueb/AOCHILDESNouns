@@ -6,6 +6,7 @@ from scipy import stats
 from preppy.legacy import TrainPrep
 
 from wordplay import config
+from wordplay.word_sets import excluded
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 from wordplay.utils import split
@@ -40,7 +41,7 @@ print(f'Found {num_rare} rare words')
 print([w for w in prep.store.types if w not in rare_words])
 
 # fig
-fig, ax = plt.subplots(dpi=192)
+fig, ax = plt.subplots(dpi=config.Fig.dpi)
 plt.title(f'{num_rare} most infrequent words')
 ax.set_xlabel('Partition')
 ax.set_ylabel('z-scored Number of occurrences')

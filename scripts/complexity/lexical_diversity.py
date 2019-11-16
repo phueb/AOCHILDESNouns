@@ -5,6 +5,7 @@ import attr
 from preppy.legacy import TrainPrep
 
 from wordplay import config
+from wordplay.word_sets import excluded
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 from wordplay.measures import calc_entropy
@@ -32,7 +33,7 @@ prep = TrainPrep(docs, **attr.asdict(params))
 AX_FONTSIZE = 8
 LEG_FONTSIZE = 6
 FIGSIZE = (3.2, 2.2)
-DPI = 192
+DPI = config.Fig.dpi
 IS_LOG = True
 WSPACE = 0.0
 HSPACE = 0.0

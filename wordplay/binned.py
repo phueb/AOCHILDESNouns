@@ -3,6 +3,7 @@ from itertools import groupby
 from typing import List, Dict
 
 from wordplay import config
+from wordplay.word_sets import excluded
 from wordplay.utils import split
 
 

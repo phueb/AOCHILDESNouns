@@ -19,6 +19,7 @@ from categoryeval.probestore import ProbeStore
 
 from wordplay.representation import make_context_by_term_matrix
 from wordplay import config
+from wordplay.word_sets import excluded
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 from wordplay.measures import calc_selectivity
@@ -38,7 +39,7 @@ docs = load_docs(CORPUS_NAME,
 params = PrepParams()
 prep = TrainPrep(docs, **attr.asdict(params))
 
-probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
+probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id, excluded=excluded)
 
 # ///////////////////////////////////////////////////////////////// parameters
 
@@ -99,7 +100,7 @@ for part_id, tw_mat_observed, tw_mat_chance, xws_observed, xws_chance in zip(par
 
 
 # fig
-_, ax = plt.subplots(figsize=(6, 6), dpi=None)
+_, ax = plt.subplots(figsize=config.Fig.fig_size, dpi=config.Fig.dpi)
 plt.title(f'{PROBES_NAME}\ncontext-size={CONTEXT_SIZE}', fontsize=12)
 ax.set_ylabel(MEASURE_NAME)
 ax.spines['right'].set_visible(False)

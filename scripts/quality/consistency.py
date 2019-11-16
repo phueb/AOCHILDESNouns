@@ -28,6 +28,7 @@ from categoryeval.probestore import ProbeStore
 from preppy.legacy import TrainPrep
 
 from wordplay import config
+from wordplay.word_sets import excluded
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 from wordplay.pos import load_pos_words
@@ -50,7 +51,7 @@ docs = load_docs(CORPUS_NAME,
 params = PrepParams()
 prep = TrainPrep(docs, **attr.asdict(params))
 
-probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
+probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id, excluded=excluded)
 
 # ///////////////////////////////////////////////////////////////// parameters
 
@@ -108,7 +109,7 @@ context2is_pos2freq2 = make_context2is_filler_pos2freq(start_loc=prep.midpoint,
                                                        end_loc=prep.store.num_tokens)
 
 # fig
-_, ax = plt.subplots(figsize=(6, 6))
+_, ax = plt.subplots(figsize=config.Fig.fig_size)
 ax.set_title(f'{POS} consistency\ncontext-size={CONTEXT_SIZE}', fontsize=12)
 ax.set_ylabel(f'Avg. number of non-{POS} in context', fontsize=12)
 ax.set_xlabel(f'Number of {POS} in context', fontsize=12)

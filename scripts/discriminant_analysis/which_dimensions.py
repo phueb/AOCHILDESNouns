@@ -13,6 +13,7 @@ from preppy.legacy import TrainPrep
 from categoryeval.probestore import ProbeStore
 
 from wordplay import config
+from wordplay.word_sets import excluded
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 from wordplay.representation import make_context_by_term_matrix
@@ -52,7 +53,7 @@ tw_mat, xws, yws = make_context_by_term_matrix(
 
 # ///////////////////////////////////////////////////////////////// LDA
 
-probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
+probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id, excluded=excluded)
 y_true = np.array([probe_store.cat2id[probe_store.probe2cat[w]] if w in probe_store.types else 0 for w in xws])
 y_rand = np.random.permutation(y_true)
 
@@ -84,7 +85,7 @@ for dim_id in range(NUM_DIMS):  # get columns cumulatively
     print()
 
 
-_, ax = plt.subplots(dpi=192)
+_, ax = plt.subplots(dpi=config.Fig.dpi)
 plt.title(f'window-size={CONTEXT_SIZE}')
 ax.set_ylabel('LDA Accuracy')
 ax.set_xlabel('Number of Singular Dimensions in Training Data')

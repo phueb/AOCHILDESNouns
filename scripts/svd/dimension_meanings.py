@@ -19,6 +19,7 @@ from preppy.legacy import TrainPrep
 from categoryeval.probestore import ProbeStore
 
 from wordplay import config
+from wordplay.word_sets import excluded
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 from wordplay.pos import load_pos_words
@@ -26,6 +27,7 @@ from wordplay.representation import make_context_by_term_matrix
 from wordplay.svd import decode_singular_dimensions
 from wordplay.svd import plot_category_encoding_dimensions
 from wordplay import config
+from wordplay import excluded
 
 # /////////////////////////////////////////////////////////////////
 
@@ -43,7 +45,7 @@ docs = load_docs(CORPUS_NAME,
 params = PrepParams()
 prep = TrainPrep(docs, **attr.asdict(params))
 
-probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
+probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id, excluded=excluded)
 
 # /////////////////////////////////////////////////////////////////
 
@@ -77,7 +79,7 @@ for cat in SYN_CATEGORIES:
     assert len(category_words) > 0
 
 # make semantic categories for probing
-probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
+probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id, excluded=excluded)
 sem_cat2words = {}
 for cat in SEM_CATEGORIES:
     category_words = probe_store.cat2probes[cat]
@@ -126,7 +128,7 @@ for cat2words, label in zip([syn_cat2words, sem_cat2words], LABELS):
         plot_category_encoding_dimensions(cat2dim_ids, NUM_DIMS, title)
 
 # comparing singular values - does syntactic or semantic category account for more?
-_, ax = plt.subplots(dpi=192, figsize=(6, 6))
+_, ax = plt.subplots(dpi=config.Fig.dpi, figsize=config.Fig.fig_size)
 ax.set_title(f'Variance explained\nnouns vs. semantics\nwindow size={CONTEXT_SIZE}', fontsize=config.Fig.ax_fontsize)
 ax.set_xlabel('Category', fontsize=config.Fig.ax_fontsize)
 ax.set_ylabel('Singular Value', fontsize=config.Fig.ax_fontsize)

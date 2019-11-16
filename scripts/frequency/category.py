@@ -6,6 +6,7 @@ from preppy.legacy import TrainPrep
 from categoryeval.probestore import ProbeStore
 
 from wordplay import config
+from wordplay.word_sets import excluded
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 from wordplay.utils import fit_line
@@ -30,7 +31,7 @@ docs = load_docs(CORPUS_NAME,
 params = PrepParams(num_parts=NUM_PARTS, reverse=REVERSE)
 prep = TrainPrep(docs, **attr.asdict(params))
 
-probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
+probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id, excluded=excluded)
 
 # /////////////////////////////////////////////////////////////////
 
@@ -46,7 +47,7 @@ for tokens in split(prep.store.tokens, prep.num_tokens_in_part):
 
 
 # fig
-fig, ax = plt.subplots(dpi=192, figsize=(6, 6))
+fig, ax = plt.subplots(dpi=config.Fig.dpi, figsize=config.Fig.fig_size)
 plt.title(CATEGORY)
 ax.set_ylabel(f'Number of occurrences')
 ax.set_xlabel('Partition')

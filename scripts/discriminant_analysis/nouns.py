@@ -10,6 +10,7 @@ import scipy.sparse.linalg as sparse_linalg
 from preppy.legacy import TrainPrep
 
 from wordplay import config
+from wordplay.word_sets import excluded
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 from wordplay.representation import make_context_by_term_matrix

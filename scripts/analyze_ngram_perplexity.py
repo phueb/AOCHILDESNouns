@@ -64,7 +64,7 @@ for num_types in NUM_TYPES_LIST:
 # fig
 bar_width = 0.35
 num_vocab_sizes = len(NUM_TYPES_LIST)
-fig, axarr = plt.subplots(num_vocab_sizes, 1, dpi=192)
+fig, axarr = plt.subplots(num_vocab_sizes, 1, dpi=config.Fig.dpi)
 palette = cycle(sns.color_palette("hls", 2)[::-1])
 for title, ax, xys in zip(['Reduced Vocabulary', 'Full Vocabulary'], axarr, xys_list):
     ax.set_title(title)

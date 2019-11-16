@@ -20,7 +20,7 @@ from wordplay.docs import load_docs
 from wordplay import config
 from wordplay.utils import fit_line
 from wordplay.utils import split
-from wordplay.sentences import get_sentences_from_tokens
+from wordplay.sentences import split_into_sentences
 
 # /////////////////////////////////////////////////////////////////
 
@@ -61,7 +61,7 @@ Span.set_extension("contains_symbol", getter=contains_symbol)
 y = []
 pbar = pyprind.ProgBar(NUM_PARTS, stream=2) if not VERBOSE else None
 for tokens in split(prep.store.tokens, prep.num_tokens_in_part):
-    sentences = get_sentences_from_tokens(tokens, punctuation={'.', '!', '?'})
+    sentences = split_into_sentences(tokens, punctuation={'.', '!', '?'})
     texts = [' '.join(s) for s in sentences]
 
     noun_chunks_in_part = []
@@ -82,7 +82,7 @@ for tokens in split(prep.store.tokens, prep.num_tokens_in_part):
 
 
 # fig
-_, ax = plt.subplots(dpi=192)
+_, ax = plt.subplots(dpi=config.Fig.dpi)
 plt.title('Noun chunks')
 ax.set_ylabel('Num unique noun chunks')
 ax.set_xlabel('Partition')
@@ -97,7 +97,7 @@ ax.plot(x, y_fitted, '-')
 plt.show()
 
 # fig
-_, ax = plt.subplots(dpi=192)
+_, ax = plt.subplots(dpi=config.Fig.dpi)
 plt.title('Noun chunks')
 ax.set_ylabel(f'Z-scored Num unique noun chunks')
 ax.set_xlabel('Partition')

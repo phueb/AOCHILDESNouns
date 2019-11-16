@@ -57,7 +57,7 @@ for age_bin in age_bin2tag_tokens.keys():
 
     # pos_words
     w2id = {w: n for n, w in enumerate(set(word_tokens))}
-    probe_store = ProbeStore('childes-20180319', PROBES_NAME, w2id)
+    probe_store = ProbeStore('childes-20180319', PROBES_NAME, w2id, excluded=excluded)
     pos_words = probe_store.cat2probes[POS]
     print(len(pos_words))
 

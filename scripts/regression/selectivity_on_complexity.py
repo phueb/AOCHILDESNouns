@@ -25,6 +25,7 @@ from categoryeval.probestore import ProbeStore
 from wordplay.regression import regress
 from wordplay.docs import load_docs
 from wordplay import config
+from wordplay.word_sets import excluded
 from wordplay.params import PrepParams
 from wordplay.utils import split
 from wordplay.representation import make_context_by_term_matrix
@@ -61,7 +62,7 @@ docs2 = load_docs(CORPUS_NAME + '_tags',
 params2 = PrepParams(num_parts=NUM_PARTS, reverse=REVERSE)
 prep2 = TrainPrep(docs2, **attr.asdict(params2))
 
-probe_store = ProbeStore('childes-20180319', PROBES_NAME, prep1.store.w2id)
+probe_store = ProbeStore('childes-20180319', PROBES_NAME, prep1.store.w2id, excluded=excluded)
 
 # ///////////////////////////////////////////////////////////////// parameters
 
@@ -80,7 +81,7 @@ SELECTIVITY = f'{POS}-context selectivity'
 pos_words = probe_store.cat2probes[POS].copy()
 
 if ADD_SEM_PROBES:
-    added_probes = ProbeStore('childes-20180319', 'sem-all', prep1.store.w2id).types.copy()
+    added_probes = ProbeStore('childes-20180319', 'sem-all', prep1.store.w2id, excluded=excluded).types.copy()
     pos_words.update(added_probes)
 
 # get a subset of pos_words which occur in ALL parts of corpus

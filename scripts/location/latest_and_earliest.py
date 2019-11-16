@@ -7,6 +7,7 @@ from matplotlib.ticker import FuncFormatter
 from preppy.legacy import TrainPrep
 
 from wordplay import config
+from wordplay.word_sets import excluded
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 from wordplay.location import make_w2locations
