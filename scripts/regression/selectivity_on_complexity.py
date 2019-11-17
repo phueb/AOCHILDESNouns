@@ -41,14 +41,14 @@ PROBES_NAME = 'syn-nva'
 
 REVERSE = False
 NUM_PARTS = 64  # approx. 30-50
-SHUFFLE_DOCS = False
+
 SHUFFLE_SENTENCES = False  # this is the only way to completely remove age-structure (also within documents)
 
 docs1 = load_docs(CORPUS_NAME,
                   num_test_take_from_mid=0,
                   num_test_take_random=0,
                   shuffle_sentences=SHUFFLE_SENTENCES,
-                  shuffle_docs=SHUFFLE_DOCS)
+                  )
 
 params1 = PrepParams(num_parts=NUM_PARTS, reverse=REVERSE)
 prep1 = TrainPrep(docs1, **attr.asdict(params1))
@@ -57,7 +57,7 @@ docs2 = load_docs(CORPUS_NAME + '_tags',
                   num_test_take_from_mid=0,
                   num_test_take_random=0,
                   shuffle_sentences=SHUFFLE_SENTENCES,
-                  shuffle_docs=SHUFFLE_DOCS)
+                  )
 
 params2 = PrepParams(num_parts=NUM_PARTS, reverse=REVERSE)
 prep2 = TrainPrep(docs2, **attr.asdict(params2))

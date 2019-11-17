@@ -18,12 +18,12 @@ PROBES_NAME = 'sem-all'
 
 REVERSE = False
 NUM_PARTS = 8
-SHUFFLE_DOCS = False
+
 START_MID = False
 START_END = False
 
 docs = load_docs(CORPUS_NAME,
-                 shuffle_docs=SHUFFLE_DOCS,
+                 shuffle_sentences=False
                  start_at_midpoint=START_MID,
                  start_at_ends=START_END)
 

@@ -20,13 +20,13 @@ PROBES_NAME = 'sem-all'
 
 REVERSE = False
 NUM_PARTS = 32
-SHUFFLE_DOCS = False
+
 NUM_MID_TEST_DOCS = 100
 
 docs = load_docs(CORPUS_NAME,
                  num_test_take_from_mid=NUM_MID_TEST_DOCS,
                  num_test_take_random=0,
-                 shuffle_docs=SHUFFLE_DOCS)
+                 )
 
 params = PrepParams(num_parts=NUM_PARTS, reverse=REVERSE)
 prep = TrainPrep(docs, **attr.asdict(params))

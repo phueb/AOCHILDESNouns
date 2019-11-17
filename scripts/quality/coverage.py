@@ -43,15 +43,9 @@ from wordplay.memory import set_memory_limit
 # /////////////////////////////////////////////////////////////////
 
 CORPUS_NAME = 'childes-20180319'
-PROBES_NAME = 'syn-4096'
+PROBES_NAME = 'sem-all'
 
-SHUFFLE_DOCS = False
-NUM_MID_TEST_DOCS = 0
-
-docs = load_docs(CORPUS_NAME,
-                 num_test_take_from_mid=NUM_MID_TEST_DOCS,
-                 num_test_take_random=0,
-                 shuffle_docs=SHUFFLE_DOCS)
+docs = load_docs(CORPUS_NAME)
 
 params = PrepParams()
 prep = TrainPrep(docs, **attr.asdict(params))
@@ -61,7 +55,7 @@ probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id, excluded=exc
 # /////////////////////////////////////////////////////////////////
 
 
-MIN_CONTEXT_FREQ = 10
+MIN_CONTEXT_FREQ = 1  # using any more than 1 reduces power to detect differences at context-size=3
 CONTEXT_SIZES = [1, 2, 3]
 SHOW_HISTOGRAM = False
 
@@ -104,7 +98,7 @@ def make_context2info(probes: Set[str],
     return res
 
 
-def make_kld_location_tuples(d, probes):
+def make_kld_tuples(d, probes):
     """
     generate tuples like [(kld, locations), (kld, locations, ...]
     """
@@ -121,7 +115,7 @@ def make_kld_location_tuples(d, probes):
                  for probe in probes])
             kl = calc_kl_divergence(probes_expected_probabilities, probes_observed_probabilities)  # asymmetric
 
-            yield kl, d[context]['locations']
+            yield kl, d[context]['locations'], context
 
 
 set_memory_limit(prop=0.9)
@@ -143,7 +137,7 @@ for cat in probe_store.cats:
         # separate kl values by location
         y1 = []
         y2 = []
-        for kld, locations in make_kld_location_tuples(context2info, cat_probes):
+        for kld, locations, context in make_kld_tuples(context2info, cat_probes):
             num_locations_in_part1 = len(np.where(np.array(locations) < prep.midpoint)[0])
             num_locations_in_part2 = len(np.where(np.array(locations) > prep.midpoint)[0])
             y1 += [kld] * num_locations_in_part1
@@ -151,7 +145,11 @@ for cat in probe_store.cats:
         y1 = np.array(y1)
         y2 = np.array(y2)
 
-
+        # print examples
+        print(cat)
+        st = [(t[0], t[2]) for t in sorted(make_kld_tuples(context2info, cat_probes), key=lambda t: t[0])]
+        print(st[:10])
+        print(st[-10:])
 
         # fig
         if SHOW_HISTOGRAM:
@@ -244,7 +242,7 @@ for context_size in CONTEXT_SIZES:
     ax = pg.plot_paired(data=df_at_context_size, dv='coverage', within='partition', subject='Category',
                         dpi=config.Fig.dpi)
     ax.set_title(f'context-size={context_size}')
-    ax.set_ylabel('Mean Coverage')
+    ax.set_ylabel('Coverage')
     plt.show()
 
 df_master = pd.concat(dfs, axis=1)

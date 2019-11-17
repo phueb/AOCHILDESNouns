@@ -20,12 +20,12 @@ CORPUS_NAME = 'childes-20180319'
 
 REVERSE = False
 NUM_PARTS = 1
-SHUFFLE_DOCS = False
+
 
 docs = load_docs(CORPUS_NAME,
                  num_test_take_from_mid=0,
                  num_test_take_random=0,
-                 shuffle_docs=SHUFFLE_DOCS)
+                 )
 
 params = PrepParams(num_parts=NUM_PARTS, reverse=REVERSE)
 prep = TrainPrep(docs, **attr.asdict(params))

@@ -16,6 +16,12 @@ To compute consistency:
     a. scatter: x= frequency of nouns in a set of contexts, y = avg frequency of non-noun fillers in set of contexts
     b. best fit line: the smaller the slope the higher the consistency of the noun-contexts
 
+WARNING:
+    this method is not robust; it returns many false positives.
+    this can be verified by shuffling sentences; differences in the best fit line will still appear.
+    second, the method is extremely sensitive to the range over which the fit line is computed,
+    and as with regression, more generally, is sensitive to outliers, of which there are many
+
 """
 
 import matplotlib.pyplot as plt
@@ -40,13 +46,10 @@ from wordplay.utils import fit_line
 CORPUS_NAME = 'childes-20180319'
 PROBES_NAME = 'sem-all'
 
-SHUFFLE_DOCS = False
-
 docs = load_docs(CORPUS_NAME,
                  num_test_take_from_mid=0,
                  num_test_take_random=0,
-                 start_at_midpoint=False,
-                 shuffle_docs=SHUFFLE_DOCS)
+                 shuffle_sentences=False)
 
 params = PrepParams()
 prep = TrainPrep(docs, **attr.asdict(params))
@@ -55,12 +58,12 @@ probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id, excluded=exc
 
 # ///////////////////////////////////////////////////////////////// parameters
 
-POS = PROBES_NAME or 'nouns'
-CONTEXT_SIZE = 2
+POS = 'nouns' or PROBES_NAME or 'nouns'
+CONTEXT_SIZE = 1
 
 MAX_CONTEXT_CLASS = 50000  # too small -> program does not work, too large -> waste memory
 MIN_SUM = 0     # only affects figure and best-fit line
-MAX_SUM = 10000  # only affects figure and best-fit line
+MAX_SUM = 500  # only affects figure and best-fit line
 
 assert MAX_SUM <= MAX_CONTEXT_CLASS
 

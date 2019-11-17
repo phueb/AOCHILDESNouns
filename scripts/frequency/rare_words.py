@@ -1,4 +1,3 @@
-import numpy as np
 import matplotlib.pyplot as plt
 import attr
 from scipy import stats
@@ -6,23 +5,21 @@ from scipy import stats
 from preppy.legacy import TrainPrep
 
 from wordplay import config
-from wordplay.word_sets import excluded
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 from wordplay.utils import split
 
 # /////////////////////////////////////////////////////////////////
 
-CORPUS_NAME = 'childes-20180319'  # _tags
+CORPUS_NAME = 'childes-20180319'
 PROBES_NAME = 'sem-all'
 
 NUM_PARTS = 32  # z-scoring doesn't make sense when num-parts=2
-SHUFFLE_DOCS = False
+
 START_MID = False
 START_END = False
 
 docs = load_docs(CORPUS_NAME,
-                 shuffle_docs=SHUFFLE_DOCS,
                  start_at_midpoint=START_MID,
                  start_at_ends=START_END)
 

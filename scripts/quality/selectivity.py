@@ -29,12 +29,12 @@ from wordplay.measures import calc_selectivity
 CORPUS_NAME = 'childes-20180319'
 PROBES_NAME = 'syn-4096'
 
-SHUFFLE_DOCS = False
+
 
 docs = load_docs(CORPUS_NAME,
                  num_test_take_from_mid=0,
                  num_test_take_random=0,
-                 shuffle_docs=SHUFFLE_DOCS)
+                 )
 
 params = PrepParams()
 prep = TrainPrep(docs, **attr.asdict(params))

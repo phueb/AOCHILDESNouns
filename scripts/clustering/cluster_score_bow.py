@@ -33,13 +33,13 @@ PROBES_NAME = 'sem-4096'  # cannot use sem-all because some are too infrequent t
 
 REVERSE = False
 NUM_PARTS = 2
-SHUFFLE_DOCS = False
+
 CONTEXT_SIZE = 7
 
 docs = load_docs(CORPUS_NAME,
                  num_test_take_from_mid=0,
                  num_test_take_random=0,
-                 shuffle_docs=SHUFFLE_DOCS)
+                 )
 
 params = PrepParams(num_parts=NUM_PARTS, reverse=REVERSE, context_size=CONTEXT_SIZE)
 prep = TrainPrep(docs, **attr.asdict(params))
