@@ -10,7 +10,6 @@ re-occurring with a category member given it has occurred with a category member
 import pandas as pd
 import attr
 import matplotlib.pyplot as plt
-import numpy as np
 import pyprind
 import pingouin as pg
 from typing import Set, List, Dict, Tuple, Any
@@ -28,7 +27,7 @@ from wordplay.memory import set_memory_limit
 
 
 CORPUS_NAME = 'childes-20180319'
-PROBES_NAME = 'sem-all'
+PROBES_NAME = 'syn-4096'
 NUM_TYPES = None
 
 docs = load_docs(CORPUS_NAME,
@@ -42,7 +41,7 @@ probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id, excluded=exc
 # /////////////////////////////////////////////////////////////////
 
 CONTEXT_SIZES = [4]
-MEASURE_NAME = 'purity'
+MEASURE_NAME = 'Prominence'
 
 MIN_CO_OCCURRENCE_FREQ = 1  # the higher the less power
 
