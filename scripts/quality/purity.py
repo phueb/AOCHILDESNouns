@@ -7,12 +7,12 @@ Ideally, the measure in question quantifies the probability of a context
 re-occurring with a category member given it has occurred with a category member once before
 """
 
-import matplotlib.pyplot as plt
-from scipy.stats import ttest_ind
+import pandas as pd
 import attr
+import matplotlib.pyplot as plt
 import numpy as np
 import pyprind
-import seaborn as sns
+import pingouin as pg
 from typing import Set, List, Dict, Tuple, Any
 
 from preppy.legacy import TrainPrep
@@ -26,11 +26,13 @@ from wordplay.memory import set_memory_limit
 
 # /////////////////////////////////////////////////////////////////
 
+
 CORPUS_NAME = 'childes-20180319'
 PROBES_NAME = 'sem-all'
-NUM_TYPES = 4096  # a small vocabulary is needed to compute purity, otherwise vocabulary is too large
+NUM_TYPES = None
 
-docs = load_docs(CORPUS_NAME)
+docs = load_docs(CORPUS_NAME,
+                 shuffle_sentences=False)
 
 params = PrepParams(num_types=NUM_TYPES)
 prep = TrainPrep(docs, **attr.asdict(params))
@@ -42,128 +44,109 @@ probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id, excluded=exc
 CONTEXT_SIZES = [1]
 MEASURE_NAME = 'purity'
 
+MIN_CO_OCCURRENCE_FREQ = 1  # the higher the less power
 
-def make_context2info(probes: Set[str],
-                      tokens: List[str],
-                      distance: int,
-                      ) -> Dict[Tuple[str], Dict[str, Any]]:
+
+def make_count_df(probes: Set[str],
+                  tokens: List[str],
+                  distance: int,
+                  ) -> pd.DataFrame:
     """
-    collect information about contexts across entire corpus.
+
     """
     print('Collecting information about probe context locations...')
 
-    res = {}
+    # collect all contexts, keeping track of whether it is in-category
     pbar = pyprind.ProgBar(len(tokens))
+    context2in_category_list = {}
     for loc, token in enumerate(tokens[:-distance]):
         context = tuple(tokens[loc + d] for d in range(-distance, 0) if d != 0)
-        res.setdefault(context, {}).setdefault('locations', []).append(loc)
-
         if token in probes:
-            res.setdefault(context, {}).setdefault('in-category', []).append(True)
+            context2in_category_list.setdefault(context, []).append(1)
         else:
-            res.setdefault(context, {}).setdefault('in-category', []).append(False)
-
+            context2in_category_list.setdefault(context, []).append(0)
         pbar.update()
 
+    # only return information about contexts that occur at least once with category
+    # note: this returns a lot of contexts, because lots of generic noun contexts co-occur with semantic probes
+    col = []
+    for context, in_category_list in context2in_category_list.items():
+        if sum(in_category_list) <= MIN_CO_OCCURRENCE_FREQ:
+            continue
+
+        for in_category in in_category_list:
+            col.append(in_category)
+
+    res = pd.DataFrame(data={'in-category': col})
+
     return res
-
-
-def make_tuples(d, expected_prob):
-    """
-    generate tuples like [(y, locations), (y, locations, ...]
-
-    y is the measure of interest; it is a ratio of two probabilities.
-    the numerator is the observed probability of category contexts co-occurring with category member
-    the denominator is the expected probability of category contexts co-occurring with category member
-    """
-    for context in d.keys():
-
-        # context must occur with category member at least once
-        is_category_context = np.any(d[context]['in-category'])
-
-        # TODO the expected probability should be conditioned on the fact that the context
-        #  has co-occurred with a category member once already
-
-        if is_category_context:
-            observed_prob = np.sum(d[context]['in-category']) / len(d[context])
-            y = observed_prob / expected_prob
-            yield y, d[context]['locations']
 
 
 set_memory_limit(prop=0.9)
 
 
-headers = ['Category', 'partition', 'context-size', MEASURE_NAME, 'n']
-name2col = {name: [] for name in headers}
-cat2context_size2p = {cat: {} for cat in probe_store.cats}
+tokens1 = prep.store.tokens[:prep.midpoint // 1]  # TODO // 4 remove this in final analysis
+tokens2 = prep.store.tokens[-prep.midpoint // 1:]
+
+name2col = {'Category': [], 'partition': [], MEASURE_NAME: []}
 for cat in probe_store.cats:
     cat_probes = probe_store.cat2probes[cat]
 
     # the probability that a context occurs with a category member
-    num_cat_tokens = sum([prep.store.w2f[p] for p in cat_probes])
-    in_cat_prob = num_cat_tokens / prep.store.num_tokens
-    print(f'Probability of in-category context co-occurrence={in_cat_prob:.4f}')
+    num_cat_tokens1 = sum([1 for w in tokens1 if w in cat_probes])
+    num_cat_tokens2 = sum([1 for w in tokens2 if w in cat_probes])
+
+    print(cat)
+    print(num_cat_tokens1)
+    print(num_cat_tokens2)
 
     for context_size in CONTEXT_SIZES:
 
         # compute measure for contexts associated with a single category
         try:
-            context2info = make_context2info(cat_probes, prep.store.tokens, context_size)
+            df1 = make_count_df(cat_probes, tokens1, context_size)
         except MemoryError:
             raise SystemExit('Reached memory limit')
 
-        # separate measure by location
-        y1 = []
-        y2 = []
-        for y, locations in make_tuples(context2info, in_cat_prob):
-            num_locations_in_part1 = len(np.where(np.array(locations) < prep.midpoint)[0])
-            num_locations_in_part2 = len(np.where(np.array(locations) > prep.midpoint)[0])
-            y1 += [y] * num_locations_in_part1
-            y2 += [y] * num_locations_in_part2
-        y1 = np.array(y1)
-        y2 = np.array(y2)
+        try:
+            df2 = make_count_df(cat_probes, tokens2, context_size)
+        except MemoryError:
+            raise SystemExit('Reached memory limit')
 
-        # t test
-        t, prob = ttest_ind(y1, y2, equal_var=True)
-        cat2context_size2p[cat][context_size] = prob
-        print('t={}'.format(t))
-        print('p={:.6f}'.format(prob))
+        df1['partition'] = 1
+        df2['partition'] = 2
+        df_master = pd.concat((df1, df2))
+
+        print()
+        print(f'n1={len(df1):,}')
+        print(f'n2={len(df2):,}')
+
+        # chi-square
+        expected, observed, stats = pg.chi2_independence(df_master, x='partition', y='in-category')
+        print('expected:')
+        print(expected)
+        print('observed"')
+        print(observed)
+        print(stats)
+
+        col1 = df_master[df_master['partition'] == 1]['in-category']
+        col2 = df_master[df_master['partition'] == 2]['in-category']
+        yi1 = col1.sum() / len(col1)
+        yi2 = col2.sum() / len(col2)
+        print(f'proportion={yi1 :.6f}')
+        print(f'proportion={yi2 :.6f}')
         print()
 
-        # populate tabular data
-        for name, di in zip(headers, (cat, 1, context_size, np.mean(y1), len(y1))):
-            name2col[name].append(di)
-        for name, di in zip(headers, (cat, 2, context_size, np.mean(y2), len(y2))):
-            name2col[name].append(di)
+        name2col[MEASURE_NAME].append(yi1)
+        name2col[MEASURE_NAME].append(yi2)
+        name2col['Category'].append(cat)
+        name2col['Category'].append(cat)
+        name2col['partition'].append(1)
+        name2col['partition'].append(2)
 
-        NUM_BINS = None
-        X_RANGE = None
-        _, ax = plt.subplots(figsize=config.Fig.fig_size, dpi=config.Fig.dpi)
-        ax.set_title('context-size={}'.format(context_size), fontsize=config.Fig.ax_fontsize)
-        ax.set_ylabel('Probability', fontsize=config.Fig.ax_fontsize)
-        ax.set_xlabel(MEASURE_NAME, fontsize=config.Fig.ax_fontsize)
-        ax.spines['right'].set_visible(False)
-        ax.spines['top'].set_visible(False)
-        ax.tick_params(axis='both', which='both', top=False, right=False)
-        # ax.set_ylim([0, Y_MAX])
-        # plot
-        colors = sns.color_palette("hls", 2)[::-1]
-        y1binned, x1, _ = ax.hist(y1, density=True, label='partition 1', color=colors[0], histtype='step',
-                                  bins=NUM_BINS, range=X_RANGE, zorder=3)
-        y2binned, x2, _ = ax.hist(y2, density=True, label='partition 2', color=colors[1], histtype='step',
-                                  bins=NUM_BINS, range=X_RANGE, zorder=3)
-        #  fill between the lines (highlighting the difference between the two histograms)
-        for i, x1i in enumerate(x1[:-1]):
-            y1line = [y1binned[i], y1binned[i]]
-            y2line = [y2binned[i], y2binned[i]]
-            ax.fill_between(x=[x1i, x1[i + 1]],
-                            y1=y1line,
-                            y2=y2line,
-                            where=y1line > y2line,
-                            color=colors[0],
-                            alpha=0.5,
-                            zorder=2)
-        #
-        plt.legend(frameon=False, loc='upper right', fontsize=config.Fig.leg_fontsize)
-        plt.tight_layout()
-        plt.show()
+
+df = pd.DataFrame(data=name2col)
+ax = pg.plot_paired(data=df, dv=MEASURE_NAME, within='partition', subject='Category', dpi=config.Fig.dpi)
+ax.set_title(f'context-sizes={CONTEXT_SIZES}')
+ax.set_ylabel(MEASURE_NAME)
+plt.show()
