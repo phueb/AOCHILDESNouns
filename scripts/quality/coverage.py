@@ -56,8 +56,8 @@ probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id, excluded=exc
 
 
 MIN_CONTEXT_FREQ = 1  # using any more than 1 reduces power to detect differences at context-size=3
-CONTEXT_SIZES = [1, 2, 3]
-SHOW_HISTOGRAM = False
+CONTEXT_SIZES = [1]
+SHOW_HISTOGRAM = True
 
 
 def make_context2info(probes: Set[str],
@@ -65,8 +65,7 @@ def make_context2info(probes: Set[str],
                       distance: int,
                       ) -> Dict[Tuple[str], Dict[str, Any]]:
     """
-    compute KL divergence for each probe context type across entire corpus.
-    keep track of information about each context type
+    collect information about contexts across entire corpus.
     """
     print('Collecting information about probe context locations...')
 
@@ -78,21 +77,12 @@ def make_context2info(probes: Set[str],
             try:
                 res[context]['freq_by_probe'][token] += 1
                 res[context]['total_freq'] += 1
-                res[context]['term_freq'] += 0
-                res[context]['probe_freq'] += 1
                 res[context]['locations'].append(loc)
             except KeyError:
                 res[context] = {'freq_by_probe': {probe: 0.0 for probe in probes},
                                 'total_freq': 0,
-                                'term_freq': 0,
-                                'probe_freq': 0,
                                 'locations': [],
                                 }
-        else:
-            try:
-                res[context]['term_freq'] += 1
-            except KeyError:  # only update contexts which are already tracked
-                pass
         pbar.update()
 
     return res
