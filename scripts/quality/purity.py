@@ -41,7 +41,7 @@ probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id, excluded=exc
 
 # /////////////////////////////////////////////////////////////////
 
-CONTEXT_SIZES = [1]
+CONTEXT_SIZES = [4]
 MEASURE_NAME = 'purity'
 
 MIN_CO_OCCURRENCE_FREQ = 1  # the higher the less power
@@ -150,3 +150,6 @@ ax = pg.plot_paired(data=df, dv=MEASURE_NAME, within='partition', subject='Categ
 ax.set_title(f'context-sizes={CONTEXT_SIZES}')
 ax.set_ylabel(MEASURE_NAME)
 plt.show()
+
+res = pg.pairwise_ttests(data=df, dv=MEASURE_NAME, within='partition', subject='Category')
+print(res)
