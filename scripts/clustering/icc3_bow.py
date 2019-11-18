@@ -13,13 +13,14 @@ This script computes BOW representations for probes
 from sklearn.metrics.pairwise import cosine_similarity
 from tabulate import tabulate
 import attr
+import pingouin as pg
+import pandas as pd
+import numpy as np
 
 from preppy.legacy import TrainPrep
 from preppy.legacy import make_windows_mat
 from categoryeval.probestore import ProbeStore
-from categoryeval.score import calc_score
 
-from wordplay import config
 from wordplay.word_sets import excluded
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
@@ -50,17 +51,7 @@ probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id, excluded=exc
 
 DIRECTION = -1  # context is left if -1, context is right if +1  # -1
 NORM = 'l1'  # l1
-METRIC = 'ck'
-
-if METRIC == 'ba':
-    y_lims = [0.5, 1.0]
-elif METRIC == 'ck':
-    y_lims = [0.0, 0.2]
-elif METRIC == 'f1':
-    y_lims = [0.0, 0.2]
-else:
-    raise AttributeError('Invalid arg to "METRIC".')
-
+MEASURE_NAME = 'ICC-3'
 
 # /////////////////////////////////////////////////////////////////
 
@@ -82,18 +73,45 @@ for part_id in part_ids:
                                                 probe_store.types,
                                                 norm=NORM, direction=DIRECTION)
 
-    # calc score
-    score = calc_score(cosine_similarity(probe_reps), probe_store.gold_sims, metric=METRIC)
+    ratings_p = cosine_similarity(probe_reps).flatten()  # predicted
+    ratings_g = probe_store.gold_sims.astype(np.int).flatten()  # gold
+
+    # make df for icc computation
+    num_rows = len(ratings_p)
+    target_col = list(np.tile(np.arange(len(probe_store.gold_sims)), len(probe_store.gold_sims.T))) * 2
+    rater_col = [0 for _ in range(num_rows)] + [1 for _ in range(num_rows)]
+
+    # iterate over thresholds, binarize similarities at each, and find best icc3
+    scores = []
+    NUM_THRESHOLDS = 100
+    START_THRESHOLD = 0.9
+    for thr in np.linspace(START_THRESHOLD, 1.0, NUM_THRESHOLDS):
+        ratings_p_binary = np.array(ratings_p > thr).astype(np.int)
+        rating_col = np.concatenate((ratings_p_binary, ratings_g))
+        df = pd.DataFrame(data={'target': target_col, 'rater': rater_col, 'rating': rating_col})
+
+        # TODO icc-3 computation returns nans - is implementation broken ?
+        # calc icc-3, a measure of inter rater reliability
+        icc = pg.intraclass_corr(data=df, targets='target', raters='rater', ratings='rating')
+
+        score_at_thr = icc['ICC'][5]  # icc-3k is at index 5
+        print(f'thr={thr:.2f} score={score_at_thr}')
+        scores.append(score_at_thr)
+
+        # number of elements that are equal
+        print(np.sum(ratings_p_binary.astype(np.int) == ratings_g.astype(np.int)), len(ratings_p))
+        print()
 
     # collect
-    part_id2score[part_id] = score
-    print('part_id={} score={:.3f}'.format(part_id, score))
+    max_score = np.nanmax(scores)
+    part_id2score[part_id] = max_score
+    print('part_id={} score={:.3f}'.format(part_id, max_score))
 
 # table
 print('Semantic category information in AO-CHILDES'
       '\ncaptured by BOW representations\n'
       'with context-size={}'.format(CONTEXT_SIZE))
-headers = ['Partition', METRIC]
+headers = ['Partition', MEASURE_NAME]
 rows = [(part_id + 1, part_id2score[part_id]) for part_id in part_ids]
 print(tabulate(rows,
                headers=headers,

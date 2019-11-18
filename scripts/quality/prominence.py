@@ -4,16 +4,29 @@ Research questions:
 2. Are contexts more "pure" in the sense that they are ess contaminated by non-category words?
 
 Ideally, the measure in question quantifies the probability of a context
-re-occurring with a category member given it has occurred with a category member once before
+re-occurring with a category member given it has occurred with a category member once before.
+
+COMPUTE_MEASURE_ONCE_ON_WHOLE_CORPUS:
+setting this to true is supposed to control for the unequal number of category members between partitions.
+for example, nouns are more frequent in partition 1 of AO-CHILDES, but ideally,
+prominence should work independently of frequency and if higher for nouns in partition 1 should
+reflect some quality of the distributional properties of nouns independent of frequency.
+if this is set to true, then each context is assigned a prominence value, based on the entire corpus,
+rather than being computed on a single partition.
+the difference in prominence between partitions then, stems entirely from the extent to which
+high or low prominence contexts are distributed over partition 1 and 2
+
 """
 
-import pandas as pd
-import attr
 import matplotlib.pyplot as plt
+import attr
+import numpy as np
 import pyprind
-import pingouin as pg
-from typing import Set, List
+from typing import Dict, Any, Set, List, Tuple
 from tabulate import tabulate
+import pandas as pd
+import pingouin as pg
+from copy import deepcopy
 
 from preppy.legacy import TrainPrep
 from categoryeval.probestore import ProbeStore
@@ -22,7 +35,7 @@ from wordplay import config
 from wordplay.word_sets import excluded
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
-from wordplay.memory import set_memory_limit
+from wordplay.figs import make_histogram
 
 # /////////////////////////////////////////////////////////////////
 
@@ -38,50 +51,56 @@ probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id, excluded=exc
 
 # /////////////////////////////////////////////////////////////////
 
+COMPUTE_MEASURE_ONCE_ON_WHOLE_CORPUS = True
 CONTEXT_SIZES = [1, 2, 3]
 MEASURE_NAME = 'Prominence'
-MIN_CO_OCCURRENCE_FREQ = 1  # the higher the less power
+SHOW_HISTOGRAM = True
 
 measure_name1 = MEASURE_NAME + '-p1'
 measure_name2 = MEASURE_NAME + '-p2'
 
 
-def make_count_df(probes: Set[str],
-                  tokens: List[str],
-                  distance: int,
-                  ) -> pd.DataFrame:
+def make_context_ys(probes: Set[str],
+                    tokens: List[str],
+                    size: int,
+                    start: int,
+                    end: int,
+                    ) -> Dict[Tuple[str], Dict[str, Any]]:
     """
-    for each context that co-occurs with a category,
-    keep track of all the times it otherwise co-occurs with a category member or not
+    compute proportion of times a category context actually co-occurs with cateogy member
     """
-    # collect all contexts, keeping track of whether it is in-category
+    info = {'in-category': [],
+            'locations': [],
+            }
+    context2info = {}
     pbar = pyprind.ProgBar(len(tokens))
-    context2in_category_list = {}
-    for loc, token in enumerate(tokens[:-distance]):
-        context = tuple(tokens[loc + d] for d in range(-distance, 0) if d != 0)
+    for loc, token in enumerate(tokens[:-size]):
+        context = tuple(tokens[loc + dist] for dist in range(-size, 0) if dist != 0)
         if token in probes:
-            context2in_category_list.setdefault(context, []).append(1)
+            context2info.setdefault(context, deepcopy(info))['in-category'].append(1)
+            context2info.setdefault(context, deepcopy(info))['locations'].append(loc)
         else:
-            context2in_category_list.setdefault(context, []).append(0)
+            context2info.setdefault(context, deepcopy(info))['in-category'].append(0)
+            context2info.setdefault(context, deepcopy(info))['locations'].append(loc)
         pbar.update()
 
-    # only return information about contexts that occur at least once with category
-    # note: this returns a lot of contexts, because lots of generic noun contexts co-occur with semantic probes
-    col = []
-    for context, in_category_list in context2in_category_list.items():
-        if sum(in_category_list) <= MIN_CO_OCCURRENCE_FREQ:
+    # return a measure for each time a context occurs between start and end
+    for context in context2info.keys():
+        # a context must occur at least once with the category
+        # note: this returns a lot of contexts, because lots of generic noun contexts co-occur with semantic probes
+        in_category_list = context2info[context]['in-category']
+        num_in_category = np.sum(in_category_list)
+        if num_in_category == 0:
             continue
-        for in_category in in_category_list:
-            col.append(in_category)
-    count_df = pd.DataFrame(data={'in-category': col})
-    return count_df
 
+        y = num_in_category / len(in_category_list)
 
-set_memory_limit(prop=0.9)
+        locations_array = np.array(context2info[context]['locations'])
+        num_locations_in_partition = np.sum(np.logical_and(start < locations_array, locations_array < end)).item()
+        for _ in range(num_locations_in_partition):  # get the same prominence value each time the context occurs
 
+            yield y
 
-tokens1 = prep.store.tokens[:prep.midpoint // 1]
-tokens2 = prep.store.tokens[-prep.midpoint // 1:]
 
 headers = ['category', 'partition', 'context-size', MEASURE_NAME, 'n']
 name2col = {name: [] for name in headers}
@@ -93,51 +112,57 @@ for cat in probe_store.cats:
         print(cat)
         print(f'context-size={context_size}')
 
-        # the probability that a context occurs with a category member
-        num_cat_tokens1 = sum([1 for w in tokens1 if w in cat_probes])
-        num_cat_tokens2 = sum([1 for w in tokens2 if w in cat_probes])
-        print(num_cat_tokens1)
-        print(num_cat_tokens2)
+        if COMPUTE_MEASURE_ONCE_ON_WHOLE_CORPUS:
+            tokens1 = prep.store.tokens
+            tokens2 = prep.store.tokens
+            start1, end1 = 0, prep.midpoint
+            start2, end2 = prep.midpoint, prep.store.num_tokens
+        else:
+            tokens1 = prep.store.tokens[:prep.midpoint]
+            tokens2 = prep.store.tokens[-prep.midpoint:]
+            start1, end1 = 0, prep.num_tokens_in_part
+            start2, end2 = 0, prep.num_tokens_in_part
 
         # compute measure for contexts associated with a single category in a single partition
+        context_ys1 = np.array(list(make_context_ys(cat_probes, tokens1, context_size,
+                                                    start=start1, end=end1))).astype(np.float32)
+        context_ys2 = np.array(list(make_context_ys(cat_probes, tokens2, context_size,
+                                                    start=start2, end=end2))).astype(np.float32)
+
+        # fig
+        if SHOW_HISTOGRAM:
+            title = f'context-size={context_size}'
+            x_label = MEASURE_NAME
+            make_histogram(context_ys1, context_ys2, x_label, y_max=None, num_bins=None, x_range=None)
+            plt.show()
+
+        # mann-whitney test
         try:
-            df1 = make_count_df(cat_probes, tokens1, context_size)
+            res = pg.mwu(context_ys1, context_ys2, tail='two-sided')
         except MemoryError:
-            raise SystemExit('Reached memory limit')
+            print('Skipping Mann-Whitney test due to memory error')
+            prob = np.nan
+        else:
+            print()
+            print(res)
+            prob = res['p-val']
 
-        try:
-            df2 = make_count_df(cat_probes, tokens2, context_size)
-        except MemoryError:
-            raise SystemExit('Reached memory limit')
-
-        # chi-square
-        df1['partition'] = 1
-        df2['partition'] = 2
-        df_at_cat = pd.concat((df1, df2))
-        expected, observed, stats = pg.chi2_independence(df_at_cat, x='partition', y='in-category')
-        prob = stats['p'][0]
-        print('expected:')
-        print(expected)
-        print('observed"')
-        print(observed)
-        print(stats)
-
-        col1 = df_at_cat[df_at_cat['partition'] == 1]['in-category']
-        col2 = df_at_cat[df_at_cat['partition'] == 2]['in-category']
-        yi1 = col1.sum() / len(col1)
-        yi2 = col2.sum() / len(col2)
+        # take mean over prominence values computed on contexts
+        # to compute overall prominence for a category
+        yi1 = np.mean(context_ys1)
+        yi2 = np.mean(context_ys2)
 
         # console
-        print(f'n1={len(df1):,}')
-        print(f'n2={len(df2):,}')
+        print(f'n1={len(context_ys1):,}')
+        print(f'n2={len(context_ys2):,}')
         print(f'{MEASURE_NAME}={yi1 :.6f}')
         print(f'{MEASURE_NAME}={yi2 :.6f}')
         print()
 
         # populate tabular data
-        for name, di in zip(headers, (cat, 1, context_size, yi1, len(df1))):
+        for name, di in zip(headers, (cat, 1, context_size, yi1, len(context_ys1))):
             name2col[name].append(di)
-        for name, di in zip(headers, (cat, 2, context_size, yi2, len(df2))):
+        for name, di in zip(headers, (cat, 2, context_size, yi2, len(context_ys2))):
             name2col[name].append(di)
 
         cat2context_size2p[cat][context_size] = prob
