@@ -6,30 +6,24 @@ Research questions:
 This measure was previously called within-category substitutability.
 
 
-How it works:
-Each context type is assigned a KL divergence reflecting its "coverage" across the entire corpus.
-To obtain a coverage specific to a particular partition,
- the coverage value of each context token which occurs in the partition is obtained, and their values averaged.
-
-# TODO i don't see anymore why this is a good idea
-Why not compute coverage for each partition separately?
-Because this would result in each partition being evaluated on the coverage on a dramatically different set of contexts.
-Computing coverage for different sets of contexts would make it difficult to compare coverage between partitions.
+There are two versions of the algorithm:
+1. Coverage is computed corpus-wide, meaning each context type is assigned a single KLD,
+and the difference in partitions stems entirely in how many of each context type occurs in a partition.
+2. Coverage is computed within a partition, meaning each context type is assigned a KLD depending on the partition.
 
 Coverage for a single category = 1 / mean(klds)
 where mean(klds) is mean of all kl-divergences, one for each category context.
 """
 
 import matplotlib.pyplot as plt
-from scipy.stats import ttest_ind
 import attr
 import numpy as np
 import pyprind
-import seaborn as sns
 from typing import Dict, Any, Set, List, Tuple
 from tabulate import tabulate
 import pandas as pd
 import pingouin as pg
+from copy import deepcopy
 
 from preppy.legacy import TrainPrep
 from categoryeval.probestore import ProbeStore
@@ -40,6 +34,7 @@ from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 from wordplay.measures import calc_kl_divergence
 from wordplay.memory import set_memory_limit
+from wordplay.figs import make_histogram
 
 # /////////////////////////////////////////////////////////////////
 
@@ -55,62 +50,51 @@ probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id, excluded=exc
 
 # /////////////////////////////////////////////////////////////////
 
-
-MIN_CONTEXT_FREQ = 1  # using any more than 1 reduces power to detect differences at context-size=3
+COMPUTE_KLDS_ONCE_ON_WHOLE_CORPUS = False  # otherwise compute klds separately on each partition
 CONTEXT_SIZES = [1]
-SHOW_HISTOGRAM = True
 MEASURE_NAME = 'Coverage'
+SHOW_HISTOGRAM = False
 
 measure_name1 = MEASURE_NAME + '-p1'
 measure_name2 = MEASURE_NAME + '-p2'
 
 
-def make_context2info(probes: Set[str],
-                      tokens: List[str],
-                      distance: int,
-                      ) -> Dict[Tuple[str], Dict[str, Any]]:
+def make_klds(probes: Set[str],
+              tokens: List[str],
+              size: int,
+              start: int,
+              end: int,
+              ) -> Dict[Tuple[str], Dict[str, Any]]:
     """
-    collect information about contexts across entire corpus.
+    compute klds for context types on entire corpus if tokens corresponds to entire corpus,
+    or compute klds for context types on a partition, if tokens corresponds to a partition
     """
-    print('Collecting information about probe context locations...')
-
-    res = {}
+    info = {'freq_by_probe': {probe: 0.0 for probe in probes},
+            'total_freq': 0,
+            'locations': [],
+            }
+    context2info = {}
     pbar = pyprind.ProgBar(len(tokens))
-    for loc, token in enumerate(tokens[:-distance]):
-        context = tuple(tokens[loc + d] for d in range(-distance, 0) if d != 0)
+    for loc, token in enumerate(tokens[:-size]):
+        context = tuple(tokens[loc + dist] for dist in range(-size, 0) if dist != 0)
         if token in probes:
-            try:
-                res[context]['freq_by_probe'][token] += 1
-                res[context]['total_freq'] += 1
-                res[context]['locations'].append(loc)
-            except KeyError:
-                res[context] = {'freq_by_probe': {probe: 0.0 for probe in probes},
-                                'total_freq': 0,
-                                'locations': [],
-                                }
+            context2info.setdefault(context, deepcopy(info))['freq_by_probe'][token] += 1
+            context2info.setdefault(context, deepcopy(info))['total_freq'] += 1
+            context2info.setdefault(context, deepcopy(info))['locations'].append(loc)
         pbar.update()
 
-    return res
+    # klds
+    e = np.array([1 / len(probes) for _ in probes])
+    for context in context2info.keys():
+        o = np.array(
+            [context2info[context]['freq_by_probe'][p] / context2info[context]['total_freq'] for p in probes])
+        kl = calc_kl_divergence(e, o)  # asymmetric: expected probabilities, observed probabilities
 
+        locations_array = np.array(context2info[context]['locations'])
+        num_locations_in_partition = np.sum(np.logical_and(start < locations_array, locations_array < end)).item()
+        for _ in range(num_locations_in_partition):  # get the same kld value each time the context occurs
 
-def make_kld_tuples(d, probes):
-    """
-    generate tuples like [(kld, locations), (kld, locations, ...]
-    """
-    probes_expected_probabilities = np.array([1 / len(probes) for _ in probes])
-
-    print('Calculating KL divergences...')
-    for context in d.keys():
-        context_freq = d[context]['total_freq']
-        if context_freq > MIN_CONTEXT_FREQ:
-
-            # kld
-            probes_observed_probabilities = np.array(
-                [d[context]['freq_by_probe'][probe] / d[context]['total_freq']
-                 for probe in probes])
-            kl = calc_kl_divergence(probes_expected_probabilities, probes_observed_probabilities)  # asymmetric
-
-            yield kl, d[context]['locations'], context
+            yield kl
 
 
 set_memory_limit(prop=0.9)
@@ -122,79 +106,62 @@ for cat in probe_store.cats:
     cat_probes = probe_store.cat2probes[cat]
 
     for context_size in CONTEXT_SIZES:
+        print(cat)
+        print(f'context-size={context_size}')
 
-        # compute KL values for contexts associated with a single category
+        if COMPUTE_KLDS_ONCE_ON_WHOLE_CORPUS:
+            tokens1 = prep.store.tokens
+            tokens2 = prep.store.tokens
+            start1, end1 = 0, prep.midpoint
+            start2, end2 = prep.midpoint, prep.store.num_tokens
+        else:
+            tokens1 = prep.store.tokens[:prep.midpoint]
+            tokens2 = prep.store.tokens[-prep.midpoint:]
+            start1, end1 = 0, prep.num_tokens_in_part
+            start2, end2 = 0, prep.num_tokens_in_part
+
+        # compute measure for contexts associated with a single category in a single partition
         try:
-            context2info = make_context2info(cat_probes, prep.store.tokens, context_size)
+            klds1 = np.array(list(make_klds(cat_probes, tokens1, context_size,
+                                            start=start1, end=end1)))
         except MemoryError:
             raise SystemExit('Reached memory limit')
 
-        # separate kl values by location
-        y1 = []
-        y2 = []
-        for kld, locations, context in make_kld_tuples(context2info, cat_probes):
-            num_locations_in_part1 = len(np.where(np.array(locations) < prep.midpoint)[0])
-            num_locations_in_part2 = len(np.where(np.array(locations) > prep.midpoint)[0])
-            y1 += [kld] * num_locations_in_part1
-            y2 += [kld] * num_locations_in_part2
-        y1 = np.array(y1)
-        y2 = np.array(y2)
-
-        # print examples
-        print(cat)
-        st = [(t[0], t[2]) for t in sorted(make_kld_tuples(context2info, cat_probes), key=lambda t: t[0])]
-        print(st[:10])
-        print(st[-10:])
+        try:
+            klds2 = np.array(list(make_klds(cat_probes, tokens2, context_size,
+                                            start=start2, end=end2)))
+        except MemoryError:
+            raise SystemExit('Reached memory limit')
 
         # fig
         if SHOW_HISTOGRAM:
-            Y_MAX = 0.6
-            NUM_BINS = 30
-            X_RANGE = [0, 14]
-            _, ax = plt.subplots(figsize=config.Fig.fig_size, dpi=config.Fig.dpi)
-            ax.set_title('context-size={}'.format(context_size), fontsize=config.Fig.ax_fontsize)
-            ax.set_ylabel('Probability', fontsize=config.Fig.ax_fontsize)
-            ax.set_xlabel('KL Divergence', fontsize=config.Fig.ax_fontsize)
-            ax.spines['right'].set_visible(False)
-            ax.spines['top'].set_visible(False)
-            ax.tick_params(axis='both', which='both', top=False, right=False)
-            ax.set_ylim([0, Y_MAX])
-            # plot
-            colors = sns.color_palette("hls", 2)[::-1]
-            y1binned, x1, _ = ax.hist(y1, density=True, label='partition 1', color=colors[0], histtype='step',
-                                      bins=NUM_BINS, range=X_RANGE, zorder=3)
-            y2binned, x2, _ = ax.hist(y2, density=True, label='partition 2', color=colors[1], histtype='step',
-                                      bins=NUM_BINS, range=X_RANGE, zorder=3)
-            #  fill between the lines (highlighting the difference between the two histograms)
-            for i, x1i in enumerate(x1[:-1]):
-                y1line = [y1binned[i], y1binned[i]]
-                y2line = [y2binned[i], y2binned[i]]
-                ax.fill_between(x=[x1i, x1[i + 1]],
-                                y1=y1line,
-                                y2=y2line,
-                                where=y1line > y2line,
-                                color=colors[0],
-                                alpha=0.5,
-                                zorder=2)
-            #
-            plt.legend(frameon=False, loc='upper right', fontsize=config.Fig.leg_fontsize)
-            plt.tight_layout()
+            title = f'context-size={context_size}'
+            x_label = 'KL Divergence'
+            make_histogram(klds1, klds2, x_label, y_max=0.6, num_bins=30, x_range=[0, 14])
             plt.show()
 
-        # t test - operates on kl divergences, not coverage
-        t, prob = ttest_ind(y1, y2, equal_var=True)
-        print('t={}'.format(t))
-        print('p={:.6f}'.format(prob))
+        # klds are not normally distributed - need non-parametric test
+        # statistical test - operates on kl divergences, not coverage
+        res = pg.mwu(klds1, klds2, tail='two-sided')
+        print()
+        print(res)
+        prob = res['p-val']
+
+        # convert klds to coverage
+        yi1 = 1.0 / np.mean(klds1)
+        yi2 = 1.0 / np.mean(klds2)
+
+        # console
+        print(f'n1={len(klds1):,}')
+        print(f'n2={len(klds2):,}')
+        print(f'{MEASURE_NAME}={yi1 :.6f}')
+        print(f'{MEASURE_NAME}={yi2 :.6f}')
         print()
 
-        # convert kld to coverage
-        coverage1 = 1.0 / np.mean(y1)
-        coverage2 = 1.0 / np.mean(y2)
-
         # populate tabular data
-        for name, di in zip(headers, (cat, 1, context_size, coverage1, len(y1))):
+        for name, di in zip(headers, (cat, 1, context_size, yi1, len(klds1))):
             name2col[name].append(di)
-        for name, di in zip(headers, (cat, 2, context_size, coverage2, len(y2))):
+        for name, di in zip(headers, (cat, 2, context_size, yi2, len(klds2))):
             name2col[name].append(di)
 
         cat2context_size2p[cat][context_size] = prob
@@ -215,7 +182,7 @@ for context_size in CONTEXT_SIZES:
     df_at_context_size = df_stats[df_stats['context-size'] == context_size]
 
     # quick comparison
-    comparison = df_at_context_size.groupby(['category', 'partition'])\
+    comparison = df_at_context_size.groupby(['category', 'partition']) \
         .mean().reset_index().sort_values(MEASURE_NAME, ascending=False)
     print(comparison)
     print()

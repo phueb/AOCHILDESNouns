@@ -27,7 +27,7 @@ from wordplay.memory import set_memory_limit
 # /////////////////////////////////////////////////////////////////
 
 CORPUS_NAME = 'childes-20180319'
-PROBES_NAME = 'syn-4096'
+PROBES_NAME = 'sem-all'
 
 docs = load_docs(CORPUS_NAME)
 
@@ -35,10 +35,10 @@ params = PrepParams()
 prep = TrainPrep(docs, **attr.asdict(params))
 
 probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id, excluded=excluded)
-t
+
 # /////////////////////////////////////////////////////////////////
 
-CONTEXT_SIZES = [2, 3]
+CONTEXT_SIZES = [1, 2, 3]
 MEASURE_NAME = 'Prominence'
 MIN_CO_OCCURRENCE_FREQ = 1  # the higher the less power
 
@@ -54,8 +54,6 @@ def make_count_df(probes: Set[str],
     for each context that co-occurs with a category,
     keep track of all the times it otherwise co-occurs with a category member or not
     """
-    print('Collecting co-occurrence information...')
-
     # collect all contexts, keeping track of whether it is in-category
     pbar = pyprind.ProgBar(len(tokens))
     context2in_category_list = {}
@@ -92,12 +90,12 @@ for cat in probe_store.cats:
     cat_probes = probe_store.cat2probes[cat]
 
     for context_size in CONTEXT_SIZES:
+        print(cat)
+        print(f'context-size={context_size}')
 
         # the probability that a context occurs with a category member
         num_cat_tokens1 = sum([1 for w in tokens1 if w in cat_probes])
         num_cat_tokens2 = sum([1 for w in tokens2 if w in cat_probes])
-
-        print(cat)
         print(num_cat_tokens1)
         print(num_cat_tokens2)
 
@@ -132,8 +130,8 @@ for cat in probe_store.cats:
         # console
         print(f'n1={len(df1):,}')
         print(f'n2={len(df2):,}')
-        print(f'proportion={yi1 :.6f}')
-        print(f'proportion={yi2 :.6f}')
+        print(f'{MEASURE_NAME}={yi1 :.6f}')
+        print(f'{MEASURE_NAME}={yi2 :.6f}')
         print()
 
         # populate tabular data
@@ -160,7 +158,7 @@ for context_size in CONTEXT_SIZES:
     df_at_context_size = df_stats[df_stats['context-size'] == context_size]
 
     # quick comparison
-    comparison = df_at_context_size.groupby(['category', 'partition'])\
+    comparison = df_at_context_size.groupby(['category', 'partition']) \
         .mean().reset_index().sort_values(MEASURE_NAME, ascending=False)
     print(comparison)
     print()

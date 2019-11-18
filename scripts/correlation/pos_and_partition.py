@@ -24,7 +24,7 @@ from wordplay.pos import tag2pos
 # /////////////////////////////////////////////////////////////////
 
 CORPUS_NAME = 'childes-20180319_tags'
-PROBES_NAME = 'sem-all'
+PROBES_NAME = 'syn-4096'
 
 
 NUM_MID_TEST_DOCS = 0
