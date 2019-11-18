@@ -69,6 +69,7 @@ def make_histogram(y1: np.ndarray,
     ax.spines['top'].set_visible(False)
     ax.tick_params(axis='both', which='both', top=False, right=False)
     ax.set_ylim([0, y_max])
+    ax.set_yticklabels([])
     # plot
     colors = sns.color_palette("hls", 2)[::-1]
     y1binned, x1, _ = ax.hist(y1, density=True, label=label1, color=colors[0], histtype='step',

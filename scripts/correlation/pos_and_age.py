@@ -5,63 +5,71 @@ Research questions:
 Caveat:
 Because age bins contain an unequal number of tokens, care must be taken this does not influence results
 """
-import spacy
-import matplotlib.pyplot as plt
 
-from categoryeval.probestore import ProbeStore
+from scipy import stats
+import numpy as np
+from tabulate import tabulate
 
 from wordplay.binned import make_age_bin2tokens
 from wordplay.binned import make_age_bin2tokens_with_min_size
+from wordplay.pos import tag2pos
 
 # ///////////////////////////////////////////////////////////////// parameters
 
 CORPUS_NAME = 'childes-20191112'
 PROBES_NAME = 'syn-4096'
 AGE_STEP = 100
-CONTEXT_SIZE = 3
 NUM_TOKENS_PER_BIN = 50 * 1000  # 100K is good with AGE_STEP=100
-POS = 'VERB'
 
 # ///////////////////////////////////////////////////////////////// combine docs by age
 
-age_bin2word_tokens = make_age_bin2tokens(CORPUS_NAME, AGE_STEP)
-age_bin2tag_tokens = make_age_bin2tokens(CORPUS_NAME, AGE_STEP, suffix='_tags')
+age_bin2tags_ = make_age_bin2tokens(CORPUS_NAME, AGE_STEP, suffix='_tags')
 
-for word_tokens in age_bin2word_tokens.values():  # this is used to determine maximal NUM_TOKENS_PER_BIN
+for word_tokens in age_bin2tags_.values():  # this is used to determine maximal NUM_TOKENS_PER_BIN
     print(f'{len(word_tokens):,}')
 
+# combine small bins
+age_bin2tags = make_age_bin2tokens_with_min_size(age_bin2tags_, NUM_TOKENS_PER_BIN)
 
-make_age_bin2tokens_with_min_size(age_bin2word_tokens)  # TODO use this to combine smaller bins
+num_bins = len(age_bin2tags)
 
 # /////////////////////////////////////////////////////////////////
 
-nlp = spacy.load("en_core_web_sm", disable=['ner'])
+POS_LIST = set([pos for pos in tag2pos.values() if pos.isupper()])
 
-x = []
-y = []
-age_bins = []
-for age_bin in age_bin2tag_tokens.keys():
+# collect counts
+pos2counts = {pos: [] for pos in POS_LIST}
+for age_bin, tags in age_bin2tags.items():
 
-    word_tokens = age_bin2word_tokens[age_bin]
-    tag_tokens = age_bin2tag_tokens[age_bin]
+    pos_tags = [tag2pos.get(t, None) for t in tags]
+    print()
+    print(f'{"excluded":<16} num={pos_tags.count(None):>9,}')
+    for pos in POS_LIST:
+        y = pos_tags.count(pos)
+        print(f'{pos:<16} num={y:>9,}')
+        # collect
+        pos2counts[pos].append(y)
 
-    assert len(word_tokens) == len(tag_tokens)
-    assert word_tokens != tag_tokens
+# calculate Spearman's correlation
+data = []
+a = np.arange(num_bins)
+for pos in POS_LIST:
+    b = np.array(pos2counts[pos]) / NUM_TOKENS_PER_BIN
+    rho, p = stats.spearmanr(a, b)
+    print(f'{pos:<12} rho={rho:+.2f} p={p:.4f}')
 
-    # get same number of tokens at each bin
-    if len(word_tokens) < NUM_TOKENS_PER_BIN:
-        print(f'WARNING: Number of tokens at age_bin={age_bin} < NUM_TOKENS_PER_BIN')
-        continue
-    else:
-        word_tokens = word_tokens[:NUM_TOKENS_PER_BIN]
+    # collect for pretty-printed table
+    data.append((pos, rho, p))
 
-    # pos_words
-    w2id = {w: n for n, w in enumerate(set(word_tokens))}
-    probe_store = ProbeStore('childes-20180319', PROBES_NAME, w2id, excluded=excluded)
-    pos_words = probe_store.cat2probes[POS]
-    print(len(pos_words))
+# print pretty table
+print()
+print(tabulate(data,
+               headers=["Part-of-Speech", "Spearman's Rho", "p-value"]))
+print(f'Number of age bins={num_bins}')
 
-
-    # TODO implement this script - it should do what pos_and_partition.py does, but instead operates over
-    # TODO age bins rather than equal sized partitions
+# latex
+print(tabulate(sorted(data, key=lambda d: d[0]),
+               headers=["Part-of-Speech", "Spearman's Rho", "p-value"],
+               tablefmt='latex',
+               floatfmt=".4f"))
 

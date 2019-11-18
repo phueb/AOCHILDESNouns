@@ -3,12 +3,13 @@ from pygal.style import DefaultStyle
 
 from categoryeval.probestore import ProbeStore
 
+from wordplay.word_sets import excluded
 from wordplay.binned import make_age_bin2tokens
 
 # ///////////////////////////////////////////////////////////////// parameters
 
 CORPUS_NAME = 'childes-20191112'
-PROBES_NAME = 'sem-all'
+PROBES_NAME = 'sem-concrete'
 POS_LIST = []
 OTHER = 'other'
 AGE_STEP = 100

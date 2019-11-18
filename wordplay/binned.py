@@ -45,7 +45,7 @@ def make_age_bin2tokens(corpus_name: str,
 
 def make_age_bin2tokens_with_min_size(age_bin2tokens: Dict[float, List[str]],
                                       min_num_tokens: int,
-                                      no_binning: bool,
+                                      no_binning: bool = False,
                                       ):
     """
     return dictionary similar to age_bin2tokens but with a constant number of tokens per age_bin.

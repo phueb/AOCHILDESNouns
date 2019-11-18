@@ -14,8 +14,6 @@ from tabulate import tabulate
 
 from preppy.legacy import TrainPrep
 
-from wordplay import config
-from wordplay.word_sets import excluded
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 from wordplay.utils import split
@@ -26,14 +24,9 @@ from wordplay.pos import tag2pos
 CORPUS_NAME = 'childes-20180319_tags'
 PROBES_NAME = 'syn-4096'
 
-
-NUM_MID_TEST_DOCS = 0
 NUM_PARTS = 64  # spearman correlation requires more than just 2
 
-docs = load_docs(CORPUS_NAME,
-                 num_test_take_from_mid=NUM_MID_TEST_DOCS,
-                 num_test_take_random=0,
-                 )
+docs = load_docs(CORPUS_NAME)
 
 params = PrepParams(num_parts=NUM_PARTS)
 prep = TrainPrep(docs, **attr.asdict(params))
