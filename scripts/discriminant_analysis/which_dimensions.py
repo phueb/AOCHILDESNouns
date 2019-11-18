@@ -79,7 +79,7 @@ for dim_id in range(NUM_DIMS):  # get columns cumulatively
     print()
 
 
-_, ax = plt.subplots(dpi=config.Fig.dpi)
+_, ax = plt.subplots(figsize=config.Fig.fig_size, dpi=config.Fig.dpi)
 plt.title(f'window-size={CONTEXT_SIZE}')
 ax.set_ylabel('LDA Accuracy')
 ax.set_xlabel('Number of Singular Dimensions in Training Data')

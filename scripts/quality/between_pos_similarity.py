@@ -74,7 +74,7 @@ for mat, xws in [(tw_mat1.T.asfptype(), xws1),  # after transposition, x-words i
         print(f'Similarity={sim:.4f}')
 
 # fig
-fig, ax = plt.subplots(dpi=None, figsize=(5, 5))
+fig, ax = plt.subplots(dpi=config.Fig.dpi, figsize=config.Fig.fig_size)
 plt.title(f'Distributional similarity between\n'
           f'{", ".join(POS_LIST)}\n'
           f'context-size={CONTEXT_SIZE}')

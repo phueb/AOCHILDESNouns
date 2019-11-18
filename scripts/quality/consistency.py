@@ -112,7 +112,7 @@ context2is_pos2freq2 = make_context2is_filler_pos2freq(start_loc=prep.midpoint,
                                                        end_loc=prep.store.num_tokens)
 
 # fig
-_, ax = plt.subplots(figsize=config.Fig.fig_size)
+_, ax = plt.subplots(figsize=config.Fig.fig_size, dpi=config.Fig.dpi)
 ax.set_title(f'{POS} consistency\ncontext-size={CONTEXT_SIZE}', fontsize=12)
 ax.set_ylabel(f'Avg. number of non-{POS} in context', fontsize=12)
 ax.set_xlabel(f'Number of {POS} in context', fontsize=12)

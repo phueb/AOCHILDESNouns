@@ -4,16 +4,13 @@ from childeshub.hub import Hub
 
 # fig
 PLOT_NUM_SVS = 64
-FONTSIZE = 18
-FIGSIZE = (8, 8)
-DPI = None
 
 MAX_NGRAM_SIZE = 7
 HUB_MODE = 'sem'
 
 
 def plot_comparison(d):
-    fig, ax = plt.subplots(1, figsize=FIGSIZE, dpi=DPI)
+    fig, ax = plt.subplots(1, figsize=config.Fig.fig_size, dpi=config.Fig.dpi)
     plt.title('', fontsize=FONTSIZE)
     ax.set_ylabel('Percent of unique n-grams in corpus', fontsize=FONTSIZE)
     ax.set_xlabel('n-gram size', fontsize=FONTSIZE)

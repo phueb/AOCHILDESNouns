@@ -114,7 +114,7 @@ plt.show()
 
 
 # blow up
-_, ax = plt.subplots(dpi=DPI, figsize=(6.0, 3))
+_, ax = plt.subplots(dpi=config.Fig.dpi, figsize=config.Fig.fig_size)
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
 ax.tick_params(axis='both', which='both', top=False, right=False)

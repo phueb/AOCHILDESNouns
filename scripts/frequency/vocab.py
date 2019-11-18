@@ -19,13 +19,7 @@ PROBES_NAME = 'sem-all'
 REVERSE = False
 NUM_PARTS = 8
 
-START_MID = False
-START_END = False
-
-docs = load_docs(CORPUS_NAME,
-                 shuffle_sentences=False
-                 start_at_midpoint=START_MID,
-                 start_at_ends=START_END)
+docs = load_docs(CORPUS_NAME)
 
 params = PrepParams(num_parts=NUM_PARTS, reverse=REVERSE)
 prep = TrainPrep(docs, **attr.asdict(params))
@@ -36,7 +30,7 @@ probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id, excluded=exc
 
 
 dists = []
-fig, ax = plt.subplots(dpi=config.Fig.dpi)
+fig, ax = plt.subplots(figsize=config.Fig.fig_size, dpi=config.Fig.dpi)
 for n, part in enumerate(prep.reordered_parts):
     c = Counter(part)
     dist = np.sort(np.log(list(c.values())))[::-1]

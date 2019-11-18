@@ -50,7 +50,7 @@ for tags in split(prep.store.tokens, prep.num_tokens_in_part):
 
 
 # fig
-_, ax = plt.subplots(dpi=config.Fig.dpi)
+_, ax = plt.subplots(figsize=config.Fig.fig_size, dpi=config.Fig.dpi)
 plt.title('')
 ax.set_ylabel('Num unique tag-sequences')
 ax.set_xlabel('Partition')
@@ -65,7 +65,7 @@ ax.plot(x, y_fitted, '-')
 plt.show()
 
 # fig
-_, ax = plt.subplots(dpi=config.Fig.dpi)
+_, ax = plt.subplots(figsize=config.Fig.fig_size, dpi=config.Fig.dpi)
 plt.title('Syntactic Complexity')
 ax.set_ylabel(f'Z-scored Num unique tag-sequences')
 ax.set_xlabel('Partition')

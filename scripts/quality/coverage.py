@@ -51,7 +51,7 @@ probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id, excluded=exc
 # /////////////////////////////////////////////////////////////////
 
 COMPUTE_KLDS_ONCE_ON_WHOLE_CORPUS = False  # otherwise compute klds separately on each partition
-CONTEXT_SIZES = [2, 3]
+CONTEXT_SIZES = [1, 2, 3]
 MEASURE_NAME = 'Coverage'
 SHOW_HISTOGRAM = False
 

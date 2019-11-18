@@ -50,7 +50,7 @@ ys = [
 
 # fig
 y_labels = ['Shannon Entropy', 'MTLD']
-fig, axs = plt.subplots(2, 1, dpi=DPI, figsize=FIGSIZE)
+fig, axs = plt.subplots(2, 1, dpi=config.Fig.dpi, figsize=config.Fig.fig_size)
 for ax, y_label, y in zip(axs, y_labels, ys):
     if ax == axs[-1]:
         ax.set_xlabel('Corpus Location', fontsize=AX_FONTSIZE, labelpad=-10)

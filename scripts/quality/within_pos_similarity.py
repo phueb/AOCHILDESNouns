@@ -69,10 +69,9 @@ for mat, xws in [(tw_mat1.T.asfptype(), xws1),  # after transposition, x-words i
         print(f'Similarity={sim:.4f}')
 
 # fig
-fig, ax = plt.subplots(dpi=None, figsize=(5, 5))
+fig, ax = plt.subplots(dpi=config.Fig.dpi, figsize=config.Fig.fig_size)
 plt.title(f'Distributional similarity within {POS}\n'
-          f'context-size={CONTEXT_SIZE}\n'
-          f'shuffled documents={SHUFFLE_DOCS}')
+          f'context-size={CONTEXT_SIZE}\n')
 ax.set_ylabel('Context Similarity')
 ax.set_xlabel('Partition')
 ax.set_xticks([0, 1])

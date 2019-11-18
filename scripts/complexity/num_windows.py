@@ -58,7 +58,7 @@ def calc_y(w_mat, w_size, uniq):
 def plot(y_label, ys_list):
     bar_width0 = 0.0
     bar_width1 = 0.25
-    _, ax = plt.subplots(dpi=config.Fig.dpi)
+    _, ax = plt.subplots(figsize=config.Fig.fig_size, dpi=config.Fig.dpi)
     ax.set_ylabel(y_label)
     ax.set_xlabel('Window size')
     ax.spines['right'].set_visible(False)

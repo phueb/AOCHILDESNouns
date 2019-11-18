@@ -29,10 +29,7 @@ REVERSE = False
 NUM_PARTS = 8
 
 
-docs = load_docs(CORPUS_NAME,
-                 num_test_take_from_mid=0,
-                 num_test_take_random=0,
-                 )
+docs = load_docs(CORPUS_NAME)
 
 params = PrepParams(num_parts=NUM_PARTS, reverse=REVERSE)
 prep = TrainPrep(docs, **attr.asdict(params))
@@ -95,8 +92,8 @@ for part_id, tokens in enumerate(split(prep.store.tokens, prep.num_tokens_in_par
     y2.append(y2i)
 
 # fig
-fig, ax = plt.subplots(dpi=config.Fig.dpi)
-plt.title(title + f' shuffle docs={SHUFFLE_DOCS}')
+fig, ax = plt.subplots(figsize=config.Fig.fig_size, dpi=config.Fig.dpi)
+plt.title(title)
 x = np.arange(NUM_PARTS)
 ax.set_xlabel('Partition')
 ax.set_ylabel(f'{POS} Context Token Frequency')

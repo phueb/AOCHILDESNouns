@@ -79,7 +79,7 @@ for part_id, part in enumerate(prep.reordered_parts):
     amp = pfinal[0]
     alpha = pfinal[1]
     # fig
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=config.Fig.fig_size, dpi=config.Fig.dpi)
     plt.title(f'{corpus_name}\nnum_types={NUM_TYPES:,}, part {part_id + 1} of {NUM_PARTS}')
     ax.set_xlabel('mean')
     ax.set_ylabel('std')

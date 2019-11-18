@@ -45,9 +45,9 @@ location_sorted_words = sorted(prep.store.types, key=w2avg_location.get)
 half = len(location_sorted_words) // 2
 
 # fig
-_, axs = plt.subplots(2, 1, sharex='all', dpi=163, figsize=(8, 6))
+_, axs = plt.subplots(2, 1, sharex='all', dpi=config.Fig.dpi, figsize=(8, 6))
 for ax, title, words in zip(axs,
-                            ['Earliest occurring words', 'Latest occuring words'],
+                            ['Earliest occurring words', 'Latest occurring words'],
                             [location_sorted_words[:half], location_sorted_words[::-1][:half]]):
     if ax == axs[1]:
         ax.set_xlabel('Corpus Location', fontsize=12)

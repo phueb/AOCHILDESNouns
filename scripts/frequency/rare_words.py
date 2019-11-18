@@ -38,7 +38,7 @@ print(f'Found {num_rare} rare words')
 print([w for w in prep.store.types if w not in rare_words])
 
 # fig
-fig, ax = plt.subplots(dpi=config.Fig.dpi)
+fig, ax = plt.subplots(figsize=config.Fig.fig_size, dpi=config.Fig.dpi)
 plt.title(f'{num_rare} most infrequent words')
 ax.set_xlabel('Partition')
 ax.set_ylabel('z-scored Number of occurrences')

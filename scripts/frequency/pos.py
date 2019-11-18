@@ -41,7 +41,7 @@ for pos in POS_LIST or sorted(pos2tags.keys()):
         y.append(num)
 
     # fig
-    _, ax = plt.subplots(dpi=config.Fig.dpi)
+    _, ax = plt.subplots(figsize=config.Fig.fig_size, dpi=config.Fig.dpi)
     plt.title('')
     ax.set_ylabel(f'Num {pos}s')
     ax.set_xlabel('Partition')
@@ -56,7 +56,7 @@ for pos in POS_LIST or sorted(pos2tags.keys()):
     plt.show()
 
     # fig
-    _, ax = plt.subplots(dpi=config.Fig.dpi)
+    _, ax = plt.subplots(figsize=config.Fig.fig_size, dpi=config.Fig.dpi)
     plt.title('')
     ax.set_ylabel(f'Z-scored Num {pos}s')
     ax.set_xlabel('Partition')

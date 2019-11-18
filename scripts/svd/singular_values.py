@@ -97,7 +97,7 @@ s1_noun_dims = [s1[i] if not np.isnan(i) else np.nan for i in noun_dims1]
 s2_noun_dims = [s2[i] if not np.isnan(i) else np.nan for i in noun_dims2]
 
 # figure
-fig, ax = plt.subplots(1, figsize=(5, 5), dpi=None)
+fig, ax = plt.subplots(figsize=config.Fig.fig_size,  dpi=config.Fig.dpi)
 plt.title(f'SVD of AO-CHILDES partitions\nwindow size={CONTEXT_SIZE}', fontsize=config.Fig.ax_fontsize)
 ax.set_ylabel('Singular value', fontsize=config.Fig.ax_fontsize)
 ax.set_xlabel('Singular Dimension', fontsize=config.Fig.ax_fontsize)
