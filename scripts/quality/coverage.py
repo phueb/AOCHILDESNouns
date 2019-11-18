@@ -11,6 +11,7 @@ Each context type is assigned a KL divergence reflecting its "coverage" across t
 To obtain a coverage specific to a particular partition,
  the coverage value of each context token which occurs in the partition is obtained, and their values averaged.
 
+# TODO i don't see anymore why this is a good idea
 Why not compute coverage for each partition separately?
 Because this would result in each partition being evaluated on the coverage on a dramatically different set of contexts.
 Computing coverage for different sets of contexts would make it difficult to compare coverage between partitions.
@@ -58,6 +59,10 @@ probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id, excluded=exc
 MIN_CONTEXT_FREQ = 1  # using any more than 1 reduces power to detect differences at context-size=3
 CONTEXT_SIZES = [1]
 SHOW_HISTOGRAM = True
+MEASURE_NAME = 'Coverage'
+
+measure_name1 = MEASURE_NAME + '-p1'
+measure_name2 = MEASURE_NAME + '-p2'
 
 
 def make_context2info(probes: Set[str],
@@ -110,7 +115,7 @@ def make_kld_tuples(d, probes):
 
 set_memory_limit(prop=0.9)
 
-headers = ['Category', 'partition', 'context-size', 'coverage', 'n']
+headers = ['category', 'partition', 'context-size', MEASURE_NAME, 'n']
 name2col = {name: [] for name in headers}
 cat2context_size2p = {cat: {} for cat in probe_store.cats}
 for cat in probe_store.cats:
@@ -178,7 +183,6 @@ for cat in probe_store.cats:
 
         # t test - operates on kl divergences, not coverage
         t, prob = ttest_ind(y1, y2, equal_var=True)
-        cat2context_size2p[cat][context_size] = prob
         print('t={}'.format(t))
         print('p={:.6f}'.format(prob))
         print()
@@ -193,53 +197,56 @@ for cat in probe_store.cats:
         for name, di in zip(headers, (cat, 2, context_size, coverage2, len(y2))):
             name2col[name].append(di)
 
-# data frame
-df = pd.DataFrame(name2col)
+        cat2context_size2p[cat][context_size] = prob
+
+# data frame for statistics
+df_stats = pd.DataFrame(name2col)
 
 # plot difference between partitions including all context-sizes
-ax = pg.plot_paired(data=df, dv='coverage', within='partition', subject='Category', dpi=config.Fig.dpi)
+ax = pg.plot_paired(data=df_stats, dv=MEASURE_NAME, within='partition', subject='category', dpi=config.Fig.dpi)
 ax.set_title(f'context-sizes={CONTEXT_SIZES}')
-ax.set_ylabel('Coverage')
+ax.set_ylabel(MEASURE_NAME)
 plt.show()
 
-# aggregate over context_sizes and build easily readable table
+# convert df to human readable format
 dfs = []
 for context_size in CONTEXT_SIZES:
     # filter by context size
-    df_at_context_size = df[df['context-size'] == context_size]
+    df_at_context_size = df_stats[df_stats['context-size'] == context_size]
 
     # quick comparison
-    comparison = df_at_context_size.groupby(['Category', 'partition'])\
-        .mean().reset_index().sort_values('coverage', ascending=False)
+    comparison = df_at_context_size.groupby(['category', 'partition'])\
+        .mean().reset_index().sort_values(MEASURE_NAME, ascending=False)
     print(comparison)
     print()
 
     # concatenate data from part 1 and 2 horizontally
-    df1 = df_at_context_size.set_index('Category').groupby('Category')[['coverage', 'n']].first()
-    df2 = df_at_context_size.set_index('Category').groupby('Category')[['coverage', 'n']].last()
-    df1 = df1.rename(columns={'coverage': 'mean-coverage-1'})
-    df2 = df2.rename(columns={'coverage': 'mean-coverage-2'})
+    df1 = df_at_context_size.set_index('category').groupby('category')[[MEASURE_NAME, 'n']].first()
+    df2 = df_at_context_size.set_index('category').groupby('category')[[MEASURE_NAME, 'n']].last()
+    df1 = df1.rename(columns={MEASURE_NAME: 'mean' + measure_name1})
+    df2 = df2.rename(columns={MEASURE_NAME: 'mean' + measure_name2})
 
     df_concat = pd.concat((df1, df2), axis=1)
     df_concat['p'] = [cat2context_size2p[cat][context_size] for cat in df_concat.index]
     dfs.append(df_concat)
 
     # pairwise t-test between means associated with each category - pairwise has more power in this case
-    res = pg.pairwise_ttests(data=df_at_context_size, dv='coverage', within='partition', subject='Category')
+    res = pg.pairwise_ttests(data=df_at_context_size, dv=MEASURE_NAME, within='partition', subject='category')
     print(res)
 
     # plot difference between partitions
-    ax = pg.plot_paired(data=df_at_context_size, dv='coverage', within='partition', subject='Category',
+    ax = pg.plot_paired(data=df_at_context_size, dv=MEASURE_NAME, within='partition', subject='category',
                         dpi=config.Fig.dpi)
     ax.set_title(f'context-size={context_size}')
-    ax.set_ylabel('Coverage')
+    ax.set_ylabel(MEASURE_NAME)
     plt.show()
 
-df_master = pd.concat(dfs, axis=1)
-df_master['overall-mean'] = df_master.filter(regex='mean*', axis=1).mean(axis=1)
-df_master = df_master.sort_values('overall-mean', ascending=False)
-df_master = df_master.drop('overall-mean', axis=1)
+# convert to human readable format
+df_human = pd.concat(dfs, axis=1)
+df_human['overall-mean'] = df_human.filter(regex='mean*', axis=1).mean(axis=1)
+df_human = df_human.sort_values('overall-mean', ascending=False)
+df_human = df_human.drop('overall-mean', axis=1)
 
-print(tabulate(df_master,
+print(tabulate(df_human,
                tablefmt='latex',
                floatfmt=".3f"))
