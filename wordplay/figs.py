@@ -68,7 +68,8 @@ def make_histogram(y1: np.ndarray,
     ax.spines['right'].set_visible(False)
     ax.spines['top'].set_visible(False)
     ax.tick_params(axis='both', which='both', top=False, right=False)
-    ax.set_ylim([0, y_max])
+    if y_max:
+        ax.set_ylim([0, y_max])
     ax.set_yticklabels([])
     # plot
     colors = sns.color_palette("hls", 2)[::-1]

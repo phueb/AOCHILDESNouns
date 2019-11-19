@@ -36,11 +36,12 @@ from wordplay.word_sets import excluded
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 from wordplay.figs import make_histogram
+from wordplay.memory import set_memory_limit
 
 # /////////////////////////////////////////////////////////////////
 
 CORPUS_NAME = 'childes-20180319'
-PROBES_NAME = 'sem-all'
+PROBES_NAME = 'syn-4096'
 
 docs = load_docs(CORPUS_NAME)
 
@@ -51,10 +52,10 @@ probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id, excluded=exc
 
 # /////////////////////////////////////////////////////////////////
 
-COMPUTE_MEASURE_ONCE_ON_WHOLE_CORPUS = True
+COMPUTE_MEASURE_ONCE_ON_WHOLE_CORPUS = False
 CONTEXT_SIZES = [1, 2, 3]
 MEASURE_NAME = 'Prominence'
-SHOW_HISTOGRAM = True
+SHOW_HISTOGRAM = False
 
 measure_name1 = MEASURE_NAME + '-p1'
 measure_name2 = MEASURE_NAME + '-p2'
@@ -102,6 +103,8 @@ def make_context_ys(probes: Set[str],
             yield y
 
 
+set_memory_limit(prop=0.90)
+
 headers = ['category', 'partition', 'context-size', MEASURE_NAME, 'n']
 name2col = {name: [] for name in headers}
 cat2context_size2p = {cat: {} for cat in probe_store.cats}
@@ -124,10 +127,14 @@ for cat in probe_store.cats:
             start2, end2 = 0, prep.num_tokens_in_part
 
         # compute measure for contexts associated with a single category in a single partition
-        context_ys1 = np.array(list(make_context_ys(cat_probes, tokens1, context_size,
-                                                    start=start1, end=end1))).astype(np.float32)
-        context_ys2 = np.array(list(make_context_ys(cat_probes, tokens2, context_size,
-                                                    start=start2, end=end2))).astype(np.float32)
+        try:
+            context_ys1 = np.array(list(make_context_ys(cat_probes, tokens1, context_size,
+                                                        start=start1, end=end1))).astype(np.float32)
+            context_ys2 = np.array(list(make_context_ys(cat_probes, tokens2, context_size,
+                                                        start=start2, end=end2))).astype(np.float32)
+        except MemoryError:
+            print('WANING: Memmory Error. Skipping computation')
+            continue
 
         # fig
         if SHOW_HISTOGRAM:
