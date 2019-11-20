@@ -55,5 +55,5 @@ for ngram_size in NGRAM_SIZES:
 headers = ['N-gram size', 'partition 1', 'partition 2']
 print(tabulate(rows,
                headers=headers,
-               tablefmt='simple',
+               tablefmt='latex',
                floatfmt='.2f'))
