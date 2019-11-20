@@ -3,10 +3,31 @@ import pyprind
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter
 from matplotlib.ticker import FormatStrFormatter
+import attr
+from tabulate import tabulate
 
-from childeshub.hub import Hub
+from preppy.legacy import TrainPrep
+from categoryeval.probestore import ProbeStore
 
+from wordplay import config
+from wordplay.word_sets import excluded
+from wordplay.params import PrepParams
+from wordplay.docs import load_docs
 from wordplay.utils import human_format
+
+# /////////////////////////////////////////////////////////////////
+
+CORPUS_NAME = 'childes-20180319'
+PROBES_NAME = 'sem-all'
+
+docs = load_docs(CORPUS_NAME)
+
+params = PrepParams()
+prep = TrainPrep(docs, **attr.asdict(params))
+
+probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id, excluded=excluded)
+
+# /////////////////////////////////////////////////////////////////
 
 NUM_BINS = 64
 NGRAM_SIZES = [1, 2, 3, 6]
