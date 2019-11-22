@@ -32,14 +32,8 @@ def fit_line(x, y, eval_x=None):
 
 
 def get_sliding_windows(window_size, tokens):
-
-    if not isinstance(window_size, int):
-        raise TypeError('This function was changed by PH in May 2019 because'
-                        'previously used sklearn Countvectorizer uses stopwords'
-                        ' and removes punctuation')
     res = list(itertoolz.sliding_window(window_size, tokens))
     return res
-
 
 
 def to_corr_mat(data_mat):
@@ -90,7 +84,7 @@ def plot_best_fit_line(ax, x, y, fontsize, color='red', zorder=3, x_pos=0.75, y_
     try:
         best_fit_fxn = np.polyfit(x, y, 1, full=True)
     except Exception as e:  # cannot fit line
-        print('rnnlab: Cannot fit line.', e)
+        print('WARNING: Cannot fit line.', e)
         return
     slope = best_fit_fxn[0][0]
     intercept = best_fit_fxn[0][1]
