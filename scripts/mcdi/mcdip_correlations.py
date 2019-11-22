@@ -4,15 +4,29 @@ import sys
 from collections import Counter
 import matplotlib.pyplot as plt
 import numpy as np
+import attr
 
+from preppy.legacy import TrainPrep
 
+from wordplay import config
 from wordplay.utils import plot_best_fit_line
+from wordplay.params import PrepParams
+from wordplay.docs import load_docs
+
+
+# /////////////////////////////////////////////////////////////////
 
 CORPUS_NAME = 'childes-20180319'
+docs = load_docs(CORPUS_NAME)
+
+params = PrepParams()
+prep = TrainPrep(docs, **attr.asdict(params))
+
+# ///////////////////////////////////////////////////////////////////
+
 MCDIP_PATH = 'mcdip.csv'
 CONTEXT_SIZE = 16  # bidirectional
 
-hub = Hub(corpus_name=CORPUS_NAME, part_order='inc_age', num_types=10000)
 
 # t2mcdip (map target to its mcdip value)
 df = pd.read_csv(MCDIP_PATH, index_col=False)
@@ -30,11 +44,11 @@ t2mcdip = {t: mcdip for t, mcdip in zip(targets, mcdips)}
 print('Collecting context words...')
 target2context_tokens = {t: [] for t in targets}
 pbar = pyprind.ProgBar(prep.store.num_tokens, stream=sys.stdout)
-for n, t in enumerate(hub.reordered_tokens):
+for n, t in enumerate(prep.store.tokens):
     pbar.update()
     if t in targets:
-        context_left = [ct for ct in hub.reordered_tokens[n - CONTEXT_SIZE: n] if ct in targets]
-        context_right = [ct for ct in hub.reordered_tokens[n + 1: n + 1 + CONTEXT_SIZE] if ct in targets]
+        context_left = [ct for ct in prep.store.tokens[n - CONTEXT_SIZE: n] if ct in targets]
+        context_right = [ct for ct in prep.store.tokens[n + 1: n + 1 + CONTEXT_SIZE] if ct in targets]
         target2context_tokens[t] += context_left + context_right
 
 # calculate result for each target (average mcdip of context words weighted by number of times in target context)
@@ -66,21 +80,14 @@ def plot(xs, ys, xlabel, ylabel, annotations=None):
 
 
 target_weighted_context_mcdip = [res[t] for t in targets]
-target_median_cgs = [hub.calc_median_term_cg(t) for t in targets]
 target_mcdips = [t2mcdip[t] for t in targets]
 target_freqs = [prep.store.w2f[t] for t in targets]
 
 plot(target_weighted_context_mcdip, target_mcdips,
      'KWOOC', 'MCDIp')
 
-plot(target_median_cgs, np.log(target_freqs),
-     'target_median_cgs', 'target_freqs')
-
 plot(target_weighted_context_mcdip, np.log(target_freqs),
      'target_weighted_context_mcdip', 'target_freqs')
 
 plot(target_mcdips, np.log(target_freqs),
      'target_mcdips', ' log target_freqs')
-
-plot(target_weighted_context_mcdip, target_median_cgs,
-     'target_weighted_context_mcdip', 'target_median_cgs')

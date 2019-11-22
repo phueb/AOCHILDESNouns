@@ -3,7 +3,6 @@ from typing import List
 from sortedcontainers import SortedSet
 
 from wordplay import config
-from wordplay.word_sets import excluded
 from wordplay.sentences import split_into_sentences
 from wordplay.utils import split
 
@@ -12,7 +11,7 @@ def load_docs(corpus_name: str,
               shuffle_docs: bool = False,
               shuffle_sentences: bool = False,
               num_test_take_from_mid: int = 0,
-              num_test_take_random: int = 100,
+              num_test_take_random: int = 0,
               start_at_midpoint: bool = False,
               start_at_ends: bool = False,
               split_seed: int = 3,
