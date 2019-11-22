@@ -3,7 +3,6 @@ import pyprind
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter
 import attr
-from tabulate import tabulate
 
 from preppy.legacy import TrainPrep
 
