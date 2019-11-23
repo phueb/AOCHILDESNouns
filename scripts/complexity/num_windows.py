@@ -13,7 +13,6 @@ from preppy.legacy import TrainPrep
 from preppy.legacy import make_windows_mat
 
 from wordplay import config
-from wordplay.word_sets import excluded
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 
@@ -37,8 +36,11 @@ prep = TrainPrep(docs, **attr.asdict(params))
 
 WINDOW_SIZES = [2, 3, 4, 5, 6]
 
-windows_mat1 = make_windows_mat(prep.reordered_halves[0], prep.num_windows_in_part, prep.num_tokens_in_window)
-windows_mat2 = make_windows_mat(prep.reordered_halves[1], prep.num_windows_in_part, prep.num_tokens_in_window)
+tokens1 = prep.store.tokens[:prep.midpoint]
+tokens2 = prep.store.tokens[-prep.midpoint:]
+
+windows_mat1 = make_windows_mat(tokens1, prep.num_windows_in_part, prep.num_tokens_in_window)
+windows_mat2 = make_windows_mat(tokens2, prep.num_windows_in_part, prep.num_tokens_in_window)
 
 
 def calc_y(w_mat, w_size, uniq):

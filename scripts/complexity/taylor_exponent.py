@@ -38,7 +38,6 @@ prep = TrainPrep(docs, **attr.asdict(params))
 
 
 SPLIT_SIZE = 5620
-CORPUS_ID = 1  # 0=mobydick, 1=CHILDES
 PLOT_FIT = False
 
 
@@ -50,7 +49,6 @@ def errfunc(p, x, y):
     return y - fitfunc(p, x)
 
 
-corpus_name = ['mobydick', 'childes-20180319'][CORPUS_ID]
 
 
 for part_id, part in enumerate(prep.reordered_parts):
@@ -80,7 +78,7 @@ for part_id, part in enumerate(prep.reordered_parts):
     alpha = pfinal[1]
     # fig
     fig, ax = plt.subplots(figsize=config.Fig.fig_size, dpi=config.Fig.dpi)
-    plt.title(f'{corpus_name}\nnum_types={NUM_TYPES:,}, part {part_id + 1} of {NUM_PARTS}')
+    plt.title(f'{CORPUS_NAME}\nnum_types={NUM_TYPES:,}, part {part_id + 1} of {NUM_PARTS}')
     ax.set_xlabel('mean')
     ax.set_ylabel('std')
     ax.spines['right'].set_visible(False)
