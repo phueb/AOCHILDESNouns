@@ -1,6 +1,6 @@
 """
 Research questions:
-1. How discriminative of semantic categories are probe contexts in partition 1 vs. partition 2?
+1. How well can categories be distinguished in partition 1 vs. partition 2?
 """
 
 import attr
@@ -9,7 +9,6 @@ from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from preppy.legacy import TrainPrep
 from categoryeval.probestore import ProbeStore
 
-from wordplay import config
 from wordplay.word_sets import excluded
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
@@ -22,46 +21,48 @@ CORPUS_NAME = 'childes-20180319'
 PROBES_NAME = 'sem-all'
 
 docs = load_docs(CORPUS_NAME)
-
-params = PrepParams()
+params = PrepParams(num_types=4096)  # TODO does limited vocabulary reproduce order effect?
 prep = TrainPrep(docs, **attr.asdict(params))
 
 probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id, excluded=excluded)
 
 # /////////////////////////////////////////////////////////////////
 
-CONTEXT_SIZE = 3
-NORMALIZE = False  # this makes all the difference - this means that the scales of variables are different and matter
+CONTEXT_SIZE = 1
 
+# ///////////////////////////////////////////////////////////////// co-occurrence matrix
 
-OFFSET = prep.midpoint
-
-# ///////////////////////////////////////////////////////////////// TW matrix
-
-# make term_by_window_co_occurrence_mats
-start1, end1 = 0, OFFSET
-start2, end2 = prep.store.num_tokens - OFFSET, prep.store.num_tokens
 tw_mat1, xws1, yws1 = make_context_by_term_matrix(
-    prep.store.tokens, start=start1, end=end1, context_size=CONTEXT_SIZE, probe_store=probe_store)
+    prep.store.tokens, start=0, end=prep.midpoint, context_size=CONTEXT_SIZE)
 tw_mat2, xws2, yws2 = make_context_by_term_matrix(
-    prep.store.tokens, start=start2, end=end2, context_size=CONTEXT_SIZE, probe_store=probe_store)
+    prep.store.tokens, start=prep.midpoint, end=prep.store.num_tokens, context_size=CONTEXT_SIZE)
 
 # ///////////////////////////////////////////////////////////////// LDA
 
 set_memory_limit(prop=1.0)
 
-# use only features common to both
+# use only contexts common to both
 common_yws = set(yws1).intersection(set(yws2))
 print(f'Number of common contexts={len(common_yws)}')
-x1 = tw_mat1.T[:, [n for n, yw in enumerate(yws1) if yw in common_yws]].toarray()
-x2 = tw_mat2.T[:, [n for n, yw in enumerate(yws2) if yw in common_yws]].toarray()
-y1 = [probe_store.cat2id[probe_store.probe2cat[p]] for p in xws1]
-y2 = [probe_store.cat2id[probe_store.probe2cat[p]] for p in xws2]
+row_ids1 = [yws1.index(yw) for yw in common_yws]
+row_ids2 = [yws2.index(yw) for yw in common_yws]
+
+# use only probes common to both
+common_xws = set(xws1).intersection(set(xws2)).intersection(probe_store.types)
+print(f'Number of common probes={len(common_xws)}')
+col_ids1 = [xws1.index(xw) for xw in common_xws]
+col_ids2 = [xws2.index(xw) for xw in common_xws]
+
+# prepare x, y
+x1 = tw_mat1.tocsr()[row_ids1].tocsc()[:, col_ids1].T.toarray()
+x2 = tw_mat2.tocsr()[row_ids2].tocsc()[:, col_ids2].T.toarray()
+y1 = [probe_store.cat2id[probe_store.probe2cat[p]] for p in common_xws]
+y2 = [probe_store.cat2id[probe_store.probe2cat[p]] for p in common_xws]
 
 for x, y in zip([x1, x2],
                 [y1, y2]):
 
-    print(f'Number of probes included in LDA={len(y)}')
+    print(f'Shape of input to LDA={x.shape}')
     clf = LinearDiscriminantAnalysis(n_components=None, priors=None, shrinkage=None,
                                      solver='svd', store_covariance=False)
     try:
@@ -76,3 +77,5 @@ for x, y in zip([x1, x2],
     print(f'partition-1 accuracy={score1:.3f}')
     print(f'partition-2 accuracy={score2:.3f}')
 
+    coefficients = clf.coef_.squeeze()  # ?
+    print(coefficients.shape)

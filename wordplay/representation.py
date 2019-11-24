@@ -71,10 +71,13 @@ def make_context_by_term_matrix(tokens: List[str],
     a context precedes a target.
     """
 
+    if (start is None and end is not None) or (end is not None and start is None):
+        raise ValueError('Specifying only start or end is not allowed.')
+
     print('Making context-term matrix')
 
     # tokens
-    if start and end:
+    if start is not None and end is not None:
         print(f'from tokens between {start:,} & {end:,}')
         tokens = tokens[start:end]
 
@@ -86,7 +89,7 @@ def make_context_by_term_matrix(tokens: List[str],
 
     # x_words
     if probe_store is not None:
-        print('WARNING: Using only probes as x-words')
+        raise RuntimeError('Deprecated because not all contexts are collected when the only targets are probes')
         x_words = probe_store.types
     else:
         x_words = SortedSet(tokens)
