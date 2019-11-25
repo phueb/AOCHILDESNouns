@@ -89,7 +89,6 @@ def make_context_by_term_matrix(tokens: List[str],
 
     # x_words
     if probe_store is not None:
-        raise RuntimeError('Deprecated because not all contexts are collected when the only targets are probes')
         x_words = probe_store.types
     else:
         x_words = SortedSet(tokens)

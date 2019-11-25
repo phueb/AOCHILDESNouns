@@ -19,7 +19,6 @@ from preppy.legacy import make_windows_mat
 from categoryeval.probestore import ProbeStore
 from categoryeval.score import calc_score
 
-from wordplay import config
 from wordplay.word_sets import excluded
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
@@ -29,19 +28,16 @@ from wordplay.memory import set_memory_limit
 # /////////////////////////////////////////////////////////////////
 
 CORPUS_NAME = 'childes-20180319'
-PROBES_NAME = 'sem-4096'  # cannot use sem-all because some are too infrequent to occur in each partition
-
-REVERSE = False
+PROBES_NAME = 'syn-nva'  # cannot use sem-all because some are too infrequent to occur in each partition
 NUM_PARTS = 2
 
-CONTEXT_SIZE = 2
 
 docs = load_docs(CORPUS_NAME,
                  num_test_take_from_mid=0,
                  num_test_take_random=0,
                  )
 
-params = PrepParams(num_parts=NUM_PARTS, reverse=REVERSE, context_size=CONTEXT_SIZE)
+params = PrepParams(num_parts=NUM_PARTS)
 prep = TrainPrep(docs, **attr.asdict(params))
 
 probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id, excluded=excluded)
@@ -50,6 +46,7 @@ probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id, excluded=exc
 
 DIRECTION = -1  # context is left if -1, context is right if +1  # -1
 NORM = 'l1'  # l1
+CONTEXT_SIZES = [1, 2, 3, 4]
 METRIC = 'ck'
 
 if METRIC == 'ba':
@@ -61,40 +58,42 @@ elif METRIC == 'f1':
 else:
     raise AttributeError('Invalid arg to "METRIC".')
 
-
 # /////////////////////////////////////////////////////////////////
 
 set_memory_limit(prop=0.9)
 
-token_parts = [prep.store.tokens[:prep.midpoint],
-               prep.store.tokens[-prep.midpoint:]]
-
 part_ids = range(2)
-part_id2score = {}
-for part_id in part_ids:
-    tokens = token_parts[part_id]
-    # compute representations
-    windows_mat = make_windows_mat(prep.reordered_parts[part_id],
-                                   prep.num_windows_in_part,
-                                   prep.num_tokens_in_window)
-    probe_reps = make_bow_probe_representations(windows_mat,
-                                                prep.store.types,
-                                                probe_store.types,
-                                                norm=NORM, direction=DIRECTION)
+part_id2scores = {part_id: [] for part_id in part_ids}
+for context_size in CONTEXT_SIZES:
 
-    # calc score
-    score = calc_score(cosine_similarity(probe_reps), probe_store.gold_sims, metric=METRIC)
+    for part_id in part_ids:
 
-    # collect
-    part_id2score[part_id] = score
-    print('part_id={} score={:.3f}'.format(part_id, score))
+        # overwrite context_size
+        prep.context_size = context_size
+
+        # compute representations
+        windows_mat = make_windows_mat(prep.reordered_parts[part_id],
+                                       prep.num_windows_in_part,
+                                       prep.num_tokens_in_window)
+        probe_reps = make_bow_probe_representations(windows_mat,
+                                                    prep.store.types,
+                                                    probe_store.types,
+                                                    norm=NORM, direction=DIRECTION)
+        try:
+            score = calc_score(cosine_similarity(probe_reps), probe_store.gold_sims, metric=METRIC)
+        except MemoryError:
+            break  # print table before exiting
+
+        # collect
+        part_id2scores[part_id].append(score)
+        print('part_id={} score={:.3f}'.format(part_id, score))
 
 # table
-print('Semantic category information in AO-CHILDES'
-      '\ncaptured by BOW representations\n'
-      'with context-size={}'.format(CONTEXT_SIZE))
-headers = ['Partition', METRIC]
-rows = [(part_id + 1, part_id2score[part_id]) for part_id in part_ids]
+print(f'{PROBES_NAME} category information in {CORPUS_NAME}\ncaptured by BOW representations')
+# noinspection PyTypeChecker
+headers = ['Partition'] + CONTEXT_SIZES
+rows = [['1'] + part_id2scores[0],
+        ['2'] + part_id2scores[1]]
 print(tabulate(rows,
                headers=headers,
                tablefmt='latex',
