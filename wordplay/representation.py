@@ -98,9 +98,9 @@ def make_context_by_term_matrix(tokens: List[str],
 
     # contexts
     contexts_in_order = get_sliding_windows(context_size, tokens)
-    unique_contexts = SortedSet(contexts_in_order)
-    num_unique_contexts = len(unique_contexts)
-    context2row_id = {c: n for n, c in enumerate(unique_contexts)}
+    y_words = SortedSet(contexts_in_order)
+    num_y_words = len(y_words)
+    yw2row_id = {c: n for n, c in enumerate(y_words)}
 
     # make sparse matrix (contexts/y-words in rows, targets/x-words in cols)
     data = []
@@ -108,7 +108,7 @@ def make_context_by_term_matrix(tokens: List[str],
     cold_ids = []
     for n, context in enumerate(contexts_in_order[:-context_size]):
         # row_id + col_id
-        row_id = context2row_id[context]
+        row_id = yw2row_id[context]
         next_context = contexts_in_order[n + 1]
         next_word = next_context[-1]  # -1 is correct because windows slide by 1 word
         try:
@@ -124,9 +124,8 @@ def make_context_by_term_matrix(tokens: List[str],
     res = sparse.coo_matrix((data, (row_ids, cold_ids)))
 
     print(f'Co-occurrence matrix has sum={res.sum():,} and shape={res.shape}')
-    expected_shape = (num_unique_contexts, num_xws)
+    expected_shape = (num_y_words, num_xws)
     if res.shape != expected_shape and not probe_store:
         raise SystemExit(f'Result does not match expected shape={expected_shape}')
 
-    y_words = unique_contexts
     return res, x_words, y_words
