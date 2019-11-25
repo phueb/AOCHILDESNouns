@@ -14,18 +14,16 @@ it ensures that for each probe, the same number of contexts occur in each "parti
 (the word "partitions" doesn't really apply here, as the corpus isn't split, but contexts are split)
 
 """
-import pyprind
 from sklearn.metrics.pairwise import cosine_similarity
 import attr
-import numpy as np
 from tabulate import tabulate
 from sortedcontainers import SortedSet
-from collections import Counter
 
 from preppy.legacy import TrainPrep
 from categoryeval.probestore import ProbeStore
 from categoryeval.score import calc_score
 
+from wordplay.representation import make_probe_reps_median_split
 from wordplay.word_sets import excluded
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
@@ -65,6 +63,7 @@ set_memory_limit(prop=0.9)
 
 split_ids = range(2)
 split_id2scores = {split_id: [] for split_id in split_ids}
+
 for context_size in CONTEXT_SIZES:
 
     # get all probe contexts
@@ -84,28 +83,7 @@ for context_size in CONTEXT_SIZES:
 
     for split_id in split_ids:
 
-        # make probe representations based on first or second median split of each probe's contexts
-        num_context_types = len(context_types)
-        probe_reps = np.zeros((probe_store.num_probes, num_context_types))
-        progress_bar = pyprind.ProgBar(probe_store.num_probes, stream=2, title='Collecting contexts')
-        for row_id, p in enumerate(probe_store.types):
-            probe_contexts = probe2contexts[p]
-            num_probe_contexts = len(probe_contexts)
-            num_in_split = num_probe_contexts // 2
-            if split_id == 0:
-                probe_contexts_split = probe_contexts[:num_in_split]
-            elif split_id == 1:
-                probe_contexts_split = probe_contexts[-num_in_split:]
-            else:
-                raise AttributeError('Invalid arg to split_id.')
-            c2f = Counter(probe_contexts_split)
-            probe_reps[row_id] = [c2f[c] for c in context_types]
-
-            progress_bar.update()
-
-        # check each representation has information
-        num_zero_rows = np.sum(~probe_reps.any(axis=1))
-        assert num_zero_rows == 0
+        probe_reps = make_probe_reps_median_split(probe2contexts, context_types, split_id)
 
         try:
             score = calc_score(cosine_similarity(probe_reps), probe_store.gold_sims, metric=METRIC)

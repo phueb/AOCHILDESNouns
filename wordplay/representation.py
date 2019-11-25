@@ -1,5 +1,9 @@
 import random
+from collections import Counter
+from typing import Dict, Set, List, Any
+
 import numpy as np
+import pyprind
 from categoryeval.probestore import ProbeStore
 from scipy import sparse
 from sklearn.preprocessing import normalize
@@ -128,3 +132,38 @@ def make_context_by_term_matrix(tokens: List[str],
         raise SystemExit(f'Result does not match expected shape={expected_shape}')
 
     return res, x_words, y_words
+
+
+def make_probe_reps_median_split(probe2contexts: Dict[str, Any],
+                                 context_types: SortedSet,
+                                 split_id: int,
+                                 ) -> np.ndarray:
+    """
+    make probe representations based on first or second median split of each probe's contexts
+    """
+    num_context_types = len(context_types)
+    probes = SortedSet(probe2contexts.keys())
+    num_probes = len(probe2contexts)
+
+    probe_reps = np.zeros((num_probes, num_context_types))
+    progress_bar = pyprind.ProgBar(num_probes, stream=2, title='Collecting contexts')
+    for row_id, p in enumerate(probes):
+        probe_contexts = probe2contexts[p]
+        num_probe_contexts = len(probe_contexts)
+        num_in_split = num_probe_contexts // 2
+        if split_id == 0:
+            probe_contexts_split = probe_contexts[:num_in_split]
+        elif split_id == 1:
+            probe_contexts_split = probe_contexts[-num_in_split:]
+        else:
+            raise AttributeError('Invalid arg to split_id.')
+        c2f = Counter(probe_contexts_split)
+        probe_reps[row_id] = [c2f[c] for c in context_types]
+
+        progress_bar.update()
+
+    # check each representation has information
+    num_zero_rows = np.sum(~probe_reps.any(axis=1))
+    assert num_zero_rows == 0
+
+    return probe_reps
