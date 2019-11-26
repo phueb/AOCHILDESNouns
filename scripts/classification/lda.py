@@ -24,14 +24,15 @@ CORPUS_NAME = 'childes-20180319'
 PROBES_NAME = 'sem-all'
 
 docs = load_docs(CORPUS_NAME)
-params = PrepParams(num_types=4096)  # TODO num types
+params = PrepParams(num_types=None)  # TODO num types
 prep = TrainPrep(docs, **attr.asdict(params))
 
 probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id, excluded=excluded)
 
 # /////////////////////////////////////////////////////////////////
 
-CONTEXT_SIZE = 3
+ORDERED_REPRESENTATIONS = True
+CONTEXT_SIZE = 4
 
 # ///////////////////////////////////////////////////////////////// representations
 
@@ -42,13 +43,17 @@ y_words = SortedSet(contexts_in_order)
 yw2row_id = {c: n for n, c in enumerate(y_words)}
 context_types = SortedSet()
 for n, context in enumerate(contexts_in_order[:-CONTEXT_SIZE]):
-    # update probe2contexts
     next_context = contexts_in_order[n + 1]
     target = next_context[-1]
     if target in probe_store.types:
-        probe2contexts[target].append(context)
-        # update context types
-        context_types.add(context)
+
+        if ORDERED_REPRESENTATIONS:
+            probe2contexts[target].append(context)
+            context_types.add(context)
+        else:
+            single_word_contexts = [(w,) for w in context]
+            probe2contexts[target].extend(single_word_contexts)
+            context_types.update(single_word_contexts)
 
 x1 = make_probe_reps_median_split(probe2contexts, context_types, split_id=0)
 x2 = make_probe_reps_median_split(probe2contexts, context_types, split_id=1)
@@ -56,7 +61,7 @@ x2 = make_probe_reps_median_split(probe2contexts, context_types, split_id=1)
 # note: LDA classifier appears to use l2 normalization internally
 # because results are same if normalization is performed externally
 
-# ///////////////////////////////////////////////////////////////// LDA
+# /////////////////////////////////////////////////////////////////
 
 set_memory_limit(prop=1.0)
 
@@ -76,8 +81,9 @@ for x, y in zip([x1, x2],
     except MemoryError as e:
         raise SystemExit('Reached memory limit')
 
-    # score on both partitions
-    score1 = clf.score(x1, y1)
-    score2 = clf.score(x2, y2)
-    print(f'partition-1 accuracy={score1:.3f}')
-    print(f'partition-2 accuracy={score2:.3f}')
+    # mean-accuracy
+    score = clf.score(x, y)
+    print(f'accuracy={score:.3f}')
+
+print('CONTEXT_SIZE', CONTEXT_SIZE)
+print('ORDERED', ORDERED_REPRESENTATIONS)

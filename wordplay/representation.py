@@ -1,6 +1,6 @@
 import random
 from collections import Counter
-from typing import Dict, Set, List, Any
+from typing import Dict, Set, List, Any, Tuple
 
 import numpy as np
 import pyprind
@@ -134,7 +134,7 @@ def make_context_by_term_matrix(tokens: List[str],
     return res, x_words, y_words
 
 
-def make_probe_reps_median_split(probe2contexts: Dict[str, Any],
+def make_probe_reps_median_split(probe2contexts: Dict[str, Tuple[str]],
                                  context_types: SortedSet,
                                  split_id: int,
                                  ) -> np.ndarray:
@@ -151,12 +151,16 @@ def make_probe_reps_median_split(probe2contexts: Dict[str, Any],
         probe_contexts = probe2contexts[p]
         num_probe_contexts = len(probe_contexts)
         num_in_split = num_probe_contexts // 2
+
+        # get either first half or second half of contexts
         if split_id == 0:
             probe_contexts_split = probe_contexts[:num_in_split]
         elif split_id == 1:
             probe_contexts_split = probe_contexts[-num_in_split:]
         else:
             raise AttributeError('Invalid arg to split_id.')
+
+        # make probe representation
         c2f = Counter(probe_contexts_split)
         probe_reps[row_id] = [c2f[c] for c in context_types]
 
