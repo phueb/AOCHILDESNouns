@@ -5,8 +5,6 @@ Research questions:
 
 import attr
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-from sortedcontainers import SortedSet
-from sortedcontainers import SortedDict
 
 from preppy.legacy import TrainPrep
 from categoryeval.probestore import ProbeStore
@@ -14,9 +12,9 @@ from categoryeval.probestore import ProbeStore
 from wordplay.word_sets import excluded
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
-from wordplay.utils import get_sliding_windows
 from wordplay.memory import set_memory_limit
 from wordplay.representation import make_probe_reps_median_split
+from wordplay.representation import get_probe_contexts
 
 # /////////////////////////////////////////////////////////////////
 
@@ -31,29 +29,15 @@ probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id, excluded=exc
 
 # /////////////////////////////////////////////////////////////////
 
-ORDERED_REPRESENTATIONS = True
+PRESERVE_WORD_ORDER = False
 CONTEXT_SIZE = 4
 
 # ///////////////////////////////////////////////////////////////// representations
 
-# get all probe contexts
-probe2contexts = SortedDict({p: [] for p in probe_store.types})
-contexts_in_order = get_sliding_windows(CONTEXT_SIZE, prep.store.tokens)
-y_words = SortedSet(contexts_in_order)
-yw2row_id = {c: n for n, c in enumerate(y_words)}
-context_types = SortedSet()
-for n, context in enumerate(contexts_in_order[:-CONTEXT_SIZE]):
-    next_context = contexts_in_order[n + 1]
-    target = next_context[-1]
-    if target in probe_store.types:
-
-        if ORDERED_REPRESENTATIONS:
-            probe2contexts[target].append(context)
-            context_types.add(context)
-        else:
-            single_word_contexts = [(w,) for w in context]
-            probe2contexts[target].extend(single_word_contexts)
-            context_types.update(single_word_contexts)
+probe2contexts, context_types = get_probe_contexts(probe_store.types,
+                                                   prep.store.tokens,
+                                                   CONTEXT_SIZE,
+                                                   PRESERVE_WORD_ORDER)
 
 x1 = make_probe_reps_median_split(probe2contexts, context_types, split_id=0)
 x2 = make_probe_reps_median_split(probe2contexts, context_types, split_id=1)
@@ -86,4 +70,4 @@ for x, y in zip([x1, x2],
     print(f'accuracy={score:.3f}')
 
 print('CONTEXT_SIZE', CONTEXT_SIZE)
-print('ORDERED', ORDERED_REPRESENTATIONS)
+print('ORDERED', PRESERVE_WORD_ORDER)

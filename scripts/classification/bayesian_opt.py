@@ -6,18 +6,17 @@ There are two answers, depending on whether
 * probe representations take into consideration word-order
 * probe representations do not take into consideration word-order
 
-This script computes probe representations which take order into consideration
 
-
-this script is probably the fairest way to compare performance between partitions because
-it ensures that for each probe, the same number of contexts occur in each "partition"
+this script does not directly compare performance between two partitions, as this might be unfair
+ due to differential number of probes occurring in each.
+instead, it ensures that for each probe, the same number of contexts occur in each "split"
 (the word "partitions" doesn't really apply here, as the corpus isn't split, but contexts are split)
 
 """
 from sklearn.metrics.pairwise import cosine_similarity
 import attr
 from tabulate import tabulate
-from sortedcontainers import SortedSet
+
 
 from preppy.legacy import TrainPrep
 from categoryeval.probestore import ProbeStore
@@ -27,13 +26,13 @@ from wordplay.representation import make_probe_reps_median_split
 from wordplay.word_sets import excluded
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
-from wordplay.utils import get_sliding_windows
+from wordplay.representation import get_probe_contexts
 from wordplay.memory import set_memory_limit
 
 # /////////////////////////////////////////////////////////////////
 
 CORPUS_NAME = 'childes-20180319'
-PROBES_NAME = 'sem-all'  # careful: some probe reps might be zero vectors if they do not occur in part
+PROBES_NAME = 'syn-4096'  # careful: some probe reps might be zero vectors if they do not occur in part
 
 
 docs = load_docs(CORPUS_NAME)
@@ -47,6 +46,7 @@ probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id, excluded=exc
 
 CONTEXT_SIZES = [1, 2, 3, 4]
 METRIC = 'ck'
+PRESERVE_WORD_ORDER = True
 
 if METRIC == 'ba':
     y_lims = [0.5, 1.0]
@@ -66,20 +66,10 @@ split_id2scores = {split_id: [] for split_id in split_ids}
 
 for context_size in CONTEXT_SIZES:
 
-    # get all probe contexts
-    probe2contexts = {p: [] for p in probe_store.types}
-    contexts_in_order = get_sliding_windows(context_size, prep.store.tokens)
-    y_words = SortedSet(contexts_in_order)
-    yw2row_id = {c: n for n, c in enumerate(y_words)}
-    context_types = SortedSet()
-    for n, context in enumerate(contexts_in_order[:-context_size]):
-        # update probe2contexts
-        next_context = contexts_in_order[n + 1]
-        target = next_context[-1]
-        if target in probe_store.types:
-            probe2contexts[target].append(context)
-            # update context types
-            context_types.add(context)
+    probe2contexts, context_types = get_probe_contexts(probe_store.types,
+                                                       prep.store.tokens,
+                                                       context_size,
+                                                       PRESERVE_WORD_ORDER)
 
     for split_id in split_ids:
 
