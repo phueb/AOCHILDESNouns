@@ -33,7 +33,7 @@ def load_docs(corpus_name: str,
     p = config.Dirs.corpora / f'{corpus_name}.txt'
     text_in_file = p.read_text()
 
-    # shuffle at sentence-lelve (as opposed to document-level)
+    # shuffle at sentence-level (as opposed to document-level)
     # this remove clustering of same-age utterances within documents
     if shuffle_sentences:
         random.seed(shuffle_seed)
