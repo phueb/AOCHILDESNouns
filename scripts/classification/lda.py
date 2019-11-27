@@ -29,8 +29,8 @@ probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id, excluded=exc
 
 # /////////////////////////////////////////////////////////////////
 
-PRESERVE_WORD_ORDER = False
-CONTEXT_SIZE = 4
+PRESERVE_WORD_ORDER = True
+CONTEXT_SIZE = 3
 
 # ///////////////////////////////////////////////////////////////// representations
 

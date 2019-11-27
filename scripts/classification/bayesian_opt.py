@@ -32,7 +32,7 @@ from wordplay.memory import set_memory_limit
 # /////////////////////////////////////////////////////////////////
 
 CORPUS_NAME = 'childes-20180319'
-PROBES_NAME = 'syn-4096'  # careful: some probe reps might be zero vectors if they do not occur in part
+PROBES_NAME = 'sem-all'  # careful: some probe reps might be zero vectors if they do not occur in part
 
 
 docs = load_docs(CORPUS_NAME)
@@ -46,7 +46,7 @@ probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id, excluded=exc
 
 CONTEXT_SIZES = [1, 2, 3, 4]
 METRIC = 'ck'
-PRESERVE_WORD_ORDER = True
+PRESERVE_WORD_ORDER = False
 
 if METRIC == 'ba':
     y_lims = [0.5, 1.0]
