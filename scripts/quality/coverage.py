@@ -130,9 +130,9 @@ for cat in probe_store.cats:
 
         # compute measure for contexts associated with a single category in a single partition
         context_ys1 = np.array(list(make_context_ys(cat_probes, tokens1, context_size,
-                                                        start=start1, end=end1)))
+                                                    start=start1, end=end1)))
         context_ys2 = np.array(list(make_context_ys(cat_probes, tokens2, context_size,
-                                                        start=start2, end=end2)))
+                                                    start=start2, end=end2)))
 
         # fig
         if SHOW_HISTOGRAM:

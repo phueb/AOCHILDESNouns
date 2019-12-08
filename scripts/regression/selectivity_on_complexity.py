@@ -30,7 +30,6 @@ from wordplay.params import PrepParams
 from wordplay.utils import split
 from wordplay.representation import make_context_by_term_matrix
 from wordplay.measures import calc_selectivity
-from wordplay.measures import calc_utterance_lengths
 from wordplay.sentences import split_into_sentences
 from wordplay.svo import subject_verb_object_triples
 
@@ -71,7 +70,7 @@ POS = 'NOUN'
 ADD_SEM_PROBES = True if POS == 'NOUN' else False  # set to True when POS = 'NOUN'
 
 # names
-MLU = 'MLU'
+PARTITION = 'partition'
 SEM_COMPLEXITY = 'semantic complexity'
 SYN_COMPLEXITY = 'syntactic complexity'
 SELECTIVITY = f'{POS}-context selectivity'
@@ -92,12 +91,12 @@ print(f'Number of {POS} words that occur in all partitions = {len(pos_words)}')
 
 nlp = spacy.load("en_core_web_sm", disable=['ner'])
 
-mlu = []
+partition = []
 syn_complexity = []
 sem_complexity = []
 selectivity = []
-for word_tokens, tag_tokens in zip(split(prep1.store.tokens, prep1.num_tokens_in_part),
-                                   split(prep2.store.tokens, prep2.num_tokens_in_part)):
+for part_id, (word_tokens, tag_tokens) in enumerate(zip(split(prep1.store.tokens, prep1.num_tokens_in_part),
+                                                        split(prep2.store.tokens, prep2.num_tokens_in_part))):
 
     assert len(word_tokens) == len(tag_tokens)
     assert word_tokens != tag_tokens
@@ -105,11 +104,6 @@ for word_tokens, tag_tokens in zip(split(prep1.store.tokens, prep1.num_tokens_in
     # check
     num_pos_words_at_bin = len([w for w in pos_words if w in word_tokens])
     print(f'Using {num_pos_words_at_bin} probes to compute selectivity')
-
-    # /////////////////////////////////// calc MLU
-
-    lengths = calc_utterance_lengths(word_tokens)
-    mlu_i = np.mean(lengths)
 
     # /////////////////////////////////// calc syntactic complexity
 
@@ -147,27 +141,27 @@ for word_tokens, tag_tokens in zip(split(prep1.store.tokens, prep1.num_tokens_in
                                                                  pos_words)
 
     print(f'selectivity={selectivity_i}\n'
-          f'mlu={mlu_i}\n'
+          f'partition={part_id + 1}\n'
           f'syn-complexity={syn_complexity_i}\n'
           f'sem-complexity={sem_complexity_i}\n')
     print()
 
     # collect
     selectivity.append(selectivity_i)
-    mlu.append(mlu_i)
+    partition.append(part_id + 1)
     syn_complexity.append(syn_complexity_i)
     sem_complexity.append(sem_complexity_i)
 
-# regress selectivity on mlu + sem-complexity
-x = pd.DataFrame(data={MLU: mlu, SEM_COMPLEXITY: sem_complexity})
+# regress selectivity on partition + sem-complexity
+x = pd.DataFrame(data={PARTITION: partition, SEM_COMPLEXITY: sem_complexity})
 x[x.columns] = StandardScaler().fit_transform(x)
 y = pd.Series(selectivity)
 y.name = SELECTIVITY
 summary = regress(x, y)  # reduces same results as sklearn with intercept + normalization
 print(summary)
 
-# regress selectivity on mlu + syn-complexity
-x = pd.DataFrame(data={MLU: mlu, SYN_COMPLEXITY: syn_complexity})
+# regress selectivity on partition + syn-complexity
+x = pd.DataFrame(data={PARTITION: partition, SYN_COMPLEXITY: syn_complexity})
 x[x.columns] = StandardScaler().fit_transform(x)
 y = pd.Series(selectivity)
 y.name = SELECTIVITY
@@ -175,7 +169,7 @@ summary = regress(x, y)  # reduces same results as sklearn with intercept + norm
 print(summary)
 
 # correlation matrix
-x_all = pd.DataFrame(data={MLU: mlu, SYN_COMPLEXITY: syn_complexity, SEM_COMPLEXITY: sem_complexity})
+x_all = pd.DataFrame(data={PARTITION: partition, SYN_COMPLEXITY: syn_complexity, SEM_COMPLEXITY: sem_complexity})
 x_all[x_all.columns] = StandardScaler().fit_transform(x_all)
 correlations = x_all.corr()
 print(correlations.round(3))
@@ -194,29 +188,29 @@ ax2.xaxis.label.set_size(LABEL_FONT_SIZE)
 ax2.yaxis.label.set_size(LABEL_FONT_SIZE)
 plt.show()
 _, ax3 = plt.subplots()
-xy.plot(kind='scatter', x=MLU, y=SELECTIVITY, ax=ax3, color='black')
+xy.plot(kind='scatter', x=PARTITION, y=SELECTIVITY, ax=ax3, color='black')
 ax3.xaxis.label.set_size(LABEL_FONT_SIZE)
 ax3.yaxis.label.set_size(LABEL_FONT_SIZE)
 plt.show()
 _, ax4 = plt.subplots()
-xy.plot(kind='scatter', x=SEM_COMPLEXITY, y=MLU, ax=ax4, color='black')
+xy.plot(kind='scatter', x=SEM_COMPLEXITY, y=PARTITION, ax=ax4, color='black')
 ax4.xaxis.label.set_size(LABEL_FONT_SIZE)
 ax4.yaxis.label.set_size(LABEL_FONT_SIZE)
 plt.show()
 _, ax5 = plt.subplots()
-xy.plot(kind='scatter', x=SYN_COMPLEXITY, y=MLU, ax=ax5, color='black')
+xy.plot(kind='scatter', x=SYN_COMPLEXITY, y=PARTITION, ax=ax5, color='black')
 ax5.xaxis.label.set_size(LABEL_FONT_SIZE)
 ax5.yaxis.label.set_size(LABEL_FONT_SIZE)
 plt.show()
 
-# partial correlation (controlling for mlu)
-res1 = pg.partial_corr(data=xy, x=SEM_COMPLEXITY, y=SELECTIVITY, covar=MLU)
-print('Partial Correlation between sem-comp and selectivity controlling for mlu')
+# partial correlation (controlling for partition)
+res1 = pg.partial_corr(data=xy, x=SEM_COMPLEXITY, y=SELECTIVITY, covar=PARTITION)
+print('Partial Correlation between sem-comp and selectivity controlling for partition')
 print(res1)
-res2 = pg.partial_corr(data=xy, x=SYN_COMPLEXITY, y=SELECTIVITY, covar=MLU)
-print('Partial Correlation between syn-comp and selectivity controlling for mlu')
+res2 = pg.partial_corr(data=xy, x=SYN_COMPLEXITY, y=SELECTIVITY, covar=PARTITION)
+print('Partial Correlation between syn-comp and selectivity controlling for partition')
 print(res2)
 
 # mediation analysis
-res = mediation_analysis(data=xy, x=MLU, m=[SYN_COMPLEXITY, SEM_COMPLEXITY], y=SELECTIVITY)
+res = mediation_analysis(data=xy, x=PARTITION, m=[SYN_COMPLEXITY, SEM_COMPLEXITY], y=SELECTIVITY)
 print(res)

@@ -133,7 +133,7 @@ for cat in probe_store.cats:
             context_ys2 = np.array(list(make_context_ys(cat_probes, tokens2, context_size,
                                                         start=start2, end=end2))).astype(np.float32)
         except MemoryError:
-            print('WANING: Memmory Error. Skipping computation')
+            print('WANING: Memory Error. Skipping computation')
             continue
 
         # fig
