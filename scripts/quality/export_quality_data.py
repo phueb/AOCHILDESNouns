@@ -217,12 +217,14 @@ for part_id, (word_tokens, tag_tokens) in enumerate(zip(split(prep1.store.tokens
 # data frame
 df = pd.DataFrame(data={
     'partition': partition,
-    'sem-comp': sem_complexity,
-    'syn-comp': syn_complexity,
+    'sem_comp': sem_complexity,
+    'syn_comp': syn_complexity,
     'coverage': coverage,
     'selectivity': selectivity,
     'prominence': prominence,
 })
-df.set_index('partition')
-print(df)
+normalized_df = (df-df.mean()) / df.std()
+normalized_df['partition'] = df['partition']
+normalized_df.to_csv('noun_quality.csv')
 
+print(normalized_df)
