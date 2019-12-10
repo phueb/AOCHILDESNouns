@@ -13,60 +13,59 @@ age information is not available for childes-20180319
 """
 
 
-def make_age_bin2tokens(corpus_name: str,
-                        age_step: int,
-                        suffix: str = '_terms',
-                        verbose: bool = False,
-                        ) -> Dict[float, List[str]]:
+def make_age_bin2data(corpus_name: str,
+                      age_step: int,
+                      suffix: str = '_terms',
+                      verbose: bool = False,
+                      ) -> Dict[float, List[str]]:
 
     ages_path = config.Dirs.corpora / f'{corpus_name}_ages.txt'
     ages_text = ages_path.read_text(encoding='utf-8')
     ages = np.array(ages_text.split(), dtype=np.float)
-    tags_path = config.Dirs.corpora / f'{corpus_name}{suffix}.txt'
-    tags_text = tags_path.read_text(encoding='utf-8')
-    tags_by_doc = [doc.split() for doc in tags_text.split('\n')[:-1]]
+    data_path = config.Dirs.corpora / f'{corpus_name}{suffix}.txt'
+    data_text = data_path.read_text(encoding='utf-8')
+    data_by_doc = [doc.split() for doc in data_text.split('\n')[:-1]]
     ages_binned = ages - np.mod(ages, age_step)
 
     # convert ages to age bins
     ages_binned = ages_binned.astype(np.int)
-    data = zip(ages_binned, tags_by_doc)
+    age_and_docs = zip(ages_binned, data_by_doc)
 
-    age_bin2tokens = {}
-    for age_bin, data_group in groupby(data, lambda d: d[0]):
-        docs = [d[1] for d in data_group]
-        tokens = list(np.concatenate(docs))
+    res = {}
+    for age_bin, doc_group in groupby(age_and_docs, lambda d: d[0]):
+        docs = [d[1] for d in doc_group]
+        data = list(np.concatenate(docs))
         if verbose:
             print(f'Found {len(docs)} transcripts for age-bin={age_bin}')
 
-        age_bin2tokens[age_bin] = tokens
+        res[age_bin] = data
 
-    return age_bin2tokens
+    return res
 
 
-def make_age_bin2tokens_with_min_size(age_bin2tokens: Dict[float, List[str]],
-                                      min_num_tokens: int,
-                                      no_binning: bool = False,
-                                      ):
+def make_age_bin2data_with_min_size(age_bin2data: Dict[float, List[str]],
+                                    min_num_data: int,
+                                    no_binning: bool = False,
+                                    ):
     """
-    return dictionary similar to age_bin2tokens but with a constant number of tokens per age_bin.
+    return dictionary similar to age_bin2tokens but with a constant number of data per age_bin.
     combine bins when a bin is too small.
-    remove content from bin when a bin is too small
     """
 
     if no_binning:
         print('WARNING: Not binning by age')
-        all_tokens = np.concatenate(list(age_bin2tokens.values()))
-        return {n: list(tokens) for n, tokens in enumerate(split(all_tokens, split_size=min_num_tokens))
-                if len(tokens) == min_num_tokens}
+        all_tokens = np.concatenate(list(age_bin2data.values()))
+        return {n: list(tokens) for n, tokens in enumerate(split(all_tokens, split_size=min_num_data))
+                if len(tokens) == min_num_data}
 
     res = {}
     buffer = []
-    for age_bin, tokens in age_bin2tokens.items():
+    for age_bin, data in age_bin2data.items():
 
-        buffer += tokens
+        buffer += data
 
-        if len(buffer) > min_num_tokens:
-            res[age_bin] = buffer[-min_num_tokens:]
+        if len(buffer) > min_num_data:
+            res[age_bin] = buffer[-min_num_data:]
             buffer = []
         else:
             continue

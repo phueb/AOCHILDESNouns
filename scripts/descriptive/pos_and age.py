@@ -1,9 +1,11 @@
-import pygal
-from pygal.style import DefaultStyle
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.ticker import FuncFormatter
 
-
+from wordplay.utils import human_format
 from wordplay.pos import pos2tags
-from wordplay.binned import make_age_bin2tokens
+from wordplay.binned import make_age_bin2data
+from wordplay import config
 
 # ///////////////////////////////////////////////////////////////// parameters
 
@@ -16,7 +18,7 @@ BAR = True
 
 # ///////////////////////////////////////////////////////////////// combine docs by age
 
-age_bin2tags = make_age_bin2tokens(CORPUS_NAME, AGE_STEP, suffix='_tags')
+age_bin2tags = make_age_bin2data(CORPUS_NAME, AGE_STEP, suffix='_tags')
 print(f'Number of bins={len(age_bin2tags)}')
 
 # /////////////////////////////////////////////////////////////////
@@ -50,40 +52,27 @@ for pos, y in pos2y.items():
     print(pos)
     print(y)
 
-print('Making chart...')
+# delete minor contributions
+del pos2y['other']
+del pos2y['particle']
+del pos2y['CCONJ']
+del pos2y['P-NOUN']
+
+# stack plot
+fig, ax = plt.subplots(dpi=config.Fig.dpi, figsize=(8, 6))
+ax.set_ylabel('Token Frequency', fontsize=config.Fig.ax_fontsize)
+ax.set_xlabel('Age of Target Child (days)', fontsize=config.Fig.ax_fontsize)
+ax.yaxis.set_major_formatter(FuncFormatter(human_format))
+ax.spines['right'].set_visible(False)
+ax.spines['top'].set_visible(False)
+ax.tick_params(axis='both', which='both', top=False, right=False)
+plt.grid(True, which='both', axis='y', alpha=0.2)
+# plot
+x = [k for k, v in sorted(age_bin2tags.items(), key=lambda i: i[0], reverse=True)]
+labels = [k for k, v in sorted(pos2y.items(), key=lambda i: i[0], reverse=True)]
+ys = [np.array(v) for k, v in sorted(pos2y.items(), key=lambda i: i[0], reverse=True)]
+ax.stackplot(x, *ys, labels=labels)
+plt.legend(loc='upper left')
+plt.show()
 
 
-# TODO make matplotlib stacked figure - matplotlib is easier to work with
-x = [1, 2, 3, 4, 5]
-y1 = [1, 1, 2, 3, 5]
-y2 = [0, 4, 2, 6, 8]
-y3 = [1, 3, 5, 7, 9]
-
-y = np.vstack([y1, y2, y3])
-
-labels = ["Fibonacci ", "Evens", "Odds"]
-
-fig, ax = plt.subplots()
-ax.stackplot(x, y1, y2, y3, labels=labels)
-
-raise SystemExit
-
-if BAR:
-    Bar = pygal.StackedBar
-else:
-    Bar = pygal.StackedLine
-
-style = DefaultStyle(plot_background='white',
-                     background='white',
-                     opacity='1.0')
-chart = Bar(fill=True,
-            show_dots=False,
-            human_readable=True,
-            x_title='Age (in days)',
-            y_title='Token frequency',
-            interpolate=INTERPOLATE,
-            style=style)
-for pos, y in pos2y.items():
-    chart.add(pos, y)
-chart.x_labels = [str(age_bin) for age_bin in age_bin2tags.keys()]
-chart.render_to_png('test.png')

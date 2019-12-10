@@ -1,72 +1,75 @@
 """
-make data frame with partition (or age) in rows, and all measures of quality on columns.
+make data frame with age_bin in rows, and all measures of quality on columns.
 use this to do path analysis in R: does semantic or syntactic complexity mediate relation between age and
 measures of distributional quality?
 
 """
 import spacy
 import numpy as np
-import attr
 import pandas as pd
 import pyprind
 from copy import deepcopy
 
-from preppy.legacy import TrainPrep
 from categoryeval.probestore import ProbeStore
 
-from wordplay.docs import load_docs
 from wordplay.word_sets import excluded
-from wordplay.params import PrepParams
-from wordplay.utils import split
 from wordplay.representation import make_context_by_term_matrix
 from wordplay.measures import calc_selectivity
 from wordplay.sentences import split_into_sentences
 from wordplay.svo import subject_verb_object_triples
 from wordplay.measures import calc_kl_divergence
-
-# /////////////////////////////////////////////////////////////////
-
-CORPUS_NAME = 'childes-20180319'
-PROBES_NAME = 'syn-nva'
-
-NUM_PARTS = 32  # approx. 30-50
-SHUFFLE_SENTENCES = False  # this is the only way to completely remove age-structure (also within documents)
-
-docs1 = load_docs(CORPUS_NAME,
-                  shuffle_sentences=SHUFFLE_SENTENCES,
-                  )
-
-params1 = PrepParams(num_parts=NUM_PARTS)
-prep1 = TrainPrep(docs1, **attr.asdict(params1))
-
-docs2 = load_docs(CORPUS_NAME + '_tags',
-                  shuffle_sentences=SHUFFLE_SENTENCES,
-                  )
-
-params2 = PrepParams(num_parts=NUM_PARTS)
-prep2 = TrainPrep(docs2, **attr.asdict(params2))
-
-probe_store = ProbeStore('childes-20180319', PROBES_NAME, prep1.store.w2id, excluded=excluded)
+from wordplay.binned import make_age_bin2data
+from wordplay.binned import make_age_bin2data_with_min_size
 
 # ///////////////////////////////////////////////////////////////// parameters
 
-CONTEXT_SIZE = 2
+CORPUS_NAME = 'childes-20191112'
+PROBES_NAME = 'syn-nva'
+AGE_STEP = 100
+NUM_TOKENS_PER_BIN = 50 * 1000  # 100K is good with AGE_STEP=100
+
+CONTEXT_SIZE = 3
 POS = 'NOUN'
 ADD_SEM_PROBES = True if POS == 'NOUN' else False  # set to True when POS = 'NOUN'
+USE_ONLY_SHARED_PROBES = True  # if True, probes must occur in each partition
+
+# ///////////////////////////////////////////////////////////////// combine docs by age
+
+age_bin2tags_ = make_age_bin2data(CORPUS_NAME, AGE_STEP, suffix='_tags')
+age_bin2tokens_ = make_age_bin2data(CORPUS_NAME, AGE_STEP)
+
+for word_tokens in age_bin2tags_.values():  # this is used to determine maximal NUM_TOKENS_PER_BIN
+    print(f'{len(word_tokens):,}')
+
+# combine small bins
+age_bin2tags = make_age_bin2data_with_min_size(age_bin2tags_, NUM_TOKENS_PER_BIN)
+age_bin2tokens = make_age_bin2data_with_min_size(age_bin2tokens_, NUM_TOKENS_PER_BIN)
+
+num_bins = len(age_bin2tags)
 
 # ///////////////////////////////////////////////////////////////// get test words
 
+w2id = {}
+num_tokens = 0
+all_tokens = []
+for tokens in age_bin2tokens.values():
+    num_tokens += len(tokens)
+    all_tokens += tokens
+    for w in set(tokens):
+        w2id[w] = len(w2id)
+probe_store = ProbeStore('childes-20180319', PROBES_NAME, w2id, excluded=excluded)
 pos_words = probe_store.cat2probes[POS].copy()
 
 if ADD_SEM_PROBES:
-    added_probes = ProbeStore('childes-20180319', 'sem-all', prep1.store.w2id, excluded=excluded).types.copy()
+    added_probes = ProbeStore('childes-20180319', 'sem-all', w2id, excluded=excluded).types.copy()
     pos_words.update(added_probes)
 
 # get a subset of pos_words which occur in ALL parts of corpus
-for tokens in split(prep1.store.tokens, prep1.num_tokens_in_part):
+for tokens in age_bin2tokens.values():
     types_in_part = set(tokens)
-    pos_words.intersection_update(types_in_part)
-print(f'Number of {POS} words that occur in all partitions = {len(pos_words)}')
+    if USE_ONLY_SHARED_PROBES:
+        pos_words.intersection_update(types_in_part)
+print(f'Using {len(pos_words)} {POS} words')
 
 nlp = spacy.load("en_core_web_sm", disable=['ner'])
 
@@ -75,9 +78,9 @@ nlp = spacy.load("en_core_web_sm", disable=['ner'])
 # preliminaries for computing coverage
 info = {'freq_by_probe': {probe: 0.0 for probe in pos_words}, 'total_freq': 0, 'locations': []}
 context2kld_info = {}
-pbar = pyprind.ProgBar(prep1.store.num_tokens)
-for loc, token in enumerate(prep1.store.tokens[:-CONTEXT_SIZE]):
-    context = tuple(prep1.store.tokens[loc + dist] for dist in range(-CONTEXT_SIZE, 0) if dist != 0)
+pbar = pyprind.ProgBar(num_tokens)
+for loc, token in enumerate(all_tokens[:-CONTEXT_SIZE]):
+    context = tuple(all_tokens[loc + dist] for dist in range(-CONTEXT_SIZE, 0) if dist != 0)
     if token in pos_words:
         context2kld_info.setdefault(context, deepcopy(info))['freq_by_probe'][token] += 1
         context2kld_info.setdefault(context, deepcopy(info))['total_freq'] += 1
@@ -87,9 +90,9 @@ for loc, token in enumerate(prep1.store.tokens[:-CONTEXT_SIZE]):
 # preliminaries for computing prominence
 info = {'in-category': [],  'locations': []}
 context2prominence_info = {}
-pbar = pyprind.ProgBar(prep1.store.num_tokens)
-for loc, token in enumerate(prep1.store.tokens[:-CONTEXT_SIZE]):
-    context = tuple(prep1.store.tokens[loc + dist] for dist in range(-CONTEXT_SIZE, 0) if dist != 0)
+pbar = pyprind.ProgBar(num_tokens)
+for loc, token in enumerate(all_tokens[:-CONTEXT_SIZE]):
+    context = tuple(all_tokens[loc + dist] for dist in range(-CONTEXT_SIZE, 0) if dist != 0)
     if token in pos_words:
         context2prominence_info.setdefault(context, deepcopy(info))['in-category'].append(1)
         context2prominence_info.setdefault(context, deepcopy(info))['locations'].append(loc)
@@ -98,18 +101,19 @@ for loc, token in enumerate(prep1.store.tokens[:-CONTEXT_SIZE]):
         context2prominence_info.setdefault(context, deepcopy(info))['locations'].append(loc)
     pbar.update()
 
-# //////////////////////////////////////////////////////////////// compute measures for each partition
+# //////////////////////////////////////////////////////////////// compute measures for each bin
 
-partition = []
+age = []
 syn_complexity = []
 sem_complexity = []
 coverage = []
 selectivity = []
 prominence = []
 start = 0  # location in corpus
-end = prep1.num_tokens_in_part  # location in corpus
-for part_id, (word_tokens, tag_tokens) in enumerate(zip(split(prep1.store.tokens, prep1.num_tokens_in_part),
-                                                        split(prep2.store.tokens, prep2.num_tokens_in_part))):
+for (age_bin, word_tokens), (_, tag_tokens) in zip(age_bin2tokens.items(),
+                                                   age_bin2tags.items()):
+
+    end = start + len(word_tokens)  # location in corpus
 
     assert len(word_tokens) == len(tag_tokens)
     assert word_tokens != tag_tokens
@@ -130,12 +134,13 @@ for part_id, (word_tokens, tag_tokens) in enumerate(zip(split(prep1.store.tokens
     # compute num SVO triples as measure of semantic complexity
     word_sentences = split_into_sentences(word_tokens, punctuation={'.', '!', '?'})
     texts = [' '.join(s) for s in word_sentences]
-    unique_triples = set()
+    triples = []
     for doc in nlp.pipe(texts):
         for t in subject_verb_object_triples(doc):  # only returns triples, not partial triples
-            unique_triples.add(t)
-    num_unique_triples_in_part = len(unique_triples)
-    sem_complexity_i = num_unique_triples_in_part
+            triples.append(t)
+    num_unique_triples_in_part = len(set(triples))
+    num_total_triples_in_part = len(triples)
+    sem_complexity_i = num_unique_triples_in_part / num_total_triples_in_part
 
     # /////////////////////////////////// calc coverage
 
@@ -192,7 +197,7 @@ for part_id, (word_tokens, tag_tokens) in enumerate(zip(split(prep1.store.tokens
     # /////////////////////////////////// collect data
 
     print(
-        f'partition={part_id + 1}\n'
+        f'age_bin={age_bin}\n'
         f'coverage={coverage_i}\n'
         f'selectivity={selectivity_i}\n'
         f'prominence={prominence_i}\n'
@@ -202,7 +207,7 @@ for part_id, (word_tokens, tag_tokens) in enumerate(zip(split(prep1.store.tokens
     print()
 
     # collect
-    partition.append(part_id + 1)
+    age.append(age_bin)
     coverage.append(coverage_i)
     selectivity.append(selectivity_i)
     prominence.append(prominence_i)
@@ -210,13 +215,12 @@ for part_id, (word_tokens, tag_tokens) in enumerate(zip(split(prep1.store.tokens
     syn_complexity.append(syn_complexity_i)
     sem_complexity.append(sem_complexity_i)
 
-    # update start + end
-    start += len(word_tokens)
-    end += len(word_tokens)
+    # update start location
+    start = end
 
 # data frame
 df = pd.DataFrame(data={
-    'partition': partition,
+    'age': age,
     'sem': sem_complexity,
     'syn': syn_complexity,
     'coverage': coverage,
@@ -224,7 +228,7 @@ df = pd.DataFrame(data={
     'prominence': prominence,
 })
 normalized_df = (df-df.mean()) / df.std()
-normalized_df['partition'] = df['partition']
-normalized_df.to_csv(f'noun_quality_cs{CONTEXT_SIZE}_np{NUM_PARTS}.csv')
+normalized_df['age'] = df['age']
+normalized_df.to_csv(f'noun_quality_cs{CONTEXT_SIZE}_age_binned.csv')
 
 print(normalized_df)

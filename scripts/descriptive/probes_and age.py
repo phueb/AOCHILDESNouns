@@ -4,7 +4,7 @@ from pygal.style import DefaultStyle
 from categoryeval.probestore import ProbeStore
 
 from wordplay.word_sets import excluded
-from wordplay.binned import make_age_bin2tokens
+from wordplay.binned import make_age_bin2data
 
 # ///////////////////////////////////////////////////////////////// parameters
 
@@ -18,7 +18,7 @@ BAR = True
 
 # ///////////////////////////////////////////////////////////////// combine docs by age
 
-age_bin2tokens = make_age_bin2tokens(CORPUS_NAME, AGE_STEP)
+age_bin2tokens = make_age_bin2data(CORPUS_NAME, AGE_STEP)
 print(f'Number of bins={len(age_bin2tokens)}')
 
 # /////////////////////////////////////////////////////////////////
