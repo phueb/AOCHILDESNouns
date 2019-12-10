@@ -50,7 +50,7 @@ probe_store = ProbeStore('childes-20180319', PROBES_NAME, prep1.store.w2id, excl
 
 # ///////////////////////////////////////////////////////////////// parameters
 
-CONTEXT_SIZE = 1
+CONTEXT_SIZE = 2
 POS = 'NOUN'
 ADD_SEM_PROBES = True if POS == 'NOUN' else False  # set to True when POS = 'NOUN'
 
