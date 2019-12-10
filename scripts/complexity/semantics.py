@@ -61,14 +61,16 @@ for tokens in split(prep.store.tokens, prep.num_tokens_in_part):
     num_unique_triples_in_part = len(set(triples_in_part))
 
     print(triples_in_part[:20])
+    yi = num_unique_triples_in_part / num_triples_in_part
 
     if VERBOSE:
         print(f'Found {num_triples_in_part:>12,} SVO triples')
-        print(f'Found {num_unique_triples_in_part:>12,} unique SVO triples')  # num tokens = num types : but why?
+        print(f'Found {num_unique_triples_in_part:>12,} unique SVO triples')
+        print(f'sem-complexity={yi:.4f}')
     else:
         pbar.update()
 
-    y.append(num_unique_triples_in_part)
+    y.append(yi)
 
 
 # fig
