@@ -129,4 +129,4 @@ def subject_verb_object_triples(doc):
                         span = (obj.i, obj.i)
                     obj = sent[span[0] - start_i : span[1] - start_i + 1]
 
-                    yield (subj, verb, obj)
+                    yield (subj.text, verb.text, obj.text)
