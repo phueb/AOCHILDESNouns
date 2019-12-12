@@ -15,11 +15,11 @@ pos2tags = {
     'ADV': {'RB', 'RBR', 'RBS', 'WRB'},
     'PRON': {'PRP', 'PRP$', 'WP', 'WP$', 'EX'},
     'ADP': {'IN'},
-    'CCONJ': {'CC'},
+    'conj': {'CC'},
     'INTJ': {'UH'},
     'DET': {'DT', 'PDT', 'WDT'},
     'particle': {'POS', 'RP', 'TO'},
-    'punctuation': {',', ':', '.', "''", 'HYPH', 'NFP'},
+    'punct': {',', ':', '.', "''", 'HYPH', 'NFP'},
 }
 
 tag2pos = {
@@ -55,7 +55,7 @@ tag2pos = {
     'EX': 'PRON',
 
     'IN': 'ADP',
-    'CC': 'CCONJ',
+    'CC': 'conj',
     'UH': 'INTJ',
 
     'PDT': 'DET',
@@ -66,12 +66,12 @@ tag2pos = {
     'RP': 'particle',
     'TO': 'particle',
 
-    '.': 'punctuation',
-    ',': 'punctuation',
-    ':': 'punctuation',
-    "'": 'punctuation',
-    'HYPH': 'punctuation',
-    'NFP': 'punctuation',
+    '.': 'punct',
+    ',': 'punct',
+    ':': 'punct',
+    "'": 'punct',
+    'HYPH': 'punct',
+    'NFP': 'punct',
 
     'CD': 'number',
 

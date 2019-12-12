@@ -6,7 +6,6 @@ from scipy import stats
 from preppy.legacy import TrainPrep
 
 from wordplay import config
-from wordplay.word_sets import excluded
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs
 from wordplay.pos import pos2tags
@@ -28,7 +27,7 @@ prep = TrainPrep(docs, **attr.asdict(params))
 
 # /////////////////////////////////////////////////////////////////
 
-POS_LIST = ['verb']
+POS_LIST = ['NOUN']
 
 for pos in POS_LIST or sorted(pos2tags.keys()):
 
