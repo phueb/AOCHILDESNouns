@@ -2,16 +2,12 @@ library(lavaan)
 library(semPlot)
 
 #read data
-data <- read.csv("scripts/quality/noun_quality_cs1_age_binned.csv")
+data <- read.csv("scripts/quality/noun_quality_cs3_age_binned.csv")
+# check for normality
 qqnorm(data$selectivity, pch = 1, frame = FALSE)
-qqline(data$selectivity, col = "steelblue", lwd = 2)
+qqnorm(data$coverage, pch = 1, frame = FALSE)
+qqnorm(data$prominence, pch = 1, frame = FALSE)
 
-path <- " coverage ~ sem + syn
-          selectivity ~ sem + syn
-          prominence ~ sem + syn
-          sem ~~ syn
-          sem  ~ partition
-          syn  ~ partition"
 
 path <- " coverage ~ sem + syn
           selectivity ~ sem + syn

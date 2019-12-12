@@ -24,12 +24,14 @@ setup(
         'spacy',
         'pandas',
         'cytoolz',
-        'pingouin'
+        'pingouin',
+        'preppy @ git+https://github.com/phueb/Preppy.git#egg=Preppy-v1.3.0',
+        'categoryeval @ git+https://github.com/phueb/CategoryEval.git#egg=CategoryEval-v1.1.0',
     ],
     url='https://github.com/phueb/Wordplay',
     license='',
     author='Philip Huebner',
     author_email='info@philhuebner.com',
-    description='Analyze statistical properties of text related to lexical categories',
+    description='Analyze distributional properties of lexical categories in text',
 
 )
