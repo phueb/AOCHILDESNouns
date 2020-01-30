@@ -3,7 +3,6 @@ from typing import List, Set
 import string
 
 from wordplay import config
-from wordplay.word_sets import excluded
 
 nlp = spacy.load('en_core_web_sm', disable=['parser', 'ner'])
 

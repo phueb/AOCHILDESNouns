@@ -7,7 +7,6 @@ import seaborn as sns
 from sortedcontainers import SortedSet
 
 from wordplay import config
-from wordplay.word_sets import excluded
 
 
 def plot_category_encoding_dimensions(cat2dim_ids: Dict[str, List[int]],
