@@ -15,7 +15,7 @@ import attr
 
 import matplotlib.pyplot as plt
 
-from preppy.legacy import TrainPrep
+from preppy import PartitionedPrep as TrainPrep
 from categoryeval.probestore import ProbeStore
 
 from wordplay import config

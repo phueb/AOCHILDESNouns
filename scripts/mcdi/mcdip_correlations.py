@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import attr
 
-from preppy.legacy import TrainPrep
+from preppy import PartitionedPrep as TrainPrep
 
 from wordplay import config
 from wordplay.utils import plot_best_fit_line

@@ -9,7 +9,7 @@ import tempfile
 import attr
 
 from wordplay import config
-from preppy.legacy import TrainPrep
+from preppy import PartitionedPrep as TrainPrep
 from categoryeval.probestore import ProbeStore
 
 from wordplay.word_sets import excluded

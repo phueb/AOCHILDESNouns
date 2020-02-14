@@ -12,7 +12,7 @@ import numpy as np
 import attr
 from tabulate import tabulate
 
-from preppy.legacy import TrainPrep
+from preppy import PartitionedPrep as TrainPrep
 
 from wordplay.params import PrepParams
 from wordplay.docs import load_docs

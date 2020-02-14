@@ -25,7 +25,7 @@ setup(
         'pandas',
         'cytoolz',
         'pingouin',
-        'preppy @ git+https://github.com/phueb/Preppy.git#egg=Preppy-v1.3.0',
+        'preppy @ git+https://github.com/phueb/Preppy.git#egg=Preppy-v2.0.0',
         'categoryeval @ git+https://github.com/phueb/CategoryEval.git#egg=CategoryEval-v1.1.0',
     ],
     url='https://github.com/phueb/Wordplay',

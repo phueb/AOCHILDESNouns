@@ -2,8 +2,8 @@ import attr
 import numpy as np
 from tabulate import tabulate
 
-from preppy.legacy import TrainPrep
-from preppy.legacy import make_windows_mat
+from preppy import PartitionedPrep as TrainPrep
+from preppy.utils import make_windows_mat
 from categoryeval.probestore import ProbeStore
 
 from wordplay.word_sets import excluded

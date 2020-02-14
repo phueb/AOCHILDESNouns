@@ -10,7 +10,7 @@ from sklearn.preprocessing import normalize
 import attr
 import numpy as np
 
-from preppy.legacy import TrainPrep
+from preppy import PartitionedPrep as TrainPrep
 
 from wordplay import config
 from wordplay.params import PrepParams

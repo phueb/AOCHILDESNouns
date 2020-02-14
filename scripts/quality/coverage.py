@@ -36,7 +36,7 @@ import pandas as pd
 import pingouin as pg
 from copy import deepcopy
 
-from preppy.legacy import TrainPrep
+from preppy import PartitionedPrep as TrainPrep
 from categoryeval.probestore import ProbeStore
 
 from wordplay import config

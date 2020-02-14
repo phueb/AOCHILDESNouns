@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import attr
 import math
 
-from preppy.legacy import TrainPrep
+from preppy import PartitionedPrep as TrainPrep
 from categoryeval.probestore import ProbeStore
 
 from wordplay import config

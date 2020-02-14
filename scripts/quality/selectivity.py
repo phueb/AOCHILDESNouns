@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import attr
 from tabulate import tabulate
 
-from preppy.legacy import TrainPrep
+from preppy import PartitionedPrep as TrainPrep
 from categoryeval.probestore import ProbeStore
 
 from wordplay.representation import make_context_by_term_matrix

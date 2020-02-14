@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import attr
 from scipy import stats
 
-from preppy.legacy import TrainPrep
+from preppy import PartitionedPrep as TrainPrep
 
 from wordplay import config
 from wordplay.params import PrepParams

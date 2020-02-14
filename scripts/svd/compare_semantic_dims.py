@@ -14,7 +14,7 @@ import numpy as np
 
 import attr
 
-from preppy.legacy import TrainPrep
+from preppy import PartitionedPrep as TrainPrep
 from categoryeval.probestore import ProbeStore
 
 from wordplay import config

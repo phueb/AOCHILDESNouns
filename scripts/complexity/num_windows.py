@@ -9,8 +9,8 @@ import numpy as np
 import seaborn as sns
 import attr
 
-from preppy.legacy import TrainPrep
-from preppy.legacy import make_windows_mat
+from preppy import PartitionedPrep as TrainPrep
+from preppy.utils import make_windows_mat
 
 from wordplay import config
 from wordplay.params import PrepParams

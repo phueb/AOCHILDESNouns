@@ -19,7 +19,7 @@ from pingouin import mediation_analysis
 from sklearn.preprocessing import StandardScaler
 import pandas as pd
 
-from preppy.legacy import TrainPrep
+from preppy import PartitionedPrep as TrainPrep
 from categoryeval.probestore import ProbeStore
 
 from wordplay.regression import regress

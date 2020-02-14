@@ -11,7 +11,7 @@ from scipy import stats
 import spacy
 import pyprind
 
-from preppy.legacy import TrainPrep
+from preppy import PartitionedPrep as TrainPrep
 
 from wordplay import config
 from wordplay.word_sets import excluded

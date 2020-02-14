@@ -18,7 +18,7 @@ import attr
 from tabulate import tabulate
 
 
-from preppy.legacy import TrainPrep
+from preppy import PartitionedPrep as TrainPrep
 from categoryeval.probestore import ProbeStore
 from categoryeval.score import calc_score
 

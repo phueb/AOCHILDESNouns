@@ -12,7 +12,7 @@ import spacy
 from spacy.tokens import Span
 import pyprind
 
-from preppy.legacy import TrainPrep
+from preppy import PartitionedPrep as TrainPrep
 
 from wordplay import config
 from wordplay.params import PrepParams

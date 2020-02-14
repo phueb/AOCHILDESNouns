@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter
 import attr
 
-from preppy.legacy import TrainPrep
+from preppy import PartitionedPrep as TrainPrep
 
 from wordplay import config
 from wordplay.params import PrepParams

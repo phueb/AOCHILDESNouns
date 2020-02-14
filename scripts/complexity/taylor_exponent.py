@@ -9,7 +9,7 @@ from scipy import optimize
 import matplotlib.pyplot as plt
 import attr
 
-from preppy.legacy import TrainPrep
+from preppy import PartitionedPrep as TrainPrep
 
 from wordplay import config
 from wordplay.word_sets import excluded

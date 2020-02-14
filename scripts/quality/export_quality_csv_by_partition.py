@@ -11,7 +11,7 @@ import pandas as pd
 import pyprind
 from copy import deepcopy
 
-from preppy.legacy import TrainPrep
+from preppy import PartitionedPrep
 from categoryeval.probestore import ProbeStore
 
 from wordplay.docs import load_docs
@@ -37,21 +37,21 @@ docs1 = load_docs(CORPUS_NAME,
                   )
 
 params1 = PrepParams(num_parts=NUM_PARTS)
-prep1 = TrainPrep(docs1, **attr.asdict(params1))
+prep1 = PartitionedPrep(docs1, **attr.asdict(params1))
 
 docs2 = load_docs(CORPUS_NAME + '_tags',
                   shuffle_sentences=SHUFFLE_SENTENCES,
                   )
 
 params2 = PrepParams(num_parts=NUM_PARTS)
-prep2 = TrainPrep(docs2, **attr.asdict(params2))
+prep2 = PartitionedPrep(docs2, **attr.asdict(params2))
 
 probe_store = ProbeStore('childes-20180319', PROBES_NAME, prep1.store.w2id, excluded=excluded)
 
 # ///////////////////////////////////////////////////////////////// parameters
 
 CONTEXT_SIZE = 1
-POS = 'NOUN'
+POS = 'VERB'
 ADD_SEM_PROBES = True if POS == 'NOUN' else False  # set to True when POS = 'NOUN'
 USE_ONLY_SHARED_PROBES = False  # TODO if True, probes must occur in each partition
 
@@ -166,7 +166,7 @@ for part_id, (word_tokens, tag_tokens) in enumerate(zip(split(prep1.store.tokens
                                                                context_size=CONTEXT_SIZE,
                                                                shuffle_tokens=True)
 
-    # calc selectivity of noun contexts
+    # calc selectivity of pos_word contexts
     cttr_chance, cttr_observed, selectivity_i = calc_selectivity(tw_mat_chance,
                                                                  tw_mat_observed,
                                                                  xws_chance,
@@ -179,7 +179,7 @@ for part_id, (word_tokens, tag_tokens) in enumerate(zip(split(prep1.store.tokens
     context_prominences = []
     for context in context2prominence_info.keys():
         # a context must occur at least once with the category
-        # note: this returns a lot of contexts, because lots of generic noun contexts co-occur with semantic probes
+        # note: this may returns a lot of contexts, because lots of contexts co-occur with e.g. nouns
         in_category_list = context2prominence_info[context]['in-category']
         num_in_category = np.sum(in_category_list)
         if num_in_category == 0:
@@ -227,6 +227,6 @@ df = pd.DataFrame(data={
 })
 normalized_df = (df-df.mean()) / df.std()
 normalized_df['partition'] = df['partition']
-normalized_df.to_csv(f'noun_quality_cs{CONTEXT_SIZE}_np{NUM_PARTS}.csv')
+normalized_df.to_csv(f'{POS}_quality_cs{CONTEXT_SIZE}_np{NUM_PARTS}.csv')
 
 print(normalized_df)

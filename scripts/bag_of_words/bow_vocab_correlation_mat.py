@@ -6,8 +6,8 @@ Research questions:
 import attr
 from sklearn.decomposition import PCA
 
-from preppy.legacy import TrainPrep
-from preppy.legacy import make_windows_mat
+from preppy import PartitionedPrep
+from preppy.utils import make_windows_mat
 
 from wordplay.figs import plot_heatmap
 from wordplay.representation import make_bow_token_representations
@@ -17,20 +17,13 @@ from wordplay.docs import load_docs
 
 # /////////////////////////////////////////////////////////////////
 
-CORPUS_NAME = 'childes-20180319'
-PROBES_NAME = 'sem-all'
-
-CONTEXT_SIZE = 3  # 3
-NUM_PARTS = 2
-
-
-docs = load_docs(CORPUS_NAME,
+docs = load_docs('childes-20180319',
                  num_test_take_from_mid=0,
                  num_test_take_random=0,
                  )
 
-params = PrepParams(num_parts=NUM_PARTS, context_size=CONTEXT_SIZE)
-prep = TrainPrep(docs, **attr.asdict(params))
+params = PrepParams(num_parts=2, context_size=3, num_types=4096)
+prep = PartitionedPrep(docs, **attr.asdict(params))
 
 
 # /////////////////////////////////////////////////////////////////
@@ -50,7 +43,7 @@ for part_id in PART_IDS:
     print('shape of windows_mat={}'.format(windows_mat.shape))
     token_reps = make_bow_token_representations(windows_mat, prep.store.types)
     print('shape of reps={}'.format(token_reps.shape))
-    assert len(token_reps) == prep.store.num_types
+    assert len(token_reps) == prep.store.num_types, (len(token_reps), prep.store.num_types)
     # pca
     pca = PCA(n_components=N_COMPONENTS)
     token_reps = pca.fit_transform(token_reps)

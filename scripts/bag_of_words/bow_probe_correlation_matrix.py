@@ -6,8 +6,8 @@ Research questions:
 import attr
 from sklearn.decomposition import PCA
 
-from preppy.legacy import TrainPrep
-from preppy.legacy import make_windows_mat
+from preppy import PartitionedPrep as TrainPrep
+from preppy.utils import make_windows_mat
 from categoryeval.probestore import ProbeStore
 
 from wordplay.figs import plot_heatmap
