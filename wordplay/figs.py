@@ -11,7 +11,7 @@ def plot_heatmap(mat,
                  x_tick_labels,
                  label_interval: int = 10,
                  save_name=None):
-    fig, ax = plt.subplots(figsize=config.Fig.fig_size, dpi=config.Fig.dpi * 2)
+    fig, ax = plt.subplots(figsize=config.Fig.fig_size, dpi=config.Fig.dpi * 4)
     plt.title('', fontsize=5)
 
     # heatmap
@@ -38,7 +38,7 @@ def plot_heatmap(mat,
     num_rows = len(mat)
     ax.set_yticks(np.arange(num_rows))
     ax.yaxis.set_ticklabels(y_tick_labels_spaced,  # no need to reverse (because no extent is set)
-                            rotation=0, fontsize=2)
+                            rotation=0, fontsize=1)
 
     # remove tick lines
     lines = (ax.xaxis.get_ticklines() +
