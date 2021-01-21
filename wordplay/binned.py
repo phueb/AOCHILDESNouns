@@ -2,14 +2,13 @@ import numpy as np
 from itertools import groupby
 from typing import List, Dict
 
-from wordplay import config
-from wordplay.word_sets import excluded
-from wordplay.utils import split
+from wordplay import configs
+from wordplay.util import split
 
 
 """
 Note:
-age information is not available for childes-20180319
+age information is not available for childes-20191112_terms
 """
 
 
@@ -19,10 +18,10 @@ def make_age_bin2data(corpus_name: str,
                       verbose: bool = False,
                       ) -> Dict[float, List[str]]:
 
-    ages_path = config.Dirs.corpora / f'{corpus_name}_ages.txt'
+    ages_path = configs.Dirs.corpora / f'{corpus_name}_ages.txt'
     ages_text = ages_path.read_text(encoding='utf-8')
     ages = np.array(ages_text.split(), dtype=np.float)
-    data_path = config.Dirs.corpora / f'{corpus_name}{suffix}.txt'
+    data_path = configs.Dirs.corpora / f'{corpus_name}{suffix}.txt'
     data_text = data_path.read_text(encoding='utf-8')
     data_by_doc = [doc.split() for doc in data_text.split('\n')[:-1]]
     ages_binned = ages - np.mod(ages, age_step)

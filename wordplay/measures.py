@@ -118,12 +118,3 @@ def mtld(words, min=10):
     return res
 
 
-def calc_kl_divergence(p: np.ndarray,
-                       q: np.ndarray,
-                       epsilon=0.00001):
-    assert len(p) == len(q)
-
-    pe = p + epsilon
-    qe = q + epsilon
-    res = np.sum(pe * np.log2(pe / qe))
-    return res

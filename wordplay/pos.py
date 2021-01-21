@@ -2,7 +2,7 @@ import spacy
 from typing import List, Set
 import string
 
-from wordplay import config
+from wordplay import configs
 
 nlp = spacy.load('en_core_web_sm', disable=['parser', 'ner'])
 
@@ -77,7 +77,7 @@ tag2pos = {
 }
 
 
-excluded_set = set(string.printable.split() + config.Symbols.all)
+excluded_set = set(string.printable.split() + configs.Symbols.all)
 
 
 def make_pos_words(vocab: List[str],
@@ -98,6 +98,6 @@ def make_pos_words(vocab: List[str],
 
 def load_pos_words(file_name: str
                    ) -> Set[str]:
-    p = config.Dirs.words / f'{file_name}.txt'
+    p = configs.Dirs.words / f'{file_name}.txt'
     res = p.read_text().split('\n')
     return set(res)

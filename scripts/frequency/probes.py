@@ -5,16 +5,16 @@ import attr
 from preppy import PartitionedPrep as TrainPrep
 from categoryeval.probestore import ProbeStore
 
-from wordplay import config
+from wordplay import configs
 from wordplay.word_sets import excluded
 from wordplay.params import PrepParams
-from wordplay.docs import load_docs
-from wordplay.utils import fit_line
-from wordplay.utils import roll_mean
+from wordplay.io import load_docs
+from wordplay.util import fit_line
+from wordplay.util import roll_mean
 
 # /////////////////////////////////////////////////////////////////
 
-CORPUS_NAME = 'childes-20180319'
+CORPUS_NAME = 'childes-20191112_terms'
 PROBES_NAME = 'sem-all'
 
 REVERSE = False
@@ -38,7 +38,7 @@ for part in prep.reordered_parts:
 
 
 # fig
-fig, ax = plt.subplots(dpi=config.Fig.dpi, figsize=config.Fig.fig_size)
+fig, ax = plt.subplots(dpi=configs.Fig.dpi, figsize=configs.Fig.fig_size)
 plt.title('')
 ax.set_ylabel('Num Probe Occurrences')
 ax.set_xlabel('Partition')

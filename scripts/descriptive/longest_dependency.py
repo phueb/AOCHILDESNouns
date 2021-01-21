@@ -1,19 +1,16 @@
 import attr
 import numpy as np
-from tabulate import tabulate
 
 from preppy import PartitionedPrep as TrainPrep
 from preppy.utils import make_windows_mat
 from categoryeval.probestore import ProbeStore
 
-from wordplay.word_sets import excluded
-from wordplay.params import PrepParams
-from wordplay.docs import load_docs
+from wordplay.io import load_docs
 from wordplay.measures import calc_kl_divergence
 
 # /////////////////////////////////////////////////////////////////
 
-CORPUS_NAME = 'childes-20180319'
+CORPUS_NAME = 'childes-20191112_terms'
 PROBES_NAME = 'syn-nva'
 
 CONTEXT_SIZE = 12
@@ -25,7 +22,7 @@ docs = load_docs(CORPUS_NAME, shuffle_sentences=SHUFFLE_SENTENCES)
 params = PrepParams(context_size=CONTEXT_SIZE, num_types=None, num_parts=NUM_PARTS)
 prep = TrainPrep(docs, **attr.asdict(params))
 
-probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id, excluded=excluded)
+probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id)
 
 # /////////////////////////////////////////////////////////////////
 

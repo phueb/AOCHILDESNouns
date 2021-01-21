@@ -4,16 +4,16 @@ import attr
 
 from preppy import PartitionedPrep as TrainPrep
 
-from wordplay import config
+from wordplay import configs
 from wordplay.word_sets import excluded
 from wordplay.params import PrepParams
-from wordplay.docs import load_docs
+from wordplay.io import load_docs
 from wordplay.measures import calc_entropy
 from wordplay.measures import mtld
 
 # /////////////////////////////////////////////////////////////////
 
-CORPUS_NAME = 'childes-20180319'
+CORPUS_NAME = 'childes-20191112_terms'
 PROBES_NAME = 'sem-all'
 
 
@@ -33,7 +33,7 @@ prep = TrainPrep(docs, **attr.asdict(params))
 AX_FONTSIZE = 8
 LEG_FONTSIZE = 6
 FIGSIZE = (3.2, 2.2)
-DPI = config.Fig.dpi
+DPI = configs.Fig.dpi
 IS_LOG = True
 WSPACE = 0.0
 HSPACE = 0.0
@@ -50,7 +50,7 @@ ys = [
 
 # fig
 y_labels = ['Shannon Entropy', 'MTLD']
-fig, axs = plt.subplots(2, 1, dpi=config.Fig.dpi, figsize=config.Fig.fig_size)
+fig, axs = plt.subplots(2, 1, dpi=configs.Fig.dpi, figsize=configs.Fig.fig_size)
 for ax, y_label, y in zip(axs, y_labels, ys):
     if ax == axs[-1]:
         ax.set_xlabel('Corpus Location', fontsize=AX_FONTSIZE, labelpad=-10)

@@ -3,7 +3,7 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 from typing import Optional, List, Dict
 
-from wordplay import config
+from wordplay import configs
 
 
 def plot_heatmap(mat,
@@ -11,7 +11,7 @@ def plot_heatmap(mat,
                  x_tick_labels,
                  label_interval: int = 10,
                  save_name=None):
-    fig, ax = plt.subplots(figsize=config.Fig.fig_size, dpi=config.Fig.dpi * 4)
+    fig, ax = plt.subplots(figsize=configs.Fig.fig_size, dpi=configs.Fig.dpi * 4)
     plt.title('', fontsize=5)
 
     # heatmap
@@ -61,10 +61,10 @@ def make_histogram(y1: np.ndarray,
                    num_bins: Optional[int] = None,
                    x_range: Optional[List[int]] = None,
                    ) -> plt.figure:
-    fig, ax = plt.subplots(figsize=config.Fig.fig_size, dpi=config.Fig.dpi)
-    ax.set_title(title, fontsize=config.Fig.ax_fontsize)
-    ax.set_ylabel('Probability', fontsize=config.Fig.ax_fontsize)
-    ax.set_xlabel(x_label, fontsize=config.Fig.ax_fontsize)
+    fig, ax = plt.subplots(figsize=configs.Fig.fig_size, dpi=configs.Fig.dpi)
+    ax.set_title(title, fontsize=configs.Fig.ax_fontsize)
+    ax.set_ylabel('Probability', fontsize=configs.Fig.ax_fontsize)
+    ax.set_xlabel(x_label, fontsize=configs.Fig.ax_fontsize)
     ax.spines['right'].set_visible(False)
     ax.spines['top'].set_visible(False)
     ax.tick_params(axis='both', which='both', top=False, right=False)
@@ -89,7 +89,7 @@ def make_histogram(y1: np.ndarray,
                         alpha=0.5,
                         zorder=2)
     #
-    plt.legend(frameon=False, loc='upper right', fontsize=config.Fig.leg_fontsize)
+    plt.legend(frameon=False, loc='upper right', fontsize=configs.Fig.leg_fontsize)
     plt.tight_layout()
 
     return fig

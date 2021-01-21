@@ -5,7 +5,7 @@ from operator import iconcat
 from preppy import PartitionedPrep as TrainPrep
 
 from wordplay.params import PrepParams
-from wordplay.docs import load_docs
+from wordplay.io import load_docs
 
 # /////////////////////////////////////////////////////////////////
 

@@ -5,13 +5,13 @@ from scipy import stats
 
 from preppy import PartitionedPrep as TrainPrep
 
-from wordplay import config
+from wordplay import configs
 from wordplay.params import PrepParams
-from wordplay.docs import load_docs
+from wordplay.io import load_docs
 from wordplay.pos import pos2tags
-from wordplay.utils import fit_line
-from wordplay.utils import roll_mean
-from wordplay.utils import split
+from wordplay.util import fit_line
+from wordplay.util import roll_mean
+from wordplay.util import split
 
 # /////////////////////////////////////////////////////////////////
 
@@ -40,7 +40,7 @@ for pos in POS_LIST or sorted(pos2tags.keys()):
         y.append(num)
 
     # fig
-    _, ax = plt.subplots(figsize=config.Fig.fig_size, dpi=config.Fig.dpi)
+    _, ax = plt.subplots(figsize=configs.Fig.fig_size, dpi=configs.Fig.dpi)
     plt.title('')
     ax.set_ylabel(f'Num {pos}s')
     ax.set_xlabel('Partition')
@@ -55,7 +55,7 @@ for pos in POS_LIST or sorted(pos2tags.keys()):
     plt.show()
 
     # fig
-    _, ax = plt.subplots(figsize=config.Fig.fig_size, dpi=config.Fig.dpi)
+    _, ax = plt.subplots(figsize=configs.Fig.fig_size, dpi=configs.Fig.dpi)
     plt.title('')
     ax.set_ylabel(f'Z-scored Num {pos}s')
     ax.set_xlabel('Partition')

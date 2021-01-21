@@ -4,14 +4,14 @@ from scipy import stats
 
 from preppy import PartitionedPrep as TrainPrep
 
-from wordplay import config
+from wordplay import configs
 from wordplay.params import PrepParams
-from wordplay.docs import load_docs
-from wordplay.utils import split
+from wordplay.io import load_docs
+from wordplay.util import split
 
 # /////////////////////////////////////////////////////////////////
 
-CORPUS_NAME = 'childes-20180319'
+CORPUS_NAME = 'childes-20191112_terms'
 PROBES_NAME = 'sem-all'
 
 NUM_PARTS = 32  # z-scoring doesn't make sense when num-parts=2
@@ -38,7 +38,7 @@ print(f'Found {num_rare} rare words')
 print([w for w in prep.store.types if w not in rare_words])
 
 # fig
-fig, ax = plt.subplots(figsize=config.Fig.fig_size, dpi=config.Fig.dpi)
+fig, ax = plt.subplots(figsize=configs.Fig.fig_size, dpi=configs.Fig.dpi)
 plt.title(f'{num_rare} most infrequent words')
 ax.set_xlabel('Partition')
 ax.set_ylabel('z-scored Number of occurrences')

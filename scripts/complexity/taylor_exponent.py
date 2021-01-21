@@ -11,14 +11,14 @@ import attr
 
 from preppy import PartitionedPrep as TrainPrep
 
-from wordplay import config
+from wordplay import configs
 from wordplay.word_sets import excluded
 from wordplay.params import PrepParams
-from wordplay.docs import load_docs
+from wordplay.io import load_docs
 
 # /////////////////////////////////////////////////////////////////
 
-CORPUS_NAME = 'childes-20180319'
+CORPUS_NAME = 'childes-20191112_terms'
 PROBES_NAME = 'sem-all'
 
 
@@ -77,7 +77,7 @@ for part_id, part in enumerate(prep.reordered_parts):
     amp = pfinal[0]
     alpha = pfinal[1]
     # fig
-    fig, ax = plt.subplots(figsize=config.Fig.fig_size, dpi=config.Fig.dpi)
+    fig, ax = plt.subplots(figsize=configs.Fig.fig_size, dpi=configs.Fig.dpi)
     plt.title(f'{CORPUS_NAME}\nnum_types={NUM_TYPES:,}, part {part_id + 1} of {NUM_PARTS}')
     ax.set_xlabel('mean')
     ax.set_ylabel('std')

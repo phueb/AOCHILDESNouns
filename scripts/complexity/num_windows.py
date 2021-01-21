@@ -12,13 +12,13 @@ import attr
 from preppy import PartitionedPrep as TrainPrep
 from preppy.utils import make_windows_mat
 
-from wordplay import config
+from wordplay import configs
 from wordplay.params import PrepParams
-from wordplay.docs import load_docs
+from wordplay.io import load_docs
 
 # /////////////////////////////////////////////////////////////////
 
-CORPUS_NAME = 'childes-20180319'
+CORPUS_NAME = 'childes-20191112_terms'
 PROBES_NAME = 'sem-all'
 
 
@@ -60,7 +60,7 @@ def calc_y(w_mat, w_size, uniq):
 def plot(y_label, ys_list):
     bar_width0 = 0.0
     bar_width1 = 0.25
-    _, ax = plt.subplots(figsize=config.Fig.fig_size, dpi=config.Fig.dpi)
+    _, ax = plt.subplots(figsize=configs.Fig.fig_size, dpi=configs.Fig.dpi)
     ax.set_ylabel(y_label)
     ax.set_xlabel('Window size')
     ax.spines['right'].set_visible(False)

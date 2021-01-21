@@ -13,18 +13,17 @@ import pyprind
 
 from preppy import PartitionedPrep as TrainPrep
 
-from wordplay import config
+from wordplay import configs
 from wordplay.word_sets import excluded
 from wordplay.params import PrepParams
-from wordplay.docs import load_docs
-from wordplay.utils import fit_line
-from wordplay.utils import split
-from wordplay.sentences import split_into_sentences
+from wordplay.io import load_docs
+from wordplay.util import fit_line, split_into_sentences
+from wordplay.util import split
 from wordplay.svo import subject_verb_object_triples
 
 # /////////////////////////////////////////////////////////////////
 
-CORPUS_NAME = 'childes-20180319'
+CORPUS_NAME = 'childes-20191112_terms'
 PROBES_NAME = 'sem-all'
 
 REVERSE = False
@@ -74,7 +73,7 @@ for tokens in split(prep.store.tokens, prep.num_tokens_in_part):
 
 
 # fig
-_, ax = plt.subplots(figsize=config.Fig.fig_size, dpi=config.Fig.dpi)
+_, ax = plt.subplots(figsize=configs.Fig.fig_size, dpi=configs.Fig.dpi)
 plt.title('SVO-triples')
 ax.set_ylabel('Num unique SVO-triples')
 ax.set_xlabel('Partition')
@@ -89,7 +88,7 @@ ax.plot(x, y_fitted, '-')
 plt.show()
 
 # fig
-_, ax = plt.subplots(figsize=config.Fig.fig_size, dpi=config.Fig.dpi)
+_, ax = plt.subplots(figsize=configs.Fig.fig_size, dpi=configs.Fig.dpi)
 plt.title('SVO-triples')
 ax.set_ylabel(f'Z-scored Num unique SVO-triples')
 ax.set_xlabel('Partition')

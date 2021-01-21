@@ -14,17 +14,16 @@ import pyprind
 
 from preppy import PartitionedPrep as TrainPrep
 
-from wordplay import config
+from wordplay import configs
 from wordplay.params import PrepParams
-from wordplay.docs import load_docs
-from wordplay import config
-from wordplay.utils import fit_line
-from wordplay.utils import split
-from wordplay.sentences import split_into_sentences
+from wordplay.io import load_docs
+from wordplay import configs
+from wordplay.util import fit_line, split_into_sentences
+from wordplay.util import split
 
 # /////////////////////////////////////////////////////////////////
 
-CORPUS_NAME = 'childes-20180319'
+CORPUS_NAME = 'childes-20191112_terms'
 PROBES_NAME = 'sem-all'
 
 REVERSE = False
@@ -52,7 +51,7 @@ def contains_symbol(span):
     checks if span has any undesired symbols.
     used to filter noun chunks.
     """
-    return any(s in span.text for s in set(config.Symbols.all))
+    return any(s in span.text for s in set(configs.Symbols.all))
 
 
 Span.set_extension("contains_symbol", getter=contains_symbol)
@@ -82,7 +81,7 @@ for tokens in split(prep.store.tokens, prep.num_tokens_in_part):
 
 
 # fig
-_, ax = plt.subplots(figsize=config.Fig.fig_size, dpi=config.Fig.dpi)
+_, ax = plt.subplots(figsize=configs.Fig.fig_size, dpi=configs.Fig.dpi)
 plt.title('Noun chunks')
 ax.set_ylabel('Num unique noun chunks')
 ax.set_xlabel('Partition')
@@ -97,7 +96,7 @@ ax.plot(x, y_fitted, '-')
 plt.show()
 
 # fig
-_, ax = plt.subplots(figsize=config.Fig.fig_size, dpi=config.Fig.dpi)
+_, ax = plt.subplots(figsize=configs.Fig.fig_size, dpi=configs.Fig.dpi)
 plt.title('Noun chunks')
 ax.set_ylabel(f'Z-scored Num unique noun chunks')
 ax.set_xlabel('Partition')

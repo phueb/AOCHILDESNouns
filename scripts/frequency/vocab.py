@@ -6,14 +6,14 @@ from collections import Counter
 from preppy import PartitionedPrep as TrainPrep
 from categoryeval.probestore import ProbeStore
 
-from wordplay import config
+from wordplay import configs
 from wordplay.word_sets import excluded
 from wordplay.params import PrepParams
-from wordplay.docs import load_docs
+from wordplay.io import load_docs
 
 # /////////////////////////////////////////////////////////////////
 
-CORPUS_NAME = 'childes-20180319'  # _tags
+CORPUS_NAME = 'childes-20191112_terms'  # _tags
 PROBES_NAME = 'sem-all'
 
 REVERSE = False
@@ -30,7 +30,7 @@ probe_store = ProbeStore(CORPUS_NAME, PROBES_NAME, prep.store.w2id, excluded=exc
 
 
 dists = []
-fig, ax = plt.subplots(figsize=config.Fig.fig_size, dpi=config.Fig.dpi)
+fig, ax = plt.subplots(figsize=configs.Fig.fig_size, dpi=configs.Fig.dpi)
 for n, part in enumerate(prep.reordered_parts):
     c = Counter(part)
     dist = np.sort(np.log(list(c.values())))[::-1]

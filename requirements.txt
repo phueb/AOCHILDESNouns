@@ -1,0 +1,13 @@
+tabulate
+sortedcontainers
+pyprind
+seaborn
+scikit-learn
+scipy
+attr
+numpy
+matplotlib
+spacy
+pandas
+cytoolz
+pingouin

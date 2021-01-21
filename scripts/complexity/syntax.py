@@ -11,12 +11,11 @@ from scipy import stats
 
 from preppy import PartitionedPrep as TrainPrep
 
-from wordplay import config
+from wordplay import configs
 from wordplay.params import PrepParams
-from wordplay.docs import load_docs
-from wordplay.utils import fit_line
-from wordplay.utils import split
-from wordplay.sentences import split_into_sentences
+from wordplay.io import load_docs
+from wordplay.util import fit_line, split_into_sentences
+from wordplay.util import split
 
 # /////////////////////////////////////////////////////////////////
 
@@ -50,7 +49,7 @@ for tags in split(prep.store.tokens, prep.num_tokens_in_part):
 
 
 # fig
-_, ax = plt.subplots(figsize=config.Fig.fig_size, dpi=config.Fig.dpi)
+_, ax = plt.subplots(figsize=configs.Fig.fig_size, dpi=configs.Fig.dpi)
 plt.title('')
 ax.set_ylabel('Num unique tag-sequences')
 ax.set_xlabel('Partition')
@@ -65,7 +64,7 @@ ax.plot(x, y_fitted, '-')
 plt.show()
 
 # fig
-_, ax = plt.subplots(figsize=config.Fig.fig_size, dpi=config.Fig.dpi)
+_, ax = plt.subplots(figsize=configs.Fig.fig_size, dpi=configs.Fig.dpi)
 plt.title('Syntactic Complexity')
 ax.set_ylabel(f'Z-scored Num unique tag-sequences')
 ax.set_xlabel('Partition')
