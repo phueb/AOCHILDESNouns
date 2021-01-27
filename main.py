@@ -22,7 +22,7 @@ NUM_TARGETS_IN_CO_MAT = 336_000  # or None
 
 PLOT_HEATMAP = False
 
-# ///////////////////////////////////////////////////////////////// combine docs by age
+# ///////////////////////////////////////////////////////////////// separate data by age
 
 age_bin2data_ = make_age_bin2data(CORPUS_NAME, AGE_STEP)
 for age_bin, data in age_bin2data_.items():
