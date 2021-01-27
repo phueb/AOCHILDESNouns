@@ -1,4 +1,0 @@
-from wordplay import configs
-
-
-

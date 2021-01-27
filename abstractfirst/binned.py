@@ -2,26 +2,19 @@ import numpy as np
 from itertools import groupby
 from typing import List, Dict
 
-from wordplay import configs
-from wordplay.util import split
-
-
-"""
-Note:
-age information is not available for childes-20191112_terms
-"""
+from abstractfirst import configs
+from abstractfirst.util import split
 
 
 def make_age_bin2data(corpus_name: str,
                       age_step: int,
-                      suffix: str = '_terms',
                       verbose: bool = False,
                       ) -> Dict[float, List[str]]:
 
     ages_path = configs.Dirs.corpora / f'{corpus_name}_ages.txt'
     ages_text = ages_path.read_text(encoding='utf-8')
     ages = np.array(ages_text.split(), dtype=np.float)
-    data_path = configs.Dirs.corpora / f'{corpus_name}{suffix}.txt'
+    data_path = configs.Dirs.corpora / f'{corpus_name}.txt'
     data_text = data_path.read_text(encoding='utf-8')
     data_by_doc = [doc.split() for doc in data_text.split('\n')[:-1]]
     ages_binned = ages - np.mod(ages, age_step)
@@ -47,7 +40,7 @@ def make_age_bin2data_with_min_size(age_bin2data: Dict[float, List[str]],
                                     no_binning: bool = False,
                                     ):
     """
-    return dictionary similar to age_bin2tokens but with a constant number of data per age_bin.
+    return dictionary similar to input but with a constant number of data per age_bin.
     combine bins when a bin is too small.
     """
 

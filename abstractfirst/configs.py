@@ -9,12 +9,6 @@ class Dirs:
     words = root / 'words'
 
 
-class Symbols:
-    OOV = 'OOV'
-    TITLED = 'TITLED'
-    all = [OOV, TITLED, 'xxx']
-
-
 class Fig:
     ax_fontsize = 20
     leg_fontsize = 12
