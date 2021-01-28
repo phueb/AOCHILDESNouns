@@ -9,7 +9,7 @@ Is the noun co-occurrence structure in speech to younger children less lexically
 Nouns were obtained from by:
 - collecting all words tagged by `spacy` as noun in a `spacy`-tokenized American-English CHILDES corpus
 - excluding words which are not among 4k most frequent words in corpus
-- excluding onomatopeia, gerunds, proper names
+- excluding onomatopeia, interjections, single characters, gerunds, proper names
 - misspelled words
 
 ## Compatibility

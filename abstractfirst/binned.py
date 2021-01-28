@@ -35,10 +35,10 @@ def make_age_bin2data(corpus_name: str,
     return res
 
 
-def make_age_bin2data_with_min_size(age_bin2data: Dict[float, List[str]],
-                                    min_num_data: int,
-                                    no_binning: bool = False,
-                                    ):
+def adjust_binned_data(age_bin2data: Dict[float, List[str]],
+                       min_num_data: int,
+                       no_binning: bool = False,
+                       ):
     """
     return dictionary similar to input but with a constant number of data per age_bin.
     combine bins when a bin is too small.
