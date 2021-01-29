@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
 import spacy
-from spacy.tokens import Doc, Token
+from typing import List
+from spacy.tokens import Token, Doc
 from pyitlib import discrete_random_variable as drv
 from scipy import sparse
 from scipy.sparse.linalg import svds
@@ -24,7 +25,8 @@ nlp = spacy.load("en_core_web_sm", disable=["ner", "parser"])
 CORPUS_NAME = 'childes-20201026'
 AGE_STEP = 900
 NUM_TOKENS_PER_BIN = 2_500_000  # 2.5M is good with AGE_STEP=900
-NUM_TARGETS_IN_CO_MAT = 308_000  # or None
+NUM_TARGETS_IN_CO_MAT = None  # or None
+FILTER_TARGETS = False
 
 LEFT_ONLY = False
 RIGHT_ONLY = False
@@ -76,21 +78,13 @@ for age_bin, text in sorted(age_bin2text.items(), key=lambda i: i[0]):
     print()
     print(f'age bin={age_bin}')
 
-    tokens = []
-    targets = SortedSet()
-
     print('Tagging...')
     nlp.max_length = len(text)
-    for token in nlp(text):  # todo use pipe() and input docs with doc boundaries intact
-        token: Token
-        tokens.append(token.text)
-        if token.tag_.startswith('NN'):
-            if token.text in targets_allowed:
-                targets.add(token.text)
-    print(f'Found {len(tokens):,} tokens in text and {len(targets):,} target types')
+    doc: Doc = nlp(text)  # todo use pipe() and input docs with doc boundaries intact
+    print(f'Found {len(doc):,} tokens in text')
 
-    co_mat: sparse.coo_matrix = make_sparse_co_occurrence_mat(tokens,
-                                                              targets,
+    co_mat: sparse.coo_matrix = make_sparse_co_occurrence_mat(doc,
+                                                              targets_allowed,
                                                               stop_n=NUM_TARGETS_IN_CO_MAT,
                                                               left_only=LEFT_ONLY,
                                                               right_only=RIGHT_ONLY,

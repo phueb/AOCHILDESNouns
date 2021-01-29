@@ -1,5 +1,5 @@
-import random
 from typing import Set, List, Optional, Tuple, Dict
+from spacy.tokens import Doc, Token
 from copy import deepcopy
 from itertools import islice
 from collections import deque
@@ -20,12 +20,11 @@ def sliding_window_iter(iterable, size):
         yield tuple(window)
 
 
-def make_sparse_co_occurrence_mat(tokens: List[str],
+def make_sparse_co_occurrence_mat(doc: Doc,
                                   targets: SortedSet,
                                   left_only: bool = False,
                                   right_only: bool = False,
                                   separate_left_and_right: bool = True,
-                                  shuffle_tokens: bool = False,
                                   stop_n: Optional[int] = None,  # stop collection if sum of matrix is stop_n
                                   ) -> sparse.coo_matrix:
     """
@@ -43,30 +42,27 @@ def make_sparse_co_occurrence_mat(tokens: List[str],
 
     print(f'Making co-occurrence matrix with left={left} and right={right} and separate={separate_left_and_right}...')
 
-    # shuffle
-    if shuffle_tokens:
-        print('WARNING: Shuffling tokens')
-        tokens = tokens.copy()
-        random.shuffle(tokens)
-
     get_row_id = {}
     get_col_id = {}
 
-    tokens_copy = deepcopy(tokens)[1:-2]  # careful: use same span as that used in for_loop
+    doc_copy = deepcopy(doc)[1:]  # careful: use same span as that used in for_loop
 
     # make sparse matrix (contexts/y-words in rows, targets/x-words in cols)
     data = []
     row_ids = []
     col_ids = []
-    for n, cw in enumerate(tokens[1:-2]):
+    for n, cw in enumerate(doc[1:-2]):
 
-        if cw not in targets:
+        if cw.text not in targets:
+            continue
+
+        if not cw.tag_.startswith('NN'):
             continue
 
         # left word, center word, right word
-        lw = tokens_copy[n - 1]
-        cw = cw
-        rw = tokens_copy[n + 1]
+        lw = doc_copy[n - 1].text
+        cw = cw.text
+        rw = doc_copy[n + 1].text
 
         # distinguish left and right words in columns by making them unique
         if separate_left_and_right:
