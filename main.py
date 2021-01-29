@@ -22,7 +22,7 @@ NUM_TARGETS_IN_CO_MAT = 360_000  # or None
 
 LEFT_ONLY = False
 RIGHT_ONLY = False
-REMOVE_ONES = True
+REMOVE_ONES = False
 SEPARATE_LEFT_AND_RIGHT = True
 
 PLOT_HEATMAP = True
@@ -71,9 +71,9 @@ for age_bin, tokens in sorted(age_bin2data.items(), key=lambda i: i[0]):
         print(s)
         print(f's1-s2={s[0] - s[1]}')
 
-    # info theory analysis
+    # info theory analysis  # todo figure out bits vs. nats
     print('Info theory analysis...')
-    xs, ys = to_pyitlib_format(co_mat.todok(), REMOVE_ONES)
+    xs, ys = to_pyitlib_format(co_mat, REMOVE_ONES)
     xy = np.vstack((xs, ys))
     print(f'xye={drv.entropy_conditional(xs, ys):>6.3f}')
     print(f'yxe={drv.entropy_conditional(ys, xs):>6.3f}')

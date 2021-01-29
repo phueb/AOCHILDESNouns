@@ -27,16 +27,21 @@ def make_sparse_co_occurrence_mat(tokens: List[str],
                                   separate_left_and_right: bool = True,
                                   shuffle_tokens: bool = False,
                                   stop_n: Optional[int] = None,  # stop collection if sum of matrix is stop_n
-                                  ) -> sparse.coo_matrix :
+                                  ) -> sparse.coo_matrix:
     """
     targets in rows, 1-left and 1-right contexts in columns
     """
 
-    assert not (right_only and left_only)
+    if separate_left_and_right:
+        assert not right_only
+        assert not left_only
+    else:
+        assert not (right_only and left_only)
 
-    window_size = 3  # (1-left context word, target, 1-right context word)
+    left = not right_only
+    right = not left_only
 
-    print('Making co-occurrence matrix...')
+    print(f'Making co-occurrence matrix with left={left} and right={right} and separate={separate_left_and_right}...')
 
     # shuffle
     if shuffle_tokens:
@@ -68,21 +73,16 @@ def make_sparse_co_occurrence_mat(tokens: List[str],
             lw = lw + 'l'
             rw = rw + 'r'
 
-        # get ids
-        col_id_l = get_col_id.setdefault(lw, len(get_col_id))
-        row_id_c = get_row_id.setdefault(cw, len(get_row_id))
-        col_id_r = get_col_id.setdefault(rw, len(get_col_id))
-
         # collect left co-occurrence
-        if not right_only:
-            row_ids.append(row_id_c)
-            col_ids.append(col_id_l)
+        if left:
+            row_ids.append(get_row_id.setdefault(cw, len(get_row_id)))
+            col_ids.append(get_col_id.setdefault(lw, len(get_col_id)))
             data.append(1)  # it is okay to append 1s because final value is sum over 1s in same position in matrix
 
         # collect right co-occurrence
-        if not left_only:
-            row_ids.append(row_id_c)
-            col_ids.append(col_id_r)
+        if right:
+            row_ids.append(get_row_id.setdefault(cw, len(get_row_id)))
+            col_ids.append(get_col_id.setdefault(rw, len(get_col_id)))
             data.append(1)  # it is okay to append 1s because final value is sum over 1s in same position in matrix
 
         if stop_n is not None:

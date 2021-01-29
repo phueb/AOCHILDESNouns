@@ -2,7 +2,7 @@ from typing import Tuple, Optional, List, Set
 from scipy.cluster.hierarchy import linkage, dendrogram
 
 import numpy as np
-from scipy.sparse import dok_matrix
+from scipy import sparse
 
 from abstractfirst import configs
 
@@ -19,7 +19,7 @@ def load_words(file_name: str
     return set(res)
 
 
-def to_pyitlib_format(co_mat: dok_matrix,
+def to_pyitlib_format(co_mat: sparse.coo_matrix,
                       remove_ones: bool,
                       ) -> Tuple[List[int], List[int]]:
     """
@@ -28,12 +28,15 @@ def to_pyitlib_format(co_mat: dok_matrix,
     xs = []
     ys = []
     new_sum = 0
-    for (i, j), num in co_mat.items():
-        if num > int(remove_ones):
-            xs += [i] * num
-            ys += [j] * num
+    for i, j, v in zip(co_mat.row, co_mat.col, co_mat.data):
+        if v > int(remove_ones):
+            xs += [i] * v
+            ys += [j] * v
 
-            new_sum += num
+            new_sum += v
+
+    if remove_ones:
+        print(f'WARNING: Excluded co-occurrences with frequency=1')
 
     print(f'Number of co-occurrences considered for further analysis={new_sum:,}')
 
