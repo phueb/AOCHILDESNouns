@@ -33,8 +33,8 @@ def make_sparse_co_occurrence_mat(tokens: List[str],
     """
 
     if separate_left_and_right:
-        assert not right_only
-        assert not left_only
+        if right_only or left_only:
+            raise ValueError('Cannot use arg left_only or right_only with arg separate_left_and_right')
     else:
         assert not (right_only and left_only)
 
@@ -52,7 +52,7 @@ def make_sparse_co_occurrence_mat(tokens: List[str],
     get_row_id = {}
     get_col_id = {}
 
-    tokens_copy = deepcopy(tokens)
+    tokens_copy = deepcopy(tokens)[1:-2]  # careful: use same span as that used in for_loop
 
     # make sparse matrix (contexts/y-words in rows, targets/x-words in cols)
     data = []
@@ -70,8 +70,8 @@ def make_sparse_co_occurrence_mat(tokens: List[str],
 
         # distinguish left and right words in columns by making them unique
         if separate_left_and_right:
-            lw = lw + 'l'
-            rw = rw + 'r'
+            lw = deepcopy(lw) + 'l'
+            rw = deepcopy(rw) + 'r'
 
         # collect left co-occurrence
         if left:

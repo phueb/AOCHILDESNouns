@@ -12,7 +12,7 @@ def plot_heatmap(mat,
                  save_name=None,
                  vmax: Optional[int] = None,
                  ):
-    fig, ax = plt.subplots(figsize=configs.Fig.fig_size, dpi=configs.Fig.dpi)
+    fig, ax = plt.subplots(figsize=(4, 2), dpi=configs.Fig.dpi)
     plt.title('', fontsize=5)
 
     # heatmap

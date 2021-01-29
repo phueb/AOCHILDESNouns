@@ -11,16 +11,18 @@ def make_age_bin2data(corpus_name: str,
                       verbose: bool = False,
                       ) -> Dict[float, List[str]]:
 
+    # convert ages to age bins
     ages_path = configs.Dirs.corpora / f'{corpus_name}_ages.txt'
     ages_text = ages_path.read_text(encoding='utf-8')
     ages = np.array(ages_text.split(), dtype=np.float)
+    ages_binned = ages - np.mod(ages, age_step)
+    ages_binned = ages_binned.astype(np.int)
+
+    # load data
     data_path = configs.Dirs.corpora / f'{corpus_name}.txt'
     data_text = data_path.read_text(encoding='utf-8')
     data_by_doc = [doc.split() for doc in data_text.split('\n')[:-1]]
-    ages_binned = ages - np.mod(ages, age_step)
 
-    # convert ages to age bins
-    ages_binned = ages_binned.astype(np.int)
     age_and_docs = zip(ages_binned, data_by_doc)
 
     res = {}
