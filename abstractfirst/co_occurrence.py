@@ -28,7 +28,7 @@ def make_sparse_co_occurrence_mat(doc: Doc,
                                   stop_n: Optional[int] = None,  # stop collection if sum of matrix is stop_n
                                   ) -> sparse.coo_matrix:
     """
-    targets in rows, 1-left and 1-right contexts in columns
+    make sparse matrix (contexts are col labels, targets are row labels)
     """
 
     if separate_left_and_right:
@@ -45,6 +45,7 @@ def make_sparse_co_occurrence_mat(doc: Doc,
     get_row_id = {}
     get_col_id = {}
 
+    # otherwise data may get modified in loop - can produce different results if data is not copied
     doc_copy = deepcopy(doc)[1:]  # careful: use same span as that used in for_loop
 
     # make sparse matrix (contexts/y-words in rows, targets/x-words in cols)
