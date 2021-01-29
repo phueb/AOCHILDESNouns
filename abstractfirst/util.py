@@ -20,25 +20,16 @@ def load_words(file_name: str
 
 
 def to_pyitlib_format(co_mat: sparse.coo_matrix,
-                      remove_ones: bool,
                       ) -> Tuple[List[int], List[int]]:
     """
     convert data in co-occurrence matrix to two lists, each with realisations of one discrete RV.
     """
     xs = []
     ys = []
-    new_sum = 0
     for i, j, v in zip(co_mat.row, co_mat.col, co_mat.data):
-        if v > int(remove_ones):
+        if v > 0:
             xs += [i] * v
             ys += [j] * v
-
-            new_sum += v
-
-    if remove_ones:
-        print(f'WARNING: Excluded co-occurrences with frequency=1')
-
-    print(f'Number of co-occurrences considered for further analysis={new_sum:,}')
 
     return xs, ys
 

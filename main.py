@@ -26,11 +26,10 @@ CORPUS_NAME = 'childes-20201026'
 AGE_STEP = 900
 NUM_TOKENS_PER_BIN = 2_500_000  # 2.5M is good with AGE_STEP=900
 NUM_TARGETS_IN_CO_MAT = None  # or None
-FILTER_TARGETS = False
+ALLOWED_TARGETS = 'sem-all'  # 'nouns-human_annotated'
 
 LEFT_ONLY = False
 RIGHT_ONLY = False
-REMOVE_ONES = False
 SEPARATE_LEFT_AND_RIGHT = True
 
 PLOT_HEATMAP = False
@@ -53,7 +52,7 @@ print(f'Number of age bins={len(age_bin2text)}')
 
 # ///////////////////////////////////////////////////////////////// targets
 
-targets_allowed = SortedSet(load_words('nouns-human_annotated'))
+targets_allowed = SortedSet(load_words(ALLOWED_TARGETS))
 
 # ///////////////////////////////////////////////////////////////// init data collection
 
@@ -105,7 +104,7 @@ for age_bin, text in sorted(age_bin2text.items(), key=lambda i: i[0]):
 
     # info theory analysis  # todo figure out bits vs. nats
     print('Info theory analysis...')
-    xs, ys = to_pyitlib_format(co_mat, REMOVE_ONES)
+    xs, ys = to_pyitlib_format(co_mat)
     xy = np.vstack((xs, ys))
     name2col[XYE].append(drv.entropy_conditional(xs, ys).item())
     name2col[YXE].append(drv.entropy_conditional(ys, xs).item())
