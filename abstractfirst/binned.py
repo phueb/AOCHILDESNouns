@@ -1,6 +1,6 @@
 import numpy as np
 from itertools import groupby
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
 from abstractfirst import configs
 from abstractfirst.util import split
@@ -9,7 +9,7 @@ from abstractfirst.util import split
 def make_age_bin2data(corpus_name: str,
                       age_step: int,
                       verbose: bool = False,
-                      ) -> Dict[float, List[str]]:
+                      ) -> Dict[float, str]:
 
     # convert ages to age bins
     ages_path = configs.Dirs.corpora / f'{corpus_name}_ages.txt'
@@ -21,46 +21,46 @@ def make_age_bin2data(corpus_name: str,
     # load data
     data_path = configs.Dirs.corpora / f'{corpus_name}.txt'
     data_text = data_path.read_text(encoding='utf-8')
-    data_by_doc = [doc.split() for doc in data_text.split('\n')[:-1]]
+    data_by_doc: List[str] = [doc for doc in data_text.split('\n')[:-1]]
 
     age_and_docs = zip(ages_binned, data_by_doc)
 
     res = {}
-    for age_bin, doc_group in groupby(age_and_docs, lambda d: d[0]):
-        docs = [d[1] for d in doc_group]
-        data = list(np.concatenate(docs))
+    for age_bin, age_and_doc_group in groupby(age_and_docs, lambda d: d[0]):
+        age_and_doc_group: List[Tuple[int, str]]
+        num_docs = 0
+        data: str = ''
+        for _, doc in age_and_doc_group:
+            data += doc
+            num_docs += 1
+
         if verbose:
-            print(f'Found {len(docs)} transcripts for age-bin={age_bin}')
+            print(f'Found {num_docs} transcripts for age-bin={age_bin}')
 
         res[age_bin] = data
 
     return res
 
 
-def adjust_binned_data(age_bin2data: Dict[float, List[str]],
-                       min_num_data: int,
-                       no_binning: bool = False,
-                       ):
+def adjust_binned_data(age_bin2text: Dict[float, str],
+                       min_num_tokens: int,
+                       ) -> Dict[float, str]:
     """
-    return dictionary similar to input but with a constant number of data per age_bin.
+    return dictionary similar to input but with a constant number of tokens per age_bin.
     combine bins when a bin is too small.
     """
 
-    if no_binning:
-        print('WARNING: Not binning by age')
-        all_tokens = np.concatenate(list(age_bin2data.values()))
-        return {n: list(tokens) for n, tokens in enumerate(split(all_tokens, split_size=min_num_data))
-                if len(tokens) == min_num_data}
-
     res = {}
-    buffer = []
-    for age_bin, data in age_bin2data.items():
+    token_buffer = []
+    for age_bin, text in age_bin2text.items():
 
-        buffer += data
+        tokens_in_text = text.split()
+        token_buffer.extend(tokens_in_text)
 
-        if len(buffer) > min_num_data:
-            res[age_bin] = buffer[-min_num_data:]
-            buffer = []
+        num_tokens_in_buffer = len(token_buffer)
+        if num_tokens_in_buffer > min_num_tokens:
+            res[age_bin] = ' '.join(token_buffer[-min_num_tokens:])
+            token_buffer.clear()
         else:
             continue
 

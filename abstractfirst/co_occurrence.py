@@ -70,8 +70,8 @@ def make_sparse_co_occurrence_mat(tokens: List[str],
 
         # distinguish left and right words in columns by making them unique
         if separate_left_and_right:
-            lw = deepcopy(lw) + 'l'
-            rw = deepcopy(rw) + 'r'
+            lw = lw + 'l'
+            rw = rw + 'r'
 
         # collect left co-occurrence
         if left:
