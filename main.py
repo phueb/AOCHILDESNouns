@@ -28,8 +28,8 @@ NUM_TOKENS_PER_BIN = 2_527_000  # 2.5M is good with AGE_STEP=900
 MAX_SUM = 300_000  # or None
 ALLOWED_TARGETS = 'sem-all'
 
-LEFT_ONLY = False
-RIGHT_ONLY = True
+LEFT_ONLY = True
+RIGHT_ONLY = False
 
 PLOT_HEATMAP = False
 
