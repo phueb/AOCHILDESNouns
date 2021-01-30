@@ -19,16 +19,18 @@ Nouns were obtained from by:
 
 ### What does the largest singular mean?
 
-The first singular dimension of a lexical co-occurrence matrix can be thought of as representing a 
-distribution of lexical frequencies, which best fits the observed frequencies of context types 
-(each context type is associated with a unique column in the matrix) of __all__ target types 
-(each associated with a unique row). 
+Assume we are talking about a lexical co-occurrence matrix, 
+where each context type is associated with a unique column in the matrix,
+and target words are associated with unique rows. 
+
+The first singular dimension of a lexical co-occurrence matrix can be thought of as a vector 
+whose elements are lexical frequencies, which best fits the observed frequencies of context types across __all__ target types.
 Its associated singular value indicates how well this single distribution describes the full co-occurrence matrix.
 This value will be larger when targets have similar context type distributions, 
 and will be smaller if targets have dissimilar context type distributions.
 Thus, a larger the fist singular value, relative to the other singular values, 
-means that the rows in the co-occurrence matrix, when projected on the first singular dimension,
-will be better approximations of the original co-occurrence matrix.
+means that the co-occurrence matrix, projected on the first singular dimension,
+will be a better approximation of the original co-occurrence matrix.
 
 ## Compatibility
 
