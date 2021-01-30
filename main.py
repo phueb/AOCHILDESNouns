@@ -11,7 +11,7 @@ from sortedcontainers import SortedSet
 from tabulate import tabulate
 
 from abstractfirst.binned import make_age_bin2data, adjust_binned_data
-from abstractfirst.co_occurrence import make_sparse_co_occurrence_mat
+from abstractfirst.co_occurrence import collect_left_and_right_co_occurrences, make_sparse_co_occurrence_mat
 from abstractfirst.figs import plot_heatmap
 from abstractfirst.memory import set_memory_limit
 from abstractfirst.util import to_pyitlib_format, load_words, cluster
@@ -24,13 +24,12 @@ nlp = spacy.load("en_core_web_sm", disable=["ner", "parser"])
 
 CORPUS_NAME = 'childes-20201026'
 AGE_STEP = 900
-NUM_TOKENS_PER_BIN = 2_500_000  # 2.5M is good with AGE_STEP=900
-NUM_TARGETS_IN_CO_MAT = None  # or None
-ALLOWED_TARGETS = 'sem-all'  # 'nouns-human_annotated'
+NUM_TOKENS_PER_BIN = 2_527_000  # 2.5M is good with AGE_STEP=900
+MAX_SUM = 300_000  # or None
+ALLOWED_TARGETS = 'sem-all'
 
 LEFT_ONLY = False
-RIGHT_ONLY = False
-SEPARATE_LEFT_AND_RIGHT = True
+RIGHT_ONLY = True
 
 PLOT_HEATMAP = False
 
@@ -56,18 +55,16 @@ targets_allowed = SortedSet(load_words(ALLOWED_TARGETS))
 
 # ///////////////////////////////////////////////////////////////// init data collection
 
-XYE = 'xye'
-YXE = 'yxe'
-_MI = ' mi'
+NXY = 'nxy'
+NYX = 'nyx'
 NMI = 'nmi'
 AMI = 'ami'
-IV_ = ' iv'
-JE_ = ' je'
+_JE = ' je'
 S1MS2U = 's1-s2'
 S1MS2N = 's1-s2 / s1+s2'
 S1DSR_ = 's1 / sum(s)'
 
-var_names = [XYE, YXE, _MI, NMI, AMI, IV_, JE_, S1MS2U, S1MS2N, S1DSR_]
+var_names = [NXY, NYX, NMI, AMI, _JE, S1MS2U, S1MS2N, S1DSR_]
 
 name2col = {n: [] for n in var_names}
 
@@ -82,37 +79,35 @@ for age_bin, text in sorted(age_bin2text.items(), key=lambda i: i[0]):
     doc: Doc = nlp(text)  # todo use pipe() and input docs with doc boundaries intact
     print(f'Found {len(doc):,} tokens in text')
 
-    co_mat: sparse.coo_matrix = make_sparse_co_occurrence_mat(doc,
-                                                              targets_allowed,
-                                                              stop_n=NUM_TARGETS_IN_CO_MAT,
-                                                              left_only=LEFT_ONLY,
-                                                              right_only=RIGHT_ONLY,
-                                                              separate_left_and_right=SEPARATE_LEFT_AND_RIGHT,
-                                                              )
+    # get co-occurrence data
+    co_data = collect_left_and_right_co_occurrences(doc,
+                                                    targets_allowed,
+                                                    left_only=LEFT_ONLY,
+                                                    right_only=RIGHT_ONLY,
+                                                    )
+    co_mat: sparse.coo_matrix = make_sparse_co_occurrence_mat(*co_data, max_sum=MAX_SUM)
 
     # factor analysis
     print('Factor analysis...')
-    co_mat_csc: sparse.csc_matrix = co_mat.tocsc()
-    co_mat_csc = co_mat.asfptype()
-    s_low_to_high = svds(co_mat_csc, k=min(co_mat_csc.shape) - 1, return_singular_vectors=False)
+    # noinspection PyTypeChecker
+    s_low_to_high = svds(co_mat.tocsc().asfptype(), k=min(co_mat.shape) - 1, return_singular_vectors=False)
     s = s_low_to_high[::-1]
     with np.printoptions(precision=2, suppress=True):
-        print(s)
+        print(s[:4])
     name2col[S1MS2U].append(s[0] - s[1])
     name2col[S1MS2N].append((s[0] - s[1]) / (s[0] + s[1]))
     name2col[S1DSR_].append(s[0] / np.sum(s))
 
     # info theory analysis  # todo figure out bits vs. nats
     print('Info theory analysis...')
-    xs, ys = to_pyitlib_format(co_mat)
+    xs, ys = to_pyitlib_format(co_mat)  # todo also get zs + calc interaction info
     xy = np.vstack((xs, ys))
-    name2col[XYE].append(drv.entropy_conditional(xs, ys).item())
-    name2col[YXE].append(drv.entropy_conditional(ys, xs).item())
-    name2col[_MI].append(drv.information_mutual(xs, ys).item())
+    je = drv.entropy_joint(xy)
+    name2col[NXY].append(drv.entropy_conditional(xs, ys).item() / je)
+    name2col[NYX].append(drv.entropy_conditional(ys, xs).item() / je)
     name2col[NMI].append(drv.information_mutual_normalised(xs, ys, norm_factor='XY').item())
     name2col[AMI].append(adjusted_mutual_info_score(xs, ys, average_method="arithmetic"))
-    name2col[IV_].append(drv.information_variation(xs, ys))
-    name2col[JE_].append(drv.entropy_joint(xy))
+    name2col[_JE].append(je)
 
     if PLOT_HEATMAP:
         co_mat_dense = co_mat.todense()

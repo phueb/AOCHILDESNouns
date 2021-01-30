@@ -1,101 +1,106 @@
 from typing import Set, List, Optional, Tuple, Dict
 from spacy.tokens import Doc, Token
-from copy import deepcopy
-from itertools import islice
-from collections import deque
+import numpy as np
+import itertools
 from scipy import sparse
 from sortedcontainers import SortedSet
 
 
-def sliding_window_iter(iterable, size):
-    """..."""
-    iterable = iter(iterable)
-    window = deque(islice(iterable, size), maxlen=size)
-    for item in iterable:
-        yield tuple(window)
-        window.append(item)
-    if window:
-        # needed because if iterable was already empty before the `for`,
-        # then the window would be yielded twice.
-        yield tuple(window)
-
-
-def make_sparse_co_occurrence_mat(doc: Doc,
-                                  targets: SortedSet,
-                                  left_only: bool = False,
-                                  right_only: bool = False,
-                                  separate_left_and_right: bool = True,
-                                  stop_n: Optional[int] = None,  # stop collection if sum of matrix is stop_n
-                                  ) -> sparse.coo_matrix:
+def collect_left_and_right_co_occurrences(doc: Doc,
+                                          targets: SortedSet,
+                                          left_only: bool = False,
+                                          right_only: bool = False,
+                                          allowed_tags: Optional[Set[str]] = None,
+                                          ) -> Tuple[List, List, List]:
     """
-    make sparse matrix (contexts are col labels, targets are row labels)
+    collect left and right co-occurrences in format suitable for scipy.sparse.coo.
+
+    note: left and right contexts receive unique column ids.
+    this is achieved by incrementing the ids in each dictionary (left and right) by consulting each other's length
     """
 
-    if separate_left_and_right:
-        if right_only or left_only:
-            raise ValueError('Cannot use arg left_only or right_only with arg separate_left_and_right')
-    else:
-        assert not (right_only and left_only)
+    assert not (right_only and left_only)
 
-    left = not right_only
-    right = not left_only
+    if allowed_tags is None:
+        allowed_tags = {'NN', 'NNS'}
 
-    print(f'Making co-occurrence matrix with left={left} and right={right} and separate={separate_left_and_right}...')
+    print(f'Collecting co-occurrences with:\n'
+          f'left={not right_only}\n'
+          f'right={not left_only}\n'
+          f'allowed_tags={allowed_tags}')
 
-    get_row_id = {}
-    get_col_id = {}
+    cw2id = {}
+    lw2id = {}
+    rw2id = {}
+    row_ids_l = []
+    row_ids_r = []
+    col_ids_l = []
+    col_ids_r = []
+    for n, cw in enumerate(doc[:-2]):
 
-    # otherwise data may get modified in loop - can produce different results if data is not copied
-    doc_copy = deepcopy(doc)[1:]  # careful: use same span as that used in for_loop
-
-    # make sparse matrix (contexts/y-words in rows, targets/x-words in cols)
-    data = []
-    row_ids = []
-    col_ids = []
-    for n, cw in enumerate(doc[1:-2]):
-
+        if n == 0:
+            continue
         if cw.text not in targets:
             continue
-
-        if not cw.tag_.startswith('NN'):
+        if cw.tag_ not in allowed_tags:
             continue
 
         # left word, center word, right word
-        lw = doc_copy[n - 1].text
+        lw = doc[n - 1].text
         cw = cw.text
-        rw = doc_copy[n + 1].text
-
-        # distinguish left and right words in columns by making them unique
-        if separate_left_and_right:
-            lw = lw + 'l'
-            rw = rw + 'r'
+        rw = doc[n + 1].text
 
         # collect left co-occurrence
-        if left:
-            row_ids.append(get_row_id.setdefault(cw, len(get_row_id)))
-            col_ids.append(get_col_id.setdefault(lw, len(get_col_id)))
-            data.append(1)  # it is okay to append 1s because final value is sum over 1s in same position in matrix
+        row_ids_l.append(cw2id.setdefault(cw, len(cw2id)))
+        col_ids_l.append(lw2id.setdefault(lw, len(lw2id) if left_only else len(lw2id) + len(rw2id)))
 
         # collect right co-occurrence
-        if right:
-            row_ids.append(get_row_id.setdefault(cw, len(get_row_id)))
-            col_ids.append(get_col_id.setdefault(rw, len(get_col_id)))
-            data.append(1)  # it is okay to append 1s because final value is sum over 1s in same position in matrix
+        row_ids_r.append(cw2id.setdefault(cw, len(cw2id)))
+        col_ids_r.append(rw2id.setdefault(rw, len(rw2id) if right_only else len(lw2id) + len(rw2id)))
 
-        if stop_n is not None:
-            if len(data) >= stop_n:
-                print(f'Stopping co-occurrence collection early because sum>=stop_n={len(data)}')
-                break
+    if left_only:
+        data = [1] * len(col_ids_l)
+        row_ids = row_ids_l
+        col_ids = col_ids_l
+        assert max(col_ids_l) + 1 == len(set(col_ids_l))  # check that col ids are consecutive
+    elif right_only:
+        data = [1] * len(col_ids_r)
+        row_ids = row_ids_r
+        col_ids = col_ids_r
+        assert max(col_ids_r) + 1 == len(set(col_ids_r))  # check that col ids are consecutive
+    else:
+        data = [1] * len(col_ids_l + col_ids_r)
+        # interleave lists - so that result can be truncated without affecting left or right contexts more
+        row_ids = list(itertools.chain(*zip(row_ids_l, row_ids_r)))
+        col_ids = list(itertools.chain(*zip(col_ids_l, row_ids_r)))
 
-    # make sparse matrix once (updating it is expensive)
+    print(f'Collected {len(data):,} co-occurrences')
+
+    return data, row_ids, col_ids
+
+
+def make_sparse_co_occurrence_mat(data: List[int],
+                                  row_ids: List[int],
+                                  col_ids: List[int],
+                                  max_sum: Optional[int] = None,
+                                  ) -> sparse.coo_matrix:
+    """make sparse matrix (contexts are col labels, targets are row labels)"""
+
+    # constrain the sum of the matrix by removing some data
+    if max_sum is not None:
+        tmp = np.vstack((data, row_ids, col_ids)).T
+        data = tmp[:max_sum, 0]
+        row_ids = tmp[:max_sum, 1]
+        col_ids = tmp[:max_sum, 2]
+
     res = sparse.coo_matrix((data, (row_ids, col_ids)))
 
-    if res.shape[0] < len(targets):
-        print(f'WARNING: Number of targets={len (targets)} but number of rows={res.shape[0]}.'
-              f'This probably means not all targets occur in this corpus partition.')
-    if res.shape[0] > len(targets):
-        raise RuntimeError(f'Number of targets={len (targets)} but number of rows={res.shape[0]}.')
+    # check that there are no skipped column ids or zero columns
+    res_csc = res.tocsc()
+    for col_id in range(res.shape[1]):
+        assert col_id in col_ids
+        assert res_csc[:, col_id].sum() != 0
 
-    print(f'Done. Co-occurrence matrix has sum={res.sum():,} and shape={res.shape}')
+    print(f'Co-occurrence matrix has sum={res.sum():,} and shape={res.shape}')
 
     return res
