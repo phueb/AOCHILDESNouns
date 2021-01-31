@@ -22,6 +22,6 @@ class Params:
 
     corpus_name = attr.ib(default='childes-20201026')
     age_step = attr.ib(default=900)
-    num_tokens_per_bin = attr.ib(default=1_000_000)     # 2_527_000 is good with params.age_ste=900
+    num_tokens_per_bin = attr.ib(default=2_527_000)     # 2_527_000 is good with params.age_ste=900
     max_sum = attr.ib(default=300_000)    # or None
     targets_name = attr.ib(default='sem-all')

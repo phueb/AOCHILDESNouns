@@ -41,7 +41,7 @@ def prepare_data(params: Params,
 def collect_dvs(params: Params,
                 doc: Doc,
                 targets: SortedSet,
-                max_projection: int = 3,
+                max_projection: int = 30,
                 ) -> pd.DataFrame:
     """
     collect all DVs, and return df with single row
@@ -72,8 +72,8 @@ def collect_dvs(params: Params,
         assert np.max(s) == s[0]
         with np.printoptions(precision=2, suppress=True):
             print(s[:4])
-        name2col.setdefault(f's1-s2/s1+s2', []).append((s[0] - s[1]) / (s[0] + s[1]))
-        name2col.setdefault(f'  s1/sum(s)', []).append(s[0] / np.sum(s))
+        name2col.setdefault(f' s1/s1+s2', []).append(s[0] / (s[0] + s[1]))
+        name2col.setdefault(f's1/sum(s)', []).append(s[0] / np.sum(s))
 
         # info theory analysis
         print('Info theory analysis...')
@@ -90,10 +90,5 @@ def collect_dvs(params: Params,
             plot_reconstructions(co_mat_coo, params, max_dim=max_projection)
 
     df = pd.DataFrame(data=name2col, columns=name2col.keys())
-
-    print(params)
-    print(tabulate(df,
-                   headers=list(df.columns),
-                   tablefmt='simple'))
 
     return df
