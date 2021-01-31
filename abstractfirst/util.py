@@ -19,22 +19,6 @@ def load_words(file_name: str
     return set(res)
 
 
-def to_pyitlib_format(co_data: CoData,
-                      ) -> Tuple[List[int], List[int], List[int]]:
-    """
-    convert data to three lists, x, y, z, each with realisations of one discrete RV.
-    """
-    xs = []
-    ys = []
-    zs = []
-    for i, j, v in zip(co_mat.row, co_mat.col, co_mat.data):
-        if v > 0:
-            xs += [i] * v
-            ys += [j] * v
-
-    return xs, ys, zs
-
-
 def cluster(mat: np.ndarray,
             dg0: Optional[dict] = None,
             dg1: Optional[dict] = None,

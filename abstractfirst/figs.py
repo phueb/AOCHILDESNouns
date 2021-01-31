@@ -1,6 +1,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 from typing import Optional, Tuple
+from pathlib import Path
 
 from abstractfirst import configs
 
@@ -9,7 +10,7 @@ def plot_heatmap(mat: np.ndarray,
                  y_tick_labels: Optional[list] = None,
                  x_tick_labels: Optional[list] = None,
                  label_interval: int = 10,
-                 save_name: Optional[str] = None,
+                 save_path: Optional[Path] = None,
                  title: str = '',
                  vmin: Optional[float] = None,
                  vmax: Optional[float] = None,
@@ -22,10 +23,10 @@ def plot_heatmap(mat: np.ndarray,
         x_tick_labels = []
 
     fig, ax = plt.subplots(figsize=figsize, dpi=configs.Fig.dpi)
-    plt.title(title, fontsize=5)
+    plt.title(title, fontsize=3)
 
     # heatmap
-    print('Plotting heatmap...')
+    # print('Plotting heatmap...')
     ax.imshow(mat,
               aspect='equal',
               cmap=plt.get_cmap('viridis'),
@@ -60,6 +61,6 @@ def plot_heatmap(mat: np.ndarray,
     plt.show()
 
     # save
-    if save_name:
-        fig.savefig(f'{configs.Dirs.images.name}/{save_name}.png', format='png')
+    if save_path:
+        fig.savefig(save_path, format='png')
 

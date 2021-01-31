@@ -25,7 +25,7 @@ def make_age_bin2data(params: Params,
     age_and_docs = zip(ages_binned, data_by_doc)
 
     res = {}
-    for age_bin, age_and_doc_group in groupby(age_and_docs, lambda d: d[0]):
+    for age, age_and_doc_group in groupby(age_and_docs, lambda d: d[0]):
         age_and_doc_group: List[Tuple[int, str]]
         num_docs = 0
         data: str = ''
@@ -34,9 +34,9 @@ def make_age_bin2data(params: Params,
             num_docs += 1
 
         if verbose:
-            print(f'Found {num_docs} transcripts for age-bin={age_bin}')
+            print(f'Found {num_docs} transcripts for age-bin={age}')
 
-        res[age_bin] = data
+        res[age] = data
 
     return res
 
@@ -45,20 +45,20 @@ def adjust_binned_data(age_bin2text: Dict[float, str],
                        min_num_tokens: int,
                        ) -> Dict[float, str]:
     """
-    return dictionary similar to input but with a constant number of tokens per age_bin.
+    return dictionary similar to input but with a constant number of tokens per age.
     combine bins when a bin is too small.
     """
 
     res = {}
     token_buffer = []
-    for age_bin, text in age_bin2text.items():
+    for age, text in age_bin2text.items():
 
         tokens_in_text = text.split()
         token_buffer.extend(tokens_in_text)
 
         num_tokens_in_buffer = len(token_buffer)
         if num_tokens_in_buffer > min_num_tokens:
-            res[age_bin] = ' '.join(token_buffer[-min_num_tokens:])
+            res[age] = ' '.join(token_buffer[-min_num_tokens:])
             token_buffer.clear()
         else:
             continue
