@@ -1,28 +1,37 @@
 import numpy as np
 from matplotlib import pyplot as plt
 from typing import Optional
+from sklearn.preprocessing import quantile_transform
 
 from abstractfirst import configs
 
 
 def plot_heatmap(mat,
-                 y_tick_labels,
-                 x_tick_labels,
+                 y_tick_labels: Optional[list] = None,
+                 x_tick_labels: Optional[list] = None,
                  label_interval: int = 10,
                  save_name=None,
-                 vmax: Optional[int] = None,
+                 title: str = '',
                  ):
-    fig, ax = plt.subplots(figsize=(4, 2), dpi=configs.Fig.dpi)
-    plt.title('', fontsize=5)
+    # make distribution less skewed
+    mat = quantile_transform(mat, axis=1, output_distribution='normal', n_quantiles=len(mat), copy=True)
+
+    if y_tick_labels is None:
+        y_tick_labels = []
+    if x_tick_labels is None:
+        x_tick_labels = []
+
+    fig, ax = plt.subplots(figsize=(6, 2), dpi=configs.Fig.dpi)
+    plt.title(title, fontsize=5)
 
     # heatmap
     print('Plotting heatmap...')
     ax.imshow(mat,
               aspect='equal',
-              cmap=plt.get_cmap('Greys'),
+              cmap=plt.get_cmap('viridis'),
               interpolation='nearest',
               vmin=0,
-              vmax=vmax,
+              vmax=1,
               )
 
     # x ticks

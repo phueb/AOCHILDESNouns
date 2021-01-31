@@ -35,29 +35,29 @@ def to_pyitlib_format(co_mat: sparse.coo_matrix,
 
 
 def cluster(mat: np.ndarray,
-            cluster_rows: bool = True,
-            cluster_cols: bool = False,
+            dg0: Optional[dict] = None,
+            dg1: Optional[dict] = None,
             method: str = 'complete',
-            metric: str = 'cityblock'):
+            metric: str = 'euclidean'):
 
-    if cluster_rows:
-        lnk0 = linkage(mat, method=method, metric=metric)
+    if dg0 is None:
+        print('Clustering rows...')
+        lnk0 = linkage(mat, method=method, metric=metric, optimal_ordering=True)
         dg0 = dendrogram(lnk0,
                          ax=None,
                          color_threshold=None,
                          no_labels=True,
                          no_plot=True)
-        res = mat[dg0['leaves'], :]  # reorder rows
-    else:
-        res = mat
+    res = mat[dg0['leaves'], :]  # reorder rows
 
-    if cluster_cols:
-        lnk1 = linkage(mat.T, method=method, metric=metric)
+    if dg1 is None:
+        print('Clustering cols...')
+        lnk1 = linkage(mat.T, method=method, metric=metric, optimal_ordering=True)
         dg1 = dendrogram(lnk1,
                          ax=None,
                          color_threshold=None,
                          no_labels=True,
                          no_plot=True)
-        res = res[:, dg1['leaves']]  # reorder cols
+    res = res[:, dg1['leaves']]  # reorder cols
 
-    return res
+    return res, dg0, dg1

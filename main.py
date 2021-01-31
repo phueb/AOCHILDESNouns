@@ -28,10 +28,11 @@ NUM_TOKENS_PER_BIN = 2_527_000  # 2.5M is good with AGE_STEP=900
 MAX_SUM = 300_000  # or None
 ALLOWED_TARGETS = 'sem-all'
 
-LEFT_ONLY = True
-RIGHT_ONLY = False
+LEFT_ONLY = False
+RIGHT_ONLY = True
 
-PLOT_HEATMAP = False
+PLOT_CO_MAT = True
+PLOT_RECONSTRUCTION = True
 
 # ///////////////////////////////////////////////////////////////// separate data by age
 
@@ -90,15 +91,15 @@ for age_bin, text in sorted(age_bin2text.items(), key=lambda i: i[0]):
     # factor analysis
     print('Factor analysis...')
     # noinspection PyTypeChecker
-    s_low_to_high = svds(co_mat.tocsc().asfptype(), k=min(co_mat.shape) - 1, return_singular_vectors=False)
-    s = s_low_to_high[::-1]
+    U, s, VT = svds(co_mat.tocsc().asfptype(), k=min(co_mat.shape) - 1, return_singular_vectors=True)
+    s = s[::-1]  # originally ordered low to high
     with np.printoptions(precision=2, suppress=True):
         print(s[:4])
     name2col[S1MS2U].append(s[0] - s[1])
     name2col[S1MS2N].append((s[0] - s[1]) / (s[0] + s[1]))
     name2col[S1DSR_].append(s[0] / np.sum(s))
 
-    # info theory analysis  # todo figure out bits vs. nats
+    # info theory analysis
     print('Info theory analysis...')
     xs, ys = to_pyitlib_format(co_mat)  # todo also get zs + calc interaction info
     xy = np.vstack((xs, ys))
@@ -109,9 +110,20 @@ for age_bin, text in sorted(age_bin2text.items(), key=lambda i: i[0]):
     name2col[AMI].append(adjusted_mutual_info_score(xs, ys, average_method="arithmetic"))
     name2col[_JE].append(je)
 
-    if PLOT_HEATMAP:
+    if PLOT_CO_MAT:
         co_mat_dense = co_mat.todense()
-        plot_heatmap(cluster(co_mat_dense), [], [], vmax=1)  # set v-max to 1 to make all nonzero values black
+        plot_heatmap(cluster(co_mat_dense)[0], title='original co-occurrence matrix')
+
+    if PLOT_RECONSTRUCTION:
+        # plot projection of co_mat onto sing dims
+        dg0, dg1 = None, None
+        projections = 0
+        for dim_id in range(len(s)):
+            projection = s[dim_id] * U[:, dim_id].reshape(-1, 1) @ VT[dim_id, :].reshape(1, -1)
+            projection_clustered, dg0, dg1 = cluster(projection, dg0, dg1)
+            projections += projection_clustered
+            if dim_id % 10 == 0:
+                plot_heatmap(projections, title=f'sing dim={dim_id}/{sum(s > 0)}')
 
 # ///////////////////////////////////////////////////////////////// show data
 
