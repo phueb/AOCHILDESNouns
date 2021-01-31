@@ -24,10 +24,15 @@ nlp = spacy.load("en_core_web_sm", disable=["ner", "parser"])
 
 # ///////////////////////////////////////////////////////////////// parameters
 
-params = Params()
+MINIMAL = True
+
+if MINIMAL:
+    params = Params(num_tokens_per_bin=100_000)
+else:
+    params = Params()
 
 PLOT_RECONSTRUCTION = True
-PLOT_MAX_SING_DIM = 30
+PLOT_MAX_SING_DIM = 300
 PLOT_EVERY = 1
 
 # ///////////////////////////////////////////////////////////////// separate data by age
@@ -60,10 +65,18 @@ _JE = ' je'
 S1MS2U = 's1-s2'
 S1MS2N = 's1-s2 / s1+s2'
 S1DSR_ = 's1 / sum(s)'
+NXT = 'noun types'
+NYT = 'context types'
 
 var_names = [NXY, NYX, NMI, AMI, _JE, S1MS2U, S1MS2N, S1DSR_]
 
 name2col = {n: [] for n in var_names}
+
+# ///////////////////////////////////////////////////////////////// remove any images
+
+if PLOT_RECONSTRUCTION:
+    shutil.rmtree(configs.Dirs.images)
+    configs.Dirs.images.mkdir()
 
 # ///////////////////////////////////////////////////////////////// data collection
 
@@ -104,8 +117,8 @@ for age_bin, text in sorted(age_bin2text.items(), key=lambda i: i[0]):
     name2col[_JE].append(je)
 
     if PLOT_RECONSTRUCTION:
-        shutil.rmtree(configs.Dirs.images)
-        configs.Dirs.images.mkdir()
+        img_subdir = configs.Dirs.images / str(age_bin)
+        img_subdir.mkdir()
 
         # remove skew for better visualisation
         co_mat_normal_csr: sparse.csr_matrix = quantile_transform(co_mat_coo,
@@ -119,7 +132,7 @@ for age_bin, text in sorted(age_bin2text.items(), key=lambda i: i[0]):
         U, s, VT = np.linalg.svd(co_mat_normal_dense, compute_uv=True)
 
         fig_size = (co_mat_normal_dense.shape[1] // 1000 + 1 * 2,
-                    co_mat_normal_dense.shape[0] // 1000 + 1 * 2 + 1,
+                    co_mat_normal_dense.shape[0] // 1000 + 1 * 2 + 0.5,
                     )
         print(f'fig size={fig_size}')
 
@@ -138,7 +151,7 @@ for age_bin, text in sorted(age_bin2text.items(), key=lambda i: i[0]):
             if dim_id % PLOT_EVERY == 0:
                 plot_heatmap(projections,
                              title=base_title + f'projections={dim_id}/{num_s}',
-                             save_name=f'age{age_bin}_dim{dim_id}',
+                             save_name=f'{img_subdir.name}/dim{dim_id:04}',
                              vmin=np.min(co_mat_normal_dense),
                              vmax=np.max(co_mat_normal_dense),
                              figsize=fig_size,
@@ -146,6 +159,7 @@ for age_bin, text in sorted(age_bin2text.items(), key=lambda i: i[0]):
 
         plot_heatmap(cluster(co_mat_normal_dense, dg0, dg1)[0],
                      title=base_title + 'original',
+                     save_name=f'{img_subdir.name}/dim{num_s:04}',
                      vmin=np.min(co_mat_normal_dense),
                      vmax=np.max(co_mat_normal_dense),
                      figsize=fig_size,

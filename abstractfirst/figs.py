@@ -61,5 +61,5 @@ def plot_heatmap(mat: np.ndarray,
 
     # save
     if save_name:
-        fig.savefig(f'{configs.Dirs.images.name}/{save_name}.svg', format='svg')  # TODO test
+        fig.savefig(f'{configs.Dirs.images.name}/{save_name}.png', format='png')
 
