@@ -1,6 +1,6 @@
 import numpy as np
 from matplotlib import pyplot as plt
-from typing import Optional
+from typing import Optional, Tuple
 
 from abstractfirst import configs
 
@@ -13,6 +13,7 @@ def plot_heatmap(mat: np.ndarray,
                  title: str = '',
                  vmin: Optional[float] = None,
                  vmax: Optional[float] = None,
+                 figsize: Tuple[int, int] = (6, 2)
                  ):
 
     if y_tick_labels is None:
@@ -20,7 +21,7 @@ def plot_heatmap(mat: np.ndarray,
     if x_tick_labels is None:
         x_tick_labels = []
 
-    fig, ax = plt.subplots(figsize=(6, 3), dpi=configs.Fig.dpi)
+    fig, ax = plt.subplots(figsize=figsize, dpi=configs.Fig.dpi)
     plt.title(title, fontsize=5)
 
     # heatmap

@@ -5,7 +5,6 @@ from typing import List
 from spacy.tokens import Token, Doc
 from pyitlib import discrete_random_variable as drv
 from scipy import sparse
-from scipy.sparse.linalg import svds
 from sklearn.metrics.cluster import adjusted_mutual_info_score
 from sklearn.preprocessing import quantile_transform
 from sortedcontainers import SortedSet
@@ -27,14 +26,16 @@ nlp = spacy.load("en_core_web_sm", disable=["ner", "parser"])
 
 CORPUS_NAME = 'childes-20201026'
 AGE_STEP = 900
-NUM_TOKENS_PER_BIN = 100_000   # TODO 2_527_000  # 2.5M is good with AGE_STEP=900
+NUM_TOKENS_PER_BIN = 1_000_000   # TODO 2_527_000  # 2.5M is good with AGE_STEP=900
 MAX_SUM = 300_000  # or None
-ALLOWED_TARGETS = 'sem-all'
+ALLOWED_TARGETS = 'nouns-annotated'
 
 LEFT_ONLY = False
 RIGHT_ONLY = True
 
 PLOT_RECONSTRUCTION = True
+PLOT_MAX_SING_DIM = 30
+PLOT_EVERY = 1
 
 # ///////////////////////////////////////////////////////////////// separate data by age
 
@@ -90,19 +91,11 @@ for age_bin, text in sorted(age_bin2text.items(), key=lambda i: i[0]):
                                                     )
     co_mat_coo: sparse.coo_matrix = make_sparse_co_occurrence_mat(*co_data, max_sum=MAX_SUM)
 
-    # make less skewed
-    co_mat_csr: sparse.csr_matrix = quantile_transform(co_mat_coo,
-                                                       axis=1,
-                                                       output_distribution='normal',
-                                                       n_quantiles=co_mat_coo.shape[0],
-                                                       copy=True,
-                                                       ignore_implicit_zeros=True)
-    co_mat_dense = co_mat_csr.toarray()
-
-    # factor analysis
-    print('Factor analysis...')
-    # don't use sparse svd: doesn't result in accurate reconstruction
-    U, s, VT = np.linalg.svd(co_mat_dense, compute_uv=True)
+    # svd
+    print('SVD...')
+    # don't use sparse svd: doesn't result in accurate reconstruction.
+    # don't normalize before svd: otherwise relative differences between rows and columns are lost
+    s = np.linalg.svd(co_mat_coo.toarray(), compute_uv=False)
     assert np.max(s) == s[0]
     with np.printoptions(precision=2, suppress=True):
         print(s[:4])
@@ -124,28 +117,47 @@ for age_bin, text in sorted(age_bin2text.items(), key=lambda i: i[0]):
     if PLOT_RECONSTRUCTION:
         shutil.rmtree(configs.Dirs.images)
         configs.Dirs.images.mkdir()
+
+        # remove skew for better visualisation
+        co_mat_normal_csr: sparse.csr_matrix = quantile_transform(co_mat_coo,
+                                                                  axis=0,
+                                                                  output_distribution='normal',
+                                                                  n_quantiles=co_mat_coo.shape[0],
+                                                                  copy=True,
+                                                                  ignore_implicit_zeros=True)
+        # don't use sparse svd: doesn't result in accurate reconstruction
+        co_mat_normal_dense = co_mat_normal_csr.toarray()
+        U, s, VT = np.linalg.svd(co_mat_normal_dense, compute_uv=True)
+
+        fig_size = (co_mat_normal_dense.shape[1] // 1000 + 1 * 2,
+                    co_mat_normal_dense.shape[0] // 1000 + 1 * 2,
+                    )
+        print(f'fig size={fig_size}')
+
         # plot projection of co_mat onto sing dims
         dg0, dg1 = None, None
-        projections = np.zeros(co_mat_csr.shape, dtype=np.float)
+        projections = np.zeros(co_mat_normal_dense.shape, dtype=np.float)
         num_s = sum(s > 0)
-        for dim_id in range(num_s):
+        for dim_id in range(PLOT_MAX_SING_DIM):
             projection = s[dim_id] * U[:, dim_id].reshape(-1, 1) @ VT[dim_id, :].reshape(1, -1)
             projection_clustered, dg0, dg1 = cluster(projection, dg0, dg1)
             projections += projection_clustered
-            if dim_id % 50 == 0:
+            if dim_id % PLOT_EVERY == 0:
                 plot_heatmap(projections,
                              title=f'sing dim={dim_id}/{num_s}',
                              save_name=f'co_mat_projections_up_to_dim{dim_id}',
-                             vmin=np.min(co_mat_csr),
-                             vmax=np.max(co_mat_csr),
+                             vmin=np.min(co_mat_normal_dense),
+                             vmax=np.max(co_mat_normal_dense),
+                             figsize=fig_size,
                              )
 
-        plot_heatmap(cluster(co_mat_dense, dg0, dg1)[0],
+        plot_heatmap(cluster(co_mat_normal_dense, dg0, dg1)[0],
                      title=f'original',
-                     vmin=np.min(co_mat_csr),
-                     vmax=np.max(co_mat_csr),
+                     vmin=np.min(co_mat_normal_dense),
+                     vmax=np.max(co_mat_normal_dense),
+                     figsize=fig_size,
                      )
-        raise SystemExit
+
 # ///////////////////////////////////////////////////////////////// show data
 
 df = pd.DataFrame(data=name2col, columns=var_names, index=age_bin2text.keys())
