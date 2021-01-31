@@ -3,23 +3,22 @@ from itertools import groupby
 from typing import List, Dict, Tuple
 
 from abstractfirst import configs
-from abstractfirst.util import split
+from abstractfirst.params import Params
 
 
-def make_age_bin2data(corpus_name: str,
-                      age_step: int,
+def make_age_bin2data(params: Params,
                       verbose: bool = False,
                       ) -> Dict[float, str]:
 
     # convert ages to age bins
-    ages_path = configs.Dirs.corpora / f'{corpus_name}_ages.txt'
+    ages_path = configs.Dirs.corpora / f'{params.corpus_name}_ages.txt'
     ages_text = ages_path.read_text(encoding='utf-8')
     ages = np.array(ages_text.split(), dtype=np.float)
-    ages_binned = ages - np.mod(ages, age_step)
+    ages_binned = ages - np.mod(ages, params.age_step)
     ages_binned = ages_binned.astype(np.int)
 
     # load data
-    data_path = configs.Dirs.corpora / f'{corpus_name}.txt'
+    data_path = configs.Dirs.corpora / f'{params.corpus_name}.txt'
     data_text = data_path.read_text(encoding='utf-8')
     data_by_doc: List[str] = [doc for doc in data_text.split('\n')[:-1]]
 

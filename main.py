@@ -1,8 +1,7 @@
 import numpy as np
 import pandas as pd
 import spacy
-from typing import List
-from spacy.tokens import Token, Doc
+from spacy.tokens import Doc
 from pyitlib import discrete_random_variable as drv
 from scipy import sparse
 from sklearn.metrics.cluster import adjusted_mutual_info_score
@@ -17,6 +16,7 @@ from abstractfirst.figs import plot_heatmap
 from abstractfirst.memory import set_memory_limit
 from abstractfirst.util import to_pyitlib_format, load_words, cluster
 from abstractfirst import configs
+from abstractfirst.params import Params
 
 set_memory_limit(0.9)
 
@@ -24,14 +24,7 @@ nlp = spacy.load("en_core_web_sm", disable=["ner", "parser"])
 
 # ///////////////////////////////////////////////////////////////// parameters
 
-CORPUS_NAME = 'childes-20201026'
-AGE_STEP = 900
-NUM_TOKENS_PER_BIN = 1_000_000   # TODO 2_527_000  # 2.5M is good with AGE_STEP=900
-MAX_SUM = 300_000  # or None
-ALLOWED_TARGETS = 'nouns-annotated'
-
-LEFT_ONLY = False
-RIGHT_ONLY = True
+params = Params()
 
 PLOT_RECONSTRUCTION = True
 PLOT_MAX_SING_DIM = 30
@@ -40,22 +33,22 @@ PLOT_EVERY = 1
 # ///////////////////////////////////////////////////////////////// separate data by age
 
 print('Raw age bins:')
-age_bin2text_unadjusted = make_age_bin2data(CORPUS_NAME, AGE_STEP)
+age_bin2text_unadjusted = make_age_bin2data(params)
 for age_bin, txt in age_bin2text_unadjusted.items():
     print(f'age bin={age_bin:>4} num tokens={len(txt.split()):,}')
 
 print('Adjusted age bins:')
-age_bin2text = adjust_binned_data(age_bin2text_unadjusted, NUM_TOKENS_PER_BIN)
+age_bin2text = adjust_binned_data(age_bin2text_unadjusted, params.num_tokens_per_bin)
 for age_bin, txt in sorted(age_bin2text.items(), key=lambda i: i[0]):
     num_tokens_adjusted = len(txt.split())
     print(f'age bin={age_bin:>4} num tokens={num_tokens_adjusted :,}')
-    assert num_tokens_adjusted >= NUM_TOKENS_PER_BIN
+    assert num_tokens_adjusted >= params.num_tokens_per_bin
 
 print(f'Number of age bins={len(age_bin2text)}')
 
 # ///////////////////////////////////////////////////////////////// targets
 
-targets_allowed = SortedSet(load_words(ALLOWED_TARGETS))
+targets_allowed = SortedSet(load_words(params.targets_name))
 
 # ///////////////////////////////////////////////////////////////// init data collection
 
@@ -84,12 +77,8 @@ for age_bin, text in sorted(age_bin2text.items(), key=lambda i: i[0]):
     print(f'Found {len(doc):,} tokens in text')
 
     # get co-occurrence data
-    co_data = collect_left_and_right_co_occurrences(doc,
-                                                    targets_allowed,
-                                                    left_only=LEFT_ONLY,
-                                                    right_only=RIGHT_ONLY,
-                                                    )
-    co_mat_coo: sparse.coo_matrix = make_sparse_co_occurrence_mat(*co_data, max_sum=MAX_SUM)
+    co_data = collect_left_and_right_co_occurrences(doc, targets_allowed, params)
+    co_mat_coo: sparse.coo_matrix = make_sparse_co_occurrence_mat(params, *co_data)
 
     # svd
     print('SVD...')
@@ -130,9 +119,13 @@ for age_bin, text in sorted(age_bin2text.items(), key=lambda i: i[0]):
         U, s, VT = np.linalg.svd(co_mat_normal_dense, compute_uv=True)
 
         fig_size = (co_mat_normal_dense.shape[1] // 1000 + 1 * 2,
-                    co_mat_normal_dense.shape[0] // 1000 + 1 * 2,
+                    co_mat_normal_dense.shape[0] // 1000 + 1 * 2 + 1,
                     )
         print(f'fig size={fig_size}')
+
+        base_title = str(params)
+        base_title += f'num co-occurrences={np.sum(co_mat_coo)}\n'
+        base_title += f'age range={age_bin}-{age_bin + params.age_step} days\n'
 
         # plot projection of co_mat onto sing dims
         dg0, dg1 = None, None
@@ -144,15 +137,15 @@ for age_bin, text in sorted(age_bin2text.items(), key=lambda i: i[0]):
             projections += projection_clustered
             if dim_id % PLOT_EVERY == 0:
                 plot_heatmap(projections,
-                             title=f'sing dim={dim_id}/{num_s}',
-                             save_name=f'co_mat_projections_up_to_dim{dim_id}',
+                             title=base_title + f'projections={dim_id}/{num_s}',
+                             save_name=f'age{age_bin}_dim{dim_id}',
                              vmin=np.min(co_mat_normal_dense),
                              vmax=np.max(co_mat_normal_dense),
                              figsize=fig_size,
                              )
 
         plot_heatmap(cluster(co_mat_normal_dense, dg0, dg1)[0],
-                     title=f'original',
+                     title=base_title + 'original',
                      vmin=np.min(co_mat_normal_dense),
                      vmax=np.max(co_mat_normal_dense),
                      figsize=fig_size,
