@@ -2,7 +2,7 @@ from typing import Tuple, Optional, List, Set
 from scipy.cluster.hierarchy import linkage, dendrogram
 
 import numpy as np
-from scipy import sparse
+from abstractfirst.co_occurrence import CoData
 
 from abstractfirst import configs
 
@@ -19,19 +19,20 @@ def load_words(file_name: str
     return set(res)
 
 
-def to_pyitlib_format(co_mat: sparse.coo_matrix,
-                      ) -> Tuple[List[int], List[int]]:
+def to_pyitlib_format(co_data: CoData,
+                      ) -> Tuple[List[int], List[int], List[int]]:
     """
-    convert data in co-occurrence matrix to two lists, each with realisations of one discrete RV.
+    convert data to three lists, x, y, z, each with realisations of one discrete RV.
     """
     xs = []
     ys = []
+    zs = []
     for i, j, v in zip(co_mat.row, co_mat.col, co_mat.data):
         if v > 0:
             xs += [i] * v
             ys += [j] * v
 
-    return xs, ys
+    return xs, ys, zs
 
 
 def cluster(mat: np.ndarray,

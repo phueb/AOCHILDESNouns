@@ -1,4 +1,5 @@
 from typing import Set, List, Optional, Tuple, Dict
+import attr
 from spacy.tokens import Doc, Token
 import numpy as np
 import itertools
@@ -9,10 +10,19 @@ from sortedcontainers import SortedSet
 from abstractfirst.params import Params
 
 
+@attr.s
+class CoData:
+    row_ids_l = attr.ib()
+    col_ids_l = attr.ib()
+
+    row_ids_r = attr.ib()
+    col_ids_r = attr.ib()
+
+
 def collect_left_and_right_co_occurrences(doc: Doc,
                                           targets: SortedSet,
                                           params: Params,
-                                          ) -> Tuple[List, List, List]:
+                                          ) -> CoData:
     """
     collect left and right co-occurrences in format suitable for scipy.sparse.coo.
 
@@ -56,33 +66,32 @@ def collect_left_and_right_co_occurrences(doc: Doc,
         row_ids_r.append(cw2id.setdefault(cw, len(cw2id)))
         col_ids_r.append(rw2id.setdefault(rw, len(rw2id) if params.right_only else len(lw2id) + len(rw2id)))
 
-    if params.left_only:
-        data = [1] * len(col_ids_l)
-        row_ids = row_ids_l
-        col_ids = col_ids_l
-        assert max(col_ids_l) + 1 == len(set(col_ids_l))  # check that col ids are consecutive
-    elif params.right_only:
-        data = [1] * len(col_ids_r)
-        row_ids = row_ids_r
-        col_ids = col_ids_r
-        assert max(col_ids_r) + 1 == len(set(col_ids_r))  # check that col ids are consecutive
-    else:
-        data = [1] * len(col_ids_l + col_ids_r)
-        # interleave lists - so that result can be truncated without affecting left or right contexts more
-        row_ids = list(itertools.chain(*zip(row_ids_l, row_ids_r)))
-        col_ids = list(itertools.chain(*zip(col_ids_l, row_ids_r)))
+    print(f'Collected {len(row_ids_r):,} right and {len(row_ids_l)} left co-occurrences')
 
-    print(f'Collected {len(data):,} co-occurrences')
-
-    return data, row_ids, col_ids
+    return CoData(row_ids_l, col_ids_l,
+                  row_ids_r, col_ids_r)
 
 
-def make_sparse_co_occurrence_mat(params: Params,
-                                  data: List[int],
-                                  row_ids: List[int],
-                                  col_ids: List[int],
+def make_sparse_co_occurrence_mat(co_data: CoData,
+                                  params: Params,
                                   ) -> sparse.coo_matrix:
     """make sparse matrix (contexts are col labels, targets are row labels)"""
+
+    if params.left_only:
+        data = [1] * len(co_data.col_ids_l)
+        row_ids = co_data.row_ids_l
+        col_ids = co_data.col_ids_l
+        assert max(co_data.col_ids_l) + 1 == len(set(co_data.col_ids_l))  # check that col ids are consecutive
+    elif params.right_only:
+        data = [1] * len(co_data.col_ids_r)
+        row_ids = co_data.row_ids_r
+        col_ids = co_data.col_ids_r
+        assert max(co_data.col_ids_r) + 1 == len(set(co_data.col_ids_r))  # check that col ids are consecutive
+    else:
+        data = [1] * len(co_data.col_ids_l + co_data.col_ids_r)
+        # interleave lists - so that result can be truncated without affecting left or right contexts more
+        row_ids = list(itertools.chain(*zip(co_data.row_ids_l, co_data.row_ids_r)))
+        col_ids = list(itertools.chain(*zip(co_data.col_ids_l, co_data.row_ids_r)))
 
     # constrain the sum of the matrix by removing some data
     if params.max_sum is not None:

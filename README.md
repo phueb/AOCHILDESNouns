@@ -6,6 +6,14 @@ Research code for replicating experiments in a future paper.
 
 Is the noun co-occurrence structure in speech to younger children less lexically specific (abstract) ? 
 
+One way to study the structure of data is to decompose it into linearly separable and orthogonal dimensions, which can be one with SVD.
+Below is a visualisation of the noun-co-occurrence matrix of speech to children under 900 days old, 
+projected on the first, then first + second, then first + second + third, ... singular dimensions, 
+ incrementing with each new animation frame.
+
+<div align="center">
+ <img src="animations/readme1.gif" width="600">
+</div>
 
 ## Technical Notes
 

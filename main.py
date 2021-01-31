@@ -32,7 +32,7 @@ else:
     params = Params()
 
 PLOT_RECONSTRUCTION = True
-PLOT_MAX_SING_DIM = 300
+PLOT_MAX_SING_DIM = 100
 PLOT_EVERY = 1
 
 # ///////////////////////////////////////////////////////////////// separate data by age
@@ -91,7 +91,7 @@ for age_bin, text in sorted(age_bin2text.items(), key=lambda i: i[0]):
 
     # get co-occurrence data
     co_data = collect_left_and_right_co_occurrences(doc, targets_allowed, params)
-    co_mat_coo: sparse.coo_matrix = make_sparse_co_occurrence_mat(params, *co_data)
+    co_mat_coo: sparse.coo_matrix = make_sparse_co_occurrence_mat(co_data, params)
 
     # svd
     print('SVD...')
@@ -107,7 +107,7 @@ for age_bin, text in sorted(age_bin2text.items(), key=lambda i: i[0]):
 
     # info theory analysis
     print('Info theory analysis...')
-    xs, ys = to_pyitlib_format(co_mat_coo)  # todo also get zs + calc interaction info
+    xs, ys = to_pyitlib_format(co_data)  # todo also get zs + calc interaction info
     xy = np.vstack((xs, ys))
     je = drv.entropy_joint(xy)
     name2col[NXY].append(drv.entropy_conditional(xs, ys).item() / je)
