@@ -1,27 +1,26 @@
 import numpy as np
 from matplotlib import pyplot as plt
 from typing import Optional
-from sklearn.preprocessing import quantile_transform
 
 from abstractfirst import configs
 
 
-def plot_heatmap(mat,
+def plot_heatmap(mat: np.ndarray,
                  y_tick_labels: Optional[list] = None,
                  x_tick_labels: Optional[list] = None,
                  label_interval: int = 10,
-                 save_name=None,
+                 save_name: Optional[str] = None,
                  title: str = '',
+                 vmin: Optional[float] = None,
+                 vmax: Optional[float] = None,
                  ):
-    # make distribution less skewed
-    mat = quantile_transform(mat, axis=1, output_distribution='normal', n_quantiles=len(mat), copy=True)
 
     if y_tick_labels is None:
         y_tick_labels = []
     if x_tick_labels is None:
         x_tick_labels = []
 
-    fig, ax = plt.subplots(figsize=(6, 2), dpi=configs.Fig.dpi)
+    fig, ax = plt.subplots(figsize=(6, 3), dpi=configs.Fig.dpi)
     plt.title(title, fontsize=5)
 
     # heatmap
@@ -30,8 +29,8 @@ def plot_heatmap(mat,
               aspect='equal',
               cmap=plt.get_cmap('viridis'),
               interpolation='nearest',
-              vmin=0,
-              vmax=1,
+              vmin=vmin,
+              vmax=vmax,
               )
 
     # x ticks
@@ -61,5 +60,5 @@ def plot_heatmap(mat,
 
     # save
     if save_name:
-        fig.savefig(f'heatmap_{save_name}.svg', format='svg')  # TODO test
+        fig.savefig(f'{configs.Dirs.images.name}/{save_name}.svg', format='svg')  # TODO test
 

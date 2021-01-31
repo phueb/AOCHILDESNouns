@@ -7,14 +7,17 @@ from pyitlib import discrete_random_variable as drv
 from scipy import sparse
 from scipy.sparse.linalg import svds
 from sklearn.metrics.cluster import adjusted_mutual_info_score
+from sklearn.preprocessing import quantile_transform
 from sortedcontainers import SortedSet
 from tabulate import tabulate
+import shutil
 
 from abstractfirst.binned import make_age_bin2data, adjust_binned_data
 from abstractfirst.co_occurrence import collect_left_and_right_co_occurrences, make_sparse_co_occurrence_mat
 from abstractfirst.figs import plot_heatmap
 from abstractfirst.memory import set_memory_limit
 from abstractfirst.util import to_pyitlib_format, load_words, cluster
+from abstractfirst import configs
 
 set_memory_limit(0.9)
 
@@ -24,14 +27,13 @@ nlp = spacy.load("en_core_web_sm", disable=["ner", "parser"])
 
 CORPUS_NAME = 'childes-20201026'
 AGE_STEP = 900
-NUM_TOKENS_PER_BIN = 2_527_000  # 2.5M is good with AGE_STEP=900
+NUM_TOKENS_PER_BIN = 100_000   # TODO 2_527_000  # 2.5M is good with AGE_STEP=900
 MAX_SUM = 300_000  # or None
 ALLOWED_TARGETS = 'sem-all'
 
 LEFT_ONLY = False
 RIGHT_ONLY = True
 
-PLOT_CO_MAT = True
 PLOT_RECONSTRUCTION = True
 
 # ///////////////////////////////////////////////////////////////// separate data by age
@@ -86,13 +88,22 @@ for age_bin, text in sorted(age_bin2text.items(), key=lambda i: i[0]):
                                                     left_only=LEFT_ONLY,
                                                     right_only=RIGHT_ONLY,
                                                     )
-    co_mat: sparse.coo_matrix = make_sparse_co_occurrence_mat(*co_data, max_sum=MAX_SUM)
+    co_mat_coo: sparse.coo_matrix = make_sparse_co_occurrence_mat(*co_data, max_sum=MAX_SUM)
+
+    # make less skewed
+    co_mat_csr: sparse.csr_matrix = quantile_transform(co_mat_coo,
+                                                       axis=1,
+                                                       output_distribution='normal',
+                                                       n_quantiles=co_mat_coo.shape[0],
+                                                       copy=True,
+                                                       ignore_implicit_zeros=True)
+    co_mat_dense = co_mat_csr.toarray()
 
     # factor analysis
     print('Factor analysis...')
-    # noinspection PyTypeChecker
-    U, s, VT = svds(co_mat.tocsc().asfptype(), k=min(co_mat.shape) - 1, return_singular_vectors=True)
-    s = s[::-1]  # originally ordered low to high
+    # don't use sparse svd: doesn't result in accurate reconstruction
+    U, s, VT = np.linalg.svd(co_mat_dense, compute_uv=True)
+    assert np.max(s) == s[0]
     with np.printoptions(precision=2, suppress=True):
         print(s[:4])
     name2col[S1MS2U].append(s[0] - s[1])
@@ -101,7 +112,7 @@ for age_bin, text in sorted(age_bin2text.items(), key=lambda i: i[0]):
 
     # info theory analysis
     print('Info theory analysis...')
-    xs, ys = to_pyitlib_format(co_mat)  # todo also get zs + calc interaction info
+    xs, ys = to_pyitlib_format(co_mat_coo)  # todo also get zs + calc interaction info
     xy = np.vstack((xs, ys))
     je = drv.entropy_joint(xy)
     name2col[NXY].append(drv.entropy_conditional(xs, ys).item() / je)
@@ -110,21 +121,31 @@ for age_bin, text in sorted(age_bin2text.items(), key=lambda i: i[0]):
     name2col[AMI].append(adjusted_mutual_info_score(xs, ys, average_method="arithmetic"))
     name2col[_JE].append(je)
 
-    if PLOT_CO_MAT:
-        co_mat_dense = co_mat.todense()
-        plot_heatmap(cluster(co_mat_dense)[0], title='original co-occurrence matrix')
-
     if PLOT_RECONSTRUCTION:
+        shutil.rmtree(configs.Dirs.images)
+        configs.Dirs.images.mkdir()
         # plot projection of co_mat onto sing dims
         dg0, dg1 = None, None
-        projections = 0
-        for dim_id in range(len(s)):
+        projections = np.zeros(co_mat_csr.shape, dtype=np.float)
+        num_s = sum(s > 0)
+        for dim_id in range(num_s):
             projection = s[dim_id] * U[:, dim_id].reshape(-1, 1) @ VT[dim_id, :].reshape(1, -1)
             projection_clustered, dg0, dg1 = cluster(projection, dg0, dg1)
             projections += projection_clustered
-            if dim_id % 10 == 0:
-                plot_heatmap(projections, title=f'sing dim={dim_id}/{sum(s > 0)}')
+            if dim_id % 50 == 0:
+                plot_heatmap(projections,
+                             title=f'sing dim={dim_id}/{num_s}',
+                             save_name=f'co_mat_projections_up_to_dim{dim_id}',
+                             vmin=np.min(co_mat_csr),
+                             vmax=np.max(co_mat_csr),
+                             )
 
+        plot_heatmap(cluster(co_mat_dense, dg0, dg1)[0],
+                     title=f'original',
+                     vmin=np.min(co_mat_csr),
+                     vmax=np.max(co_mat_csr),
+                     )
+        raise SystemExit
 # ///////////////////////////////////////////////////////////////// show data
 
 df = pd.DataFrame(data=name2col, columns=var_names, index=age_bin2text.keys())

@@ -7,6 +7,7 @@ class Dirs:
     scripts = root / 'scripts'
     corpora = root / 'corpora'
     words = root / 'words'
+    images = root / 'images'
 
 
 class Fig:
