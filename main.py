@@ -51,6 +51,7 @@ for params in [Params()]:  # todo
             # add info about condition
             df_age['targets_control'] = targets_control
             df_age['age'] = age
+            df_age['lemmas'] = params.lemmas
             dfs.append(df_age)
 
     df_condition = pd.concat(dfs, axis=0)

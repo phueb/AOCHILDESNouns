@@ -20,7 +20,7 @@ class Params:
     direction = attr.ib(default='')
     merge_punctuation = attr.ib(default=False)
     targets_control = attr.ib(default=False)
-    lemmas = attr.ib(default=False)  # TODO implement
+    lemmas = attr.ib(default=True)  # TODO implement
 
     corpus_name = attr.ib(default='childes-20201026')
     num_days = attr.ib(default=1000)  # age range in each age bin - there are always two bins

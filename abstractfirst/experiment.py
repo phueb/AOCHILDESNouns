@@ -34,7 +34,6 @@ def prepare_data(params: Params,
 def measure_dvs(params: Params,
                 doc: Doc,
                 targets: SortedSet,
-                max_projection: int = 0,  # set to 0 to prevent plotting
                 ) -> pd.DataFrame:
     """
     collect all DVs, and return df with single row
@@ -42,14 +41,12 @@ def measure_dvs(params: Params,
 
     name2col = {}
 
-
     # get co-occurrence data
     co_data = collect_left_and_right_co_occurrences(doc, targets, params)
 
     # for each direction (left, right, both)
     for direction in configs.Conditions.directions:
 
-        print(f'direction={direction}')
         params = attr.evolve(params, direction=direction)
         name2col.setdefault(f'direction', []).append(direction)
 
@@ -80,8 +77,8 @@ def measure_dvs(params: Params,
         name2col.setdefault(f'ami', []).append(adjusted_mutual_info_score(xs, ys, average_method="arithmetic"))
         name2col.setdefault(f' je', []).append(je)
 
-        if max_projection > 0:
-            plot_reconstructions(co_mat_coo, params, max_dim=max_projection)
+        if configs.Fig.max_projection > 0:
+            plot_reconstructions(co_mat_coo, params, max_dim=configs.Fig.max_projection)
 
     df = pd.DataFrame(data=name2col, columns=name2col.keys())
 

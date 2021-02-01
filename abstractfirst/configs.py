@@ -14,6 +14,7 @@ class Fig:
     ax_fontsize = 20
     leg_fontsize = 12
     dpi = 300
+    max_projection = 10
 
 
 class Data:

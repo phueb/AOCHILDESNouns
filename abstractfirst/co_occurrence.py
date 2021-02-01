@@ -62,9 +62,14 @@ def collect_left_and_right_co_occurrences(doc: Doc,
             continue
 
         # left word, center word, right word
-        lw = doc[n - 1].text
-        cw = cw.text
-        rw = doc[n + 1].text
+        if params.lemmas:
+            lw = doc[n - 1].lemma
+            cw = cw.lemma
+            rw = doc[n + 1].lemma
+        else:
+            lw = doc[n - 1].text
+            cw = cw.text
+            rw = doc[n + 1].text
 
         # collect left co-occurrence
         row_ids_l.append(cw2id.setdefault(cw, len(cw2id)))

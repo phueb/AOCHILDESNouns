@@ -19,11 +19,11 @@ def make_path(age: int,
     return res
 
 
-def make_title(params: Params,
-               excluded_attrs: Optional[List[str]] = None,
-               ) -> str:
+def make_fig_title(params: Params,
+                   excluded_attrs: Optional[List[str]] = None,
+                   ) -> str:
     if excluded_attrs is None:
-        excluded_attrs = ['num_days', 'num_tokens_per_age', 'max_sum']
+        excluded_attrs = ['num_days', 'num_tokens_per_age', 'max_sum_one_direction']
 
     old = params.__repr__()
     old = old.replace('Params(', '')
@@ -58,7 +58,7 @@ def plot_reconstructions(co_mat_coo: sparse.coo_matrix,
                 )
     print(f'fig size={fig_size}')
     print(params.direction)
-    base_title = make_title(params)
+    base_title = make_fig_title(params)
     base_title += f'num co-occurrences={np.sum(co_mat_coo)}\n'
     base_title += f'age={params.age}\n'
     # plot projection of co_mat onto sing dims
