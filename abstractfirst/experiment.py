@@ -4,79 +4,73 @@ from spacy.tokens import Doc
 from pyitlib import discrete_random_variable as drv
 from scipy import sparse
 from sklearn.metrics.cluster import adjusted_mutual_info_score
-from tabulate import tabulate
 import attr
 from typing import List, Dict
 from sortedcontainers import SortedSet
 
-from abstractfirst.binned import make_age_bin2data, adjust_binned_data
+from abstractfirst.pre_processing import make_age2docs
 from abstractfirst.co_occurrence import collect_left_and_right_co_occurrences, make_sparse_co_occurrence_mat
 from abstractfirst.params import Params
 from abstractfirst.reconstruct import plot_reconstructions
+from abstractfirst import configs
 
 
 def prepare_data(params: Params,
-                 verbose: bool = False,
-                 ) -> Dict[float, str]:
+                 ) -> Dict[str, Doc]:
 
-    age_bin2text_unadjusted = make_age_bin2data(params)
-    
-    if verbose:
-        print('Raw age bins:')
-        for age, txt in age_bin2text_unadjusted.items():
-            print(f'age bin={age:>4} num tokens={len(txt.split()):,}')
+    age2docs: Dict[str, List[Doc]] = make_age2docs(params)
 
-    age_bin2text = adjust_binned_data(age_bin2text_unadjusted, params.num_tokens_per_bin)
+    # make each age bin equally large
+    age2doc = {}
+    for age, docs in age2docs.items():
 
-    if verbose:
-        print('Adjusted age bins:')
-        for age, txt in sorted(age_bin2text.items(), key=lambda i: i[0]):
-            num_tokens_adjusted = len(txt.split())
-            print(f'age bin={age:>4} num tokens={num_tokens_adjusted :,}')
-            assert num_tokens_adjusted >= params.num_tokens_per_bin
+        doc_combined = Doc.from_docs(docs)
+        age2doc[age] = doc_combined
+        print(f'Num tokens at age={age} is {len(doc_combined):,}')
 
-    return age_bin2text
+    return age2doc
 
 
-def collect_dvs(params: Params,
+def measure_dvs(params: Params,
                 doc: Doc,
                 targets: SortedSet,
-                max_projection: int = 30,
+                max_projection: int = 0,  # set to 0 to prevent plotting
                 ) -> pd.DataFrame:
     """
     collect all DVs, and return df with single row
     """
 
     name2col = {}
-    directions = ['l', 'r', 'b']
+
 
     # get co-occurrence data
     co_data = collect_left_and_right_co_occurrences(doc, targets, params)
 
     # for each direction (left, right, both)
-    for direction in directions:
+    for direction in configs.Conditions.directions:
 
         print(f'direction={direction}')
         params = attr.evolve(params, direction=direction)
         name2col.setdefault(f'direction', []).append(direction)
 
+        # adjust max_sum
+        if direction == 'b' and isinstance(params.max_sum_one_direction, int):
+            params = attr.evolve(params, max_sum_one_direction=params.max_sum_one_direction * 2)
+
         co_mat_coo: sparse.coo_matrix = make_sparse_co_occurrence_mat(co_data, params)
-        name2col.setdefault(f'x-types', []).append(co_mat_coo.shape[0])
-        name2col.setdefault(f'y-types', []).append(co_mat_coo.shape[1])
+        name2col.setdefault(f'x-tokens', []).append(co_mat_coo.sum().item())
+        name2col.setdefault(f'x-types ', []).append(co_mat_coo.shape[0])
+        name2col.setdefault(f'y-types ', []).append(co_mat_coo.shape[1])
 
         # svd
-        print('SVD...')
         # don't use sparse svd: doesn't result in accurate reconstruction.
         # don't normalize before svd: otherwise relative differences between rows and columns are lost
         s = np.linalg.svd(co_mat_coo.toarray(), compute_uv=False)
         assert np.max(s) == s[0]
-        with np.printoptions(precision=2, suppress=True):
-            print(s[:4])
         name2col.setdefault(f' s1/s1+s2', []).append(s[0] / (s[0] + s[1]))
         name2col.setdefault(f's1/sum(s)', []).append(s[0] / np.sum(s))
 
         # info theory analysis
-        print('Info theory analysis...')
         xs, ys = co_data.make_rvs(direction)  # todo also get zs + calc interaction info
         xy = np.vstack((xs, ys))
         je = drv.entropy_joint(xy)

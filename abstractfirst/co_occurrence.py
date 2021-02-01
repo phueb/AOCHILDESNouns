@@ -112,11 +112,12 @@ def make_sparse_co_occurrence_mat(co_data: CoData,
         raise AttributeError('Invalid arg')
 
     # constrain the sum of the matrix by removing some data
-    if params.max_sum is not None:
+    assert isinstance(params.max_sum_one_direction, int) or params.max_sum_one_direction is None
+    if params.max_sum_one_direction is not None:
         tmp = np.vstack((data, row_ids, col_ids)).T
-        data = tmp[:params.max_sum, 0]
-        row_ids = tmp[:params.max_sum, 1]
-        col_ids = tmp[:params.max_sum, 2]
+        data = tmp[:params.max_sum_one_direction, 0]
+        row_ids = tmp[:params.max_sum_one_direction, 1]
+        col_ids = tmp[:params.max_sum_one_direction, 2]
 
     res = sparse.coo_matrix((data, (row_ids, col_ids)))
 

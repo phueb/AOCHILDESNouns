@@ -1,18 +1,19 @@
+"""
+Run a full experiment, by collecting DVs in all conditions into 1 data frame
+"""
+
 import shutil
-from sortedcontainers import SortedSet
-import spacy
-from spacy.tokens import Doc
+
 import attr
 import pandas as pd
 from tabulate import tabulate
 
-from abstractfirst.util import load_words
+from abstractfirst.util import make_targets_ctl
 from abstractfirst import configs
 from abstractfirst.memory import set_memory_limit
-from abstractfirst.experiment import collect_dvs, prepare_data
+from abstractfirst.experiment import measure_dvs, prepare_data
 from abstractfirst.params import Params
 
-nlp = spacy.load("en_core_web_sm", disable=["ner", "parser"])
 
 set_memory_limit(0.9)
 
@@ -24,22 +25,33 @@ configs.Dirs.images.mkdir()
 
 for params in [Params()]:  # todo
 
-    targets = SortedSet(load_words(params.targets_name))
-    age2text = prepare_data(params)
+    # load spacy-processed data to analyze
+    age2doc = prepare_data(params)
 
+    # all dvs will be collected in data frames, which are concatenated at the end
     dfs = []
-    for age, text in sorted(age2text.items(), key=lambda i: i[0]):
-        print()
-        print(f'age={age}')
-        params = attr.evolve(params, age=age)
 
-        print('Tagging...')
-        nlp.max_length = len(text)
-        doc: Doc = nlp(text)
+    # for each target condition (experimental vs control)
+    targets_exp, targets_ctl = make_targets_ctl(params)
+    for targets_control, targets in zip([False, True],
+                                        [targets_exp, targets_ctl]):
 
-        df_age = collect_dvs(params, doc, targets)
-        df_age['age'] = age
-        dfs.append(df_age)  # get single row with all dvs in a single condition
+        # for each age
+        for age, doc in sorted(age2doc.items(), key=lambda i: i[0]):
+
+            # update + print conditions
+            print()
+            params = attr.evolve(params, targets_control=targets_control)
+            params = attr.evolve(params, age=age)
+            print(params)
+
+            # measure Dvs
+            df_age = measure_dvs(params, doc, targets)  # a full set of dvs for a single condition
+
+            # add info about condition
+            df_age['targets_control'] = targets_control
+            df_age['age'] = age
+            dfs.append(df_age)
 
     df_condition = pd.concat(dfs, axis=0)
     print(tabulate(df_condition,

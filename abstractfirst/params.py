@@ -16,12 +16,14 @@ import itertools
 @attr.s
 class Params:
     # conditions
-    age = attr.ib(default=0)
-    tags = attr.ib(default={'NN', 'NNS'})
-    direction = attr.ib(default='b')
+    age = attr.ib(default='')
+    direction = attr.ib(default='')
+    merge_punctuation = attr.ib(default=False)
+    targets_control = attr.ib(default=False)
+    lemmas = attr.ib(default=False)  # TODO implement
 
     corpus_name = attr.ib(default='childes-20201026')
-    age_step = attr.ib(default=900)
-    num_tokens_per_bin = attr.ib(default=2_527_000)     # 2_527_000 is good with params.age_ste=900
-    max_sum = attr.ib(default=300_000)    # or None
+    num_days = attr.ib(default=1000)  # age range in each age bin - there are always two bins
+    max_sum_one_direction = attr.ib(default=88_000)
     targets_name = attr.ib(default='sem-all')
+    tags = attr.ib(default={'NN', 'NNS'})
