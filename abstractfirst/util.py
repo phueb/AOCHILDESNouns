@@ -1,4 +1,5 @@
-from typing import Tuple, Optional, List
+from typing import Tuple, Optional, List, Dict
+from spacy.tokens import Doc
 from scipy.cluster.hierarchy import linkage, dendrogram
 from sortedcontainers import SortedSet
 import numpy as np
@@ -15,30 +16,32 @@ def split(it: List,
         yield it[i:i + split_size]
 
 
-def make_targets_ctl(params: Params,
-                     verbose: bool = False,
-                     ) -> Tuple[SortedSet, SortedSet]:
+def make_targets(params: Params,
+                 age2doc: Dict[str, Doc],
+                 verbose: bool = True,
+                 ) -> Tuple[SortedSet, SortedSet]:
 
     # load experimental targets - but not all may occur in corpus
     p = configs.Dirs.words / f'{params.targets_name}.txt'
     targets_exp_ = p.read_text().split('\n')
     assert targets_exp_[-1]
 
+    # count words
+    w2f = Counter()
+    for doc in age2doc.values():
+        w2f.update([t.text for t in doc])
+
     # make control + experimental targets that match in frequency
     targets_ctl = SortedSet()
     targets_exp = SortedSet()
-    data_path = configs.Dirs.corpora / f'{params.corpus_name}.txt'
-    data_text = data_path.read_text(encoding='utf-8')
-    w2f = Counter(data_text.split(' '))
     vocab = [w for w, f in w2f.most_common()]
     for n, v in enumerate(vocab):
         if v in targets_exp_:
-            t_ctl = vocab[n - 1]
+            t_ctl = vocab[n - 1]  # targets should be slightly more frequent so that params.max_sum works
             targets_exp.add(v)
-            targets_ctl.add(t_ctl)
-
+            targets_ctl.add(t_ctl)  # todo lots of nouns here, restrict to non-nouns?
             if verbose:
-                print(v, w2f[v], t_ctl, w2f[t_ctl])
+                print(f'{v:<18} {w2f[v]:>6,} {t_ctl:<18} {w2f[t_ctl]:>6,}')
 
     assert len(targets_exp) == len(targets_ctl)
 

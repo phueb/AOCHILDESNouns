@@ -60,7 +60,6 @@ def plot_reconstructions(co_mat_coo: sparse.coo_matrix,
     print(params.direction)
     base_title = make_fig_title(params)
     base_title += f'num co-occurrences={np.sum(co_mat_coo)}\n'
-    base_title += f'age={params.age}\n'
     # plot projection of co_mat onto sing dims
     dg0, dg1 = None, None
     projections = np.zeros(co_mat_normal_dense.shape, dtype=np.float)

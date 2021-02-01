@@ -12,6 +12,7 @@ from abstractfirst.params import Params
 
 @attr.s
 class CoData:
+    """store co-occurrence data, for left, right, and both context directions separately"""
     row_ids_l = attr.ib()
     col_ids_l = attr.ib()
 
@@ -21,8 +22,9 @@ class CoData:
     row_ids_b = attr.ib()
     col_ids_b = attr.ib()
 
-    def make_rvs(self, direction: str,
-                 ) -> Tuple[List[int], List[int]]:
+    def get_x_y(self, direction: str,
+                ) -> Tuple[List[int], List[int]]:
+        """get realizations of two random variables, x, and y, corresponding to row and column of co matrix"""
         if direction == 'l':
             return self.row_ids_l, self.col_ids_l
         elif direction == 'r':
@@ -32,15 +34,21 @@ class CoData:
         else:
             raise AttributeError('Invalid arg')
 
+    def get_x_y_z(self):
+        """get realizations of three random variables, x, y, z, where y are left and z are right context type ids"""
+        assert self.row_ids_r == self.row_ids_l
+        return self.row_ids_r, self.col_ids_l, self.col_ids_r
+
 
 def collect_left_and_right_co_occurrences(doc: Doc,
                                           targets: SortedSet,
                                           params: Params,
                                           ) -> CoData:
     """
-    collect left and right co-occurrences in format suitable for scipy.sparse.coo.
+    collect co-occurrences in format suitable for scipy.sparse.coo.
 
-    note: also collects combined (left + right) co-occurrences.
+    note: collects left, right and "both" co-occurrences.
+    in the latter case, both a right and left co-occurrence are recorded separately.
     """
 
     cw2id = {}
@@ -58,7 +66,7 @@ def collect_left_and_right_co_occurrences(doc: Doc,
             continue
         if cw.text not in targets:
             continue
-        if cw.tag_ not in params.tags:
+        if not params.targets_control and cw.tag_ not in params.tags:  # do not filter by tag when using control targets
             continue
 
         # left word, center word, right word

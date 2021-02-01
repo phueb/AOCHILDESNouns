@@ -68,14 +68,22 @@ def measure_dvs(params: Params,
         name2col.setdefault(f's1/sum(s)', []).append(s[0] / np.sum(s))
 
         # info theory analysis
-        xs, ys = co_data.make_rvs(direction)  # todo also get zs + calc interaction info
+        if direction == 'b':
+            xs, ys, zs = co_data.get_x_y_z()
+            xyz = np.vstack((xs, ys, zs))
+            xyz_je = drv.entropy_joint(xyz)
+            nii = drv.information_interaction(xyz).item() / xyz_je
+        else:
+            nii = np.nan  # need 3 rvs to compute interaction information
+        xs, ys = co_data.get_x_y(direction)  # todo also get zs + calc interaction info
         xy = np.vstack((xs, ys))
-        je = drv.entropy_joint(xy)
-        name2col.setdefault(f'nxy', []).append(drv.entropy_conditional(xs, ys).item() / je)
-        name2col.setdefault(f'nyx', []).append(drv.entropy_conditional(ys, xs).item() / je)
+        xy_je = drv.entropy_joint(xy)
+        name2col.setdefault(f'nxy', []).append(drv.entropy_conditional(xs, ys).item() / xy_je)
+        name2col.setdefault(f'nyx', []).append(drv.entropy_conditional(ys, xs).item() / xy_je)
+        name2col.setdefault(f'nii', []).append(nii)
         name2col.setdefault(f'nmi', []).append(drv.information_mutual_normalised(xs, ys, norm_factor='XY').item())
         name2col.setdefault(f'ami', []).append(adjusted_mutual_info_score(xs, ys, average_method="arithmetic"))
-        name2col.setdefault(f' je', []).append(je)
+        name2col.setdefault(f' je', []).append(xy_je)
 
         if configs.Fig.max_projection > 0:
             plot_reconstructions(co_mat_coo, params, max_dim=configs.Fig.max_projection)

@@ -14,7 +14,7 @@ class Fig:
     ax_fontsize = 20
     leg_fontsize = 12
     dpi = 300
-    max_projection = 10
+    max_projection = 0  # set to 0 to prevent plotting of reconstructions
 
 
 class Data:

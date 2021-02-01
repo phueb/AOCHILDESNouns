@@ -8,7 +8,7 @@ import attr
 import pandas as pd
 from tabulate import tabulate
 
-from abstractfirst.util import make_targets_ctl
+from abstractfirst.util import make_targets
 from abstractfirst import configs
 from abstractfirst.memory import set_memory_limit
 from abstractfirst.experiment import measure_dvs, prepare_data
@@ -32,7 +32,7 @@ for params in [Params()]:  # todo
     dfs = []
 
     # for each target condition (experimental vs control)
-    targets_exp, targets_ctl = make_targets_ctl(params)
+    targets_exp, targets_ctl = make_targets(params, age2doc)
     for targets_control, targets in zip([False, True],
                                         [targets_exp, targets_ctl]):
 
