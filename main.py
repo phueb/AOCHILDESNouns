@@ -34,9 +34,6 @@ for params in Conditions.all():  # each param holds information about IVs in a s
         # for each age
         for age, doc in sorted(age2doc.items(), key=lambda i: i[0]):
 
-            # get co-occurrence data
-            co_data = collect_left_and_right_co_occurrences(doc, targets, params)
-
             # for each direction (left, right, both)
             for direction in configs.Conditions.directions:
 
@@ -48,6 +45,10 @@ for params in Conditions.all():  # each param holds information about IVs in a s
                                      direction=direction,
                                      )
                 print(params)
+
+                # get co-occurrence data
+                # warning: do not call this function until attr.evolve(params) has been called
+                co_data = collect_left_and_right_co_occurrences(doc, targets, params)
                 print(f'Collected {len(co_data.row_ids_r):,} right and {len(co_data.row_ids_l):,} left co-occurrences')
 
                 # measure Dvs

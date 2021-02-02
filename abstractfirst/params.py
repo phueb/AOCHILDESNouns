@@ -18,7 +18,7 @@ class Conditions:
     # user-filled
     user = {
         'punctuation': ['keep'],  #, 'remove', 'merge'],
-        'lemmas': [False],
+        'lemmas': [True],
     }
 
     ivs = {}

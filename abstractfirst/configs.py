@@ -23,7 +23,7 @@ class Data:
     max_sum = {False: 88_000,  # max num co-occurrences when targets_control is False
                True: 49_000,    # max num co-occurrences when targets_control is True
                }
-    exclude_exp_from_ctl_targets = False
+    exclude_exp_from_ctl_targets = True
 
 
 class Conditions:
