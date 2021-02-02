@@ -18,15 +18,15 @@ def split(it: List,
 
 def make_targets(params: Params,
                  age2doc: Dict[str, Doc],
-                 verbose: bool = True,
+                 verbose: bool = False,
                  ) -> Tuple[SortedSet, SortedSet]:
 
     # load experimental targets - but not all may occur in corpus
-    p = configs.Dirs.words / f'{params.targets_name}.txt'
+    p = configs.Dirs.targets / f'{params.targets_name}.txt'
     targets_exp_ = p.read_text().split('\n')
     assert targets_exp_[-1]
 
-    # count words
+    # count targets
     w2f = Counter()
     for doc in age2doc.values():
         w2f.update([t.text for t in doc])
@@ -39,7 +39,7 @@ def make_targets(params: Params,
         if v in targets_exp_:
             t_ctl = vocab[n - 1]  # targets should be slightly more frequent so that params.max_sum works
             targets_exp.add(v)
-            targets_ctl.add(t_ctl)  # todo lots of nouns here, restrict to non-nouns?
+            targets_ctl.add(t_ctl)
             if verbose:
                 print(f'{v:<18} {w2f[v]:>6,} {t_ctl:<18} {w2f[t_ctl]:>6,}')
 

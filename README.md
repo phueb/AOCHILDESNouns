@@ -1,6 +1,6 @@
 # AbstractFirst
 
-Research code for replicating experiments in a future paper.
+Research code for replicating experiments in an upcoming paper.
 
 ## Research Question
 
@@ -15,6 +15,20 @@ projected on the first, then first + second, then first + second + third, ... si
 <div align="center">
  <img src="animations/readme1.gif" width="600">
 </div>
+
+
+## Replication
+
+Clone the repository, then install requirements (preferably into a virtual Python3.7 environment):
+```bash
+pip install -r requirements.txt
+```
+
+Optionally edit the conditions to replicate in `abstractfirst/params.py`, and then:
+
+```bash
+python3 main.py
+```
 
 ## Technical Notes
 
@@ -43,4 +57,4 @@ will be a better approximation of the original co-occurrence matrix.
 
 ## Compatibility
 
-Developed on Ubuntu 16.04 and Python 3.7
+Developed on Ubuntu 18.04 and Python 3.7

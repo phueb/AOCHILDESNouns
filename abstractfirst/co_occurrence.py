@@ -1,6 +1,6 @@
-from typing import Set, List, Optional, Tuple, Dict
+from typing import List, Tuple
 import attr
-from spacy.tokens import Doc, Token
+from spacy.tokens import Doc
 import numpy as np
 import itertools
 from scipy import sparse

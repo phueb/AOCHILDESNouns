@@ -3,6 +3,7 @@ from typing import List, Dict, Tuple
 import spacy
 from spacy.tokens import Doc, DocBin
 from sortedcontainers import SortedSet
+from spacy.tokens.doc import Doc
 
 from abstractfirst import configs
 from abstractfirst.params import Params
@@ -18,10 +19,23 @@ def load_transcripts(params: Params):
 
     corpus_path = configs.Dirs.corpora / f'{params.corpus_name}.txt'
     corpus_text = corpus_path.read_text(encoding='utf-8')
-    if params.merge_punctuation:
+
+    if params.punctuation == 'keep':
+        print('Keeping punctuation as-is')
+
+    elif params.punctuation == 'merge':
         print('Merging punctuation into one symbol')
         for symbol in {'.', '!', '?'}:
             corpus_text = corpus_text.replace(symbol, '[EOS]')
+
+    elif params.punctuation == 'remove':
+        print('Removing punctuation')
+        for symbol in {'. ', '! ', '? '}:
+            corpus_text = corpus_text.replace(symbol, '')
+
+    else:
+        raise AttributeError('Invalid arg to punctuation')
+
     transcripts: List[str] = corpus_text.split('\n')[:-1]
 
     return transcripts
@@ -64,20 +78,27 @@ def load_ages(params: Params,
 def make_age2docs(params: Params,
                   verbose: bool = True,
                   ) -> Dict[str, List[Doc]]:
-    """return a collection of spacy documents for each age"""
+    """return a collection of spacy documents for each age.
+
+    warning: currently, only one corpus binary is saved to disk, with punctuation intact.
+    when params.punctuation is anything but "keep", the raw corpus will be loaded,
+     in order for punctuation to be processed as specified by params.punctuation, and POS-tagged
+    """
 
     # try loading docs from disk or make them
     fn = params.corpus_name + '.spacy'
     bin_path = configs.Dirs.corpora / fn
-    if bin_path.exists():
+    if bin_path.exists() and params.punctuation == 'keep':
         doc_bin = DocBin().from_disk(bin_path)
         docs = list(doc_bin.get_docs(nlp.vocab))
     else:
         print(f'WARNING: Did not find binary file associated with {params.corpus_name}. Preprocessing corpus...')
         transcripts = load_transcripts(params)
         docs: List[Doc] = [doc for doc in nlp.pipe(transcripts)]
-        doc_bin = DocBin(docs=docs)
-        doc_bin.to_disk(bin_path)
+        # only save to disk if we know that punctuation has not been modified
+        if params.punctuation == 'keep':
+            doc_bin = DocBin(docs=docs)
+            doc_bin.to_disk(bin_path)
 
     # group docs by age
     ages = load_ages(params)
@@ -95,3 +116,17 @@ def make_age2docs(params: Params,
     return res
 
 
+def prepare_data(params: Params,
+                 ) -> Dict[str, Doc]:
+
+    age2docs: Dict[str, List[Doc]] = make_age2docs(params)
+
+    # make each age bin equally large
+    age2doc = {}
+    for age, docs in age2docs.items():
+
+        doc_combined = Doc.from_docs(docs)
+        age2doc[age] = doc_combined
+        print(f'Num tokens at age={age} is {len(doc_combined):,}')
+
+    return age2doc

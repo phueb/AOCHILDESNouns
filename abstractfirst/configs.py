@@ -6,8 +6,9 @@ class Dirs:
     root = src.parent
     scripts = root / 'scripts'
     corpora = root / 'corpora'
-    words = root / 'words'
+    targets = root / 'targets'
     images = root / 'images'
+    results = root / 'results'
 
 
 class Fig:
