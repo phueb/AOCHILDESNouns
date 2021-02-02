@@ -36,6 +36,11 @@ def load_transcripts(params: Params):
     else:
         raise AttributeError('Invalid arg to punctuation')
 
+    # remove duplicated whitespace
+    corpus_text = corpus_text.strip()
+    while '  ' in corpus_text:
+        corpus_text = corpus_text.replace('  ', ' ')
+
     transcripts: List[str] = corpus_text.split('\n')[:-1]
 
     return transcripts
@@ -75,22 +80,24 @@ def load_ages(params: Params,
     return res
 
 
-def make_age2docs(params: Params,
-                  verbose: bool = True,
-                  ) -> Dict[str, List[Doc]]:
-    """return a collection of spacy documents for each age.
+def prepare_data(params: Params,
+                 verbose: bool = True,
+                 ) -> Dict[str, Doc]:
+    """
+    return a single spacy doc for each age.
 
     warning: currently, only one corpus binary is saved to disk, with punctuation intact.
     when params.punctuation is anything but "keep", the raw corpus will be loaded,
      in order for punctuation to be processed as specified by params.punctuation, and POS-tagged
     """
 
-    # try loading docs from disk or make them
+    # try loading transcripts from disk
     fn = params.corpus_name + '.spacy'
     bin_path = configs.Dirs.corpora / fn
     if bin_path.exists() and params.punctuation == 'keep':
         doc_bin = DocBin().from_disk(bin_path)
         docs = list(doc_bin.get_docs(nlp.vocab))
+    # load raw transcripts + process them
     else:
         print(f'WARNING: Did not find binary file associated with {params.corpus_name}. Preprocessing corpus...')
         transcripts = load_transcripts(params)
@@ -102,26 +109,16 @@ def make_age2docs(params: Params,
 
     # group docs by age
     ages = load_ages(params)
-    res = {}
+    age2docs = {}
     for age in SortedSet(ages):
-
         if age == EXCLUDED_AGE:
             continue
-
         docs_at_age = [docs[n] for n, ai in enumerate(ages) if ai == age]
-        res[age] = docs_at_age
-
+        age2docs[age] = docs_at_age
         if verbose:
-            print(f'Processed {len(res[age]):>6} transcripts for age={age}')
-    return res
+            print(f'Processed {len(age2docs[age]):>6} transcripts for age={age}')
 
-
-def prepare_data(params: Params,
-                 ) -> Dict[str, Doc]:
-
-    age2docs: Dict[str, List[Doc]] = make_age2docs(params)
-
-    # make each age bin equally large
+    # combine all documents at same age
     age2doc = {}
     for age, docs in age2docs.items():
 

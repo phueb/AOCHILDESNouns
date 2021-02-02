@@ -39,8 +39,6 @@ for params in Conditions.all():  # each param holds information about IVs in a s
 
             # for each direction (left, right, both)
             for direction in configs.Conditions.directions:
-                params = attr.evolve(params,
-                                     direction=direction)
 
                 # update + print IV realizations in current condition
                 print()
@@ -50,13 +48,14 @@ for params in Conditions.all():  # each param holds information about IVs in a s
                                      direction=direction,
                                      )
                 print(params)
+                print(f'Collected {len(co_data.row_ids_r):,} right and {len(co_data.row_ids_l):,} left co-occurrences')
 
                 # measure Dvs
                 data: dict = measure_dvs(params, co_data)  # a full set of dvs for a single condition
                 row_id += 1
 
-                # add info about condition to df row
-                ivs = {ivn: params.__getattribute__(ivn) for ivn in Conditions.ivs}
+                # add info about condition to df row - don't use magic methods which are uninfluenced attr.evolve()
+                ivs = {ivn: attr.asdict(params)[ivn] for ivn in Conditions.ivs}
                 data.update(ivs)
                 row = pd.DataFrame(data=data, index=[row_id])
 

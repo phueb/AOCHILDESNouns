@@ -18,7 +18,7 @@ class Conditions:
     # user-filled
     user = {
         'punctuation': ['keep'],  #, 'remove', 'merge'],
-        'lemmas': [True],
+        'lemmas': [False],
     }
 
     ivs = {}
@@ -50,6 +50,5 @@ class Params:
     # data (this should only rarely change, if ever)
     corpus_name = attr.ib(default='childes-20201026')
     num_days = attr.ib(default=1000)  # age range in each age bin - there are always two bins
-    max_sum_one_direction = attr.ib(default=136_000)
-    targets_name = attr.ib(default='nouns-annotated')
+    targets_name = attr.ib(default='sem-all')
     tags = attr.ib(default={'NN', 'NNS'})

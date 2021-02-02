@@ -1,12 +1,12 @@
 import numpy as np
 from scipy import sparse
+from scipy.cluster.hierarchy import linkage, dendrogram
 from sklearn.preprocessing import quantile_transform
 from pathlib import Path
 from typing import List, Optional
 
 from abstractfirst import configs
 from abstractfirst.figs import plot_heatmap
-from abstractfirst.util import cluster
 from abstractfirst.params import Params
 
 
@@ -23,7 +23,7 @@ def make_fig_title(params: Params,
                    excluded_attrs: Optional[List[str]] = None,
                    ) -> str:
     if excluded_attrs is None:
-        excluded_attrs = ['num_days', 'num_tokens_per_age', 'max_sum_one_direction']
+        excluded_attrs = []
 
     old = params.__repr__()
     old = old.replace('Params(', '')
@@ -83,3 +83,32 @@ def plot_reconstructions(co_mat_coo: sparse.coo_matrix,
                  vmax=np.max(co_mat_normal_dense),
                  figsize=fig_size,
                  )
+
+
+def cluster(mat: np.ndarray,
+            dg0: Optional[dict] = None,
+            dg1: Optional[dict] = None,
+            method: str = 'complete',
+            metric: str = 'euclidean'):
+
+    if dg0 is None:
+        print('Clustering rows...')
+        lnk0 = linkage(mat, method=method, metric=metric, optimal_ordering=True)
+        dg0 = dendrogram(lnk0,
+                         ax=None,
+                         color_threshold=None,
+                         no_labels=True,
+                         no_plot=True)
+    res = mat[dg0['leaves'], :]  # reorder rows
+
+    if dg1 is None:
+        print('Clustering cols...')
+        lnk1 = linkage(mat.T, method=method, metric=metric, optimal_ordering=True)
+        dg1 = dendrogram(lnk1,
+                         ax=None,
+                         color_threshold=None,
+                         no_labels=True,
+                         no_plot=True)
+    res = res[:, dg1['leaves']]  # reorder cols
+
+    return res, dg0, dg1

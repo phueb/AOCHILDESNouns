@@ -8,6 +8,7 @@ from sortedcontainers import SortedSet
 
 
 from abstractfirst.params import Params
+from abstractfirst import configs
 
 
 @attr.s
@@ -93,8 +94,6 @@ def collect_left_and_right_co_occurrences(doc: Doc,
         col_ids_b.append(col_ids_l[-1])
         col_ids_b.append(col_ids_r[-1])
 
-    print(f'Collected {len(row_ids_r):,} right and {len(row_ids_l):,} left co-occurrences')
-
     return CoData(row_ids_l, col_ids_l,
                   row_ids_r, col_ids_r,
                   row_ids_b, col_ids_b,
@@ -125,12 +124,13 @@ def make_sparse_co_occurrence_mat(co_data: CoData,
         raise AttributeError('Invalid arg')
 
     # constrain the sum of the matrix by removing some data
-    assert isinstance(params.max_sum_one_direction, int) or params.max_sum_one_direction is None
-    if params.max_sum_one_direction is not None:
+    max_sum = configs.Data.max_sum[params.targets_control]
+    assert isinstance(max_sum, int) or max_sum is None
+    if max_sum is not None:
         tmp = np.vstack((data, row_ids, col_ids)).T
-        data = tmp[:params.max_sum_one_direction, 0]
-        row_ids = tmp[:params.max_sum_one_direction, 1]
-        col_ids = tmp[:params.max_sum_one_direction, 2]
+        data = tmp[:max_sum, 0]
+        row_ids = tmp[:max_sum, 1]
+        col_ids = tmp[:max_sum, 2]
 
     res = sparse.coo_matrix((data, (row_ids, col_ids)))
 

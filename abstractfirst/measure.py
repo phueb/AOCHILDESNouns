@@ -22,12 +22,8 @@ def measure_dvs(params: Params,
 
     res = {}
 
-    # adjust max_sum  (this does not change params in outer scope, which is as it should be)
-    if params.direction == 'b' and isinstance(params.max_sum_one_direction, int):
-        params = attr.evolve(params, max_sum_one_direction=params.max_sum_one_direction * 2)
-
     co_mat_coo: sparse.coo_matrix = make_sparse_co_occurrence_mat(co_data, params)
-    res[f'x-tokens'] = co_mat_coo.sum().item()
+    res[f'x-tokens'] = co_mat_coo.sum().item() // 2 if params.direction == 'b' else co_mat_coo.sum().item()
     res[f'x-types '] = co_mat_coo.shape[0]
     res[f'y-types '] = co_mat_coo.shape[1]
 

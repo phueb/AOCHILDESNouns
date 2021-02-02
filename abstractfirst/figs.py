@@ -63,4 +63,3 @@ def plot_heatmap(mat: np.ndarray,
     # save
     if save_path:
         fig.savefig(save_path, format='png')
-

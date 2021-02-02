@@ -1,24 +1,15 @@
-from typing import Tuple, Optional, List, Dict
+from typing import Tuple, Dict
 from spacy.tokens import Doc
-from scipy.cluster.hierarchy import linkage, dendrogram
 from sortedcontainers import SortedSet
-import numpy as np
 from collections import Counter
 
 from abstractfirst.params import Params
 from abstractfirst import configs
 
 
-def split(it: List,
-          split_size: int,
-          ):
-    for i in range(0, len(it), split_size):
-        yield it[i:i + split_size]
-
-
 def make_targets(params: Params,
                  age2doc: Dict[str, Doc],
-                 verbose: bool = False,
+                 verbose: bool = True,
                  ) -> Tuple[SortedSet, SortedSet]:
 
     # load experimental targets - but not all may occur in corpus
@@ -34,44 +25,26 @@ def make_targets(params: Params,
     # make control + experimental targets that match in frequency
     targets_ctl = SortedSet()
     targets_exp = SortedSet()
-    vocab = [w for w, f in w2f.most_common()]
+    vocab = [w for w, f in w2f.most_common()]  # in order of most to least common (lower id -> higher frequency)
     for n, v in enumerate(vocab):
         if v in targets_exp_:
-            t_ctl = vocab[n - 1]  # targets should be slightly more frequent so that params.max_sum works
+
+            # find control target that is not in set of experimental targets, and is not already in control target set
+            offset = -1
+            while True:
+                target_ctl = vocab[n - offset]  # targets should be slightly more frequent so that params.max_sum works
+                offset += 1
+                if target_ctl in targets_exp_ and configs.Data.exclude_exp_from_ctl_targets:
+                    continue
+                if target_ctl in targets_ctl:
+                    continue
+                break
+
             targets_exp.add(v)
-            targets_ctl.add(t_ctl)
+            targets_ctl.add(target_ctl)
             if verbose:
-                print(f'{v:<18} {w2f[v]:>6,} {t_ctl:<18} {w2f[t_ctl]:>6,}')
+                print(f'{v:<18} {w2f[v]:>6,} {target_ctl:<18} {w2f[target_ctl]:>6,}')
 
     assert len(targets_exp) == len(targets_ctl)
 
     return targets_exp, targets_ctl
-
-
-def cluster(mat: np.ndarray,
-            dg0: Optional[dict] = None,
-            dg1: Optional[dict] = None,
-            method: str = 'complete',
-            metric: str = 'euclidean'):
-
-    if dg0 is None:
-        print('Clustering rows...')
-        lnk0 = linkage(mat, method=method, metric=metric, optimal_ordering=True)
-        dg0 = dendrogram(lnk0,
-                         ax=None,
-                         color_threshold=None,
-                         no_labels=True,
-                         no_plot=True)
-    res = mat[dg0['leaves'], :]  # reorder rows
-
-    if dg1 is None:
-        print('Clustering cols...')
-        lnk1 = linkage(mat.T, method=method, metric=metric, optimal_ordering=True)
-        dg1 = dendrogram(lnk1,
-                         ax=None,
-                         color_threshold=None,
-                         no_labels=True,
-                         no_plot=True)
-    res = res[:, dg1['leaves']]  # reorder cols
-
-    return res, dg0, dg1
