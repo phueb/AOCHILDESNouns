@@ -61,24 +61,45 @@ def collect_left_and_right_co_occurrences(doc: Doc,
     col_ids_l = []
     col_ids_r = []
     col_ids_b = []
-    for n, cw in enumerate(doc[:-2]):
+    for n in range(len(doc) - 2):
 
         if n == 0:
             continue
-        if cw.text not in targets:
+        if doc[n].text not in targets:
             continue
-        if not params.targets_control and cw.tag_ not in params.tags:  # do not filter by tag when using control targets
+        if not params.targets_control and doc[n].tag_ not in params.tags:  # do not filter when using control targets
             continue
 
-        # left word, center word, right word
-        if params.lemmas:
-            lw = doc[n - 1].lemma
-            cw = cw.lemma
-            rw = doc[n + 1].lemma
-        else:
-            lw = doc[n - 1].text
-            cw = cw.text
-            rw = doc[n + 1].text
+        # handle punctuation
+        lwo = 1  # left word offset
+        rwo = 1  # right word offset
+        while True:
+            is_break = True
+            # left word, center word, right word
+            if params.lemmas:
+                lw = doc[n - lwo].lemma_
+                cw = doc[n].lemma_
+                rw = doc[n + rwo].lemma_
+            else:
+                lw = doc[n - lwo].text
+                cw = doc[n].text
+                rw = doc[n + rwo].text
+
+            if lw in configs.Data.punctuation:
+                if params.punctuation == 'remove':
+                    lwo += 1
+                    is_break = False
+                elif params.punctuation == 'merge':
+                    lw = configs.Data.eos
+            if rw in configs.Data.punctuation:
+                if params.punctuation == 'remove':
+                    rwo += 1
+                    is_break = False
+                elif params.punctuation == 'merge':
+                    rw = configs.Data.eos
+
+            if is_break:
+                break
 
         # collect left co-occurrence
         row_ids_l.append(cw2id.setdefault(cw, len(cw2id)))

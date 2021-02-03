@@ -23,11 +23,11 @@ row_id = 0
 
 for params in Conditions.all():  # each param holds information about IVs in a single condition
 
-    # load spacy-processed data to analyze
+    # load spacy-processed data to analyze, and targets
     age2doc = prepare_data(params)
+    targets_exp, targets_ctl = make_targets(params, age2doc)
 
     # for each target condition (experimental vs control)
-    targets_exp, targets_ctl = make_targets(params, age2doc)
     for targets_control, targets in zip([False, True],
                                         [targets_exp, targets_ctl]):
 

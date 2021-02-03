@@ -25,6 +25,9 @@ class Data:
                }
     exclude_exp_from_ctl_targets = True
 
+    punctuation = {'.', '!', '?'}
+    eos = '[EOS]'
+
 
 class Conditions:
     directions = ['r']  # ['l', 'r', 'b']

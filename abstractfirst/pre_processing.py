@@ -20,28 +20,28 @@ def load_transcripts(params: Params):
     corpus_path = configs.Dirs.corpora / f'{params.corpus_name}.txt'
     corpus_text = corpus_path.read_text(encoding='utf-8')
 
-    if params.punctuation == 'keep':
-        print('Keeping punctuation as-is')
+    # if params.punctuation == 'keep':
+    #     print('Keeping punctuation as-is')
+    #
+    # elif params.punctuation == 'merge':
+    #     print('Merging punctuation into one symbol')
+    #     for symbol in configs.Data.punctuation:
+    #         corpus_text = corpus_text.replace(symbol, '[EOS]')
+    #
+    # elif params.punctuation == 'remove':
+    #     print('Removing punctuation')
+    #     for symbol in configs.Data.punctuation:
+    #         corpus_text = corpus_text.replace(symbol, '')
+    #
+    # else:
+    #     raise AttributeError('Invalid arg to punctuation')
 
-    elif params.punctuation == 'merge':
-        print('Merging punctuation into one symbol')
-        for symbol in {'.', '!', '?'}:
-            corpus_text = corpus_text.replace(symbol, '[EOS]')
+    # # remove duplicated whitespace
+    # corpus_text = corpus_text.strip()
+    # while '  ' in corpus_text:
+    #     corpus_text = corpus_text.replace('  ', ' ')
 
-    elif params.punctuation == 'remove':
-        print('Removing punctuation')
-        for symbol in {'. ', '! ', '? '}:
-            corpus_text = corpus_text.replace(symbol, '')
-
-    else:
-        raise AttributeError('Invalid arg to punctuation')
-
-    # remove duplicated whitespace
-    corpus_text = corpus_text.strip()
-    while '  ' in corpus_text:
-        corpus_text = corpus_text.replace('  ', ' ')
-
-    transcripts: List[str] = corpus_text.split('\n')[:-1]
+    transcripts: List[str] = [ti for ti in corpus_text.split('\n') if ti]
 
     return transcripts
 
@@ -51,8 +51,14 @@ def load_ages(params: Params,
     """convert ages into strings e.g. '0-900days' """
     ages_path = configs.Dirs.corpora / f'{params.corpus_name}_ages.txt'
     ages_text = ages_path.read_text(encoding='utf-8')
-    ages = [float(ai) for ai in ages_text.split()]
 
+    # remove duplicated whitespace
+    corpus_text = ages_text.strip()
+    while '  ' in corpus_text:
+        corpus_text = corpus_text.replace('  ', ' ')
+
+    # to float
+    ages = [float(ai) for ai in ages_text.split('\n') if ai]
     min_age = min(ages)
     max_age = max(ages)
 
@@ -86,15 +92,14 @@ def prepare_data(params: Params,
     """
     return a single spacy doc for each age.
 
-    warning: currently, only one corpus binary is saved to disk, with punctuation intact.
-    when params.punctuation is anything but "keep", the raw corpus will be loaded,
-     in order for punctuation to be processed as specified by params.punctuation, and POS-tagged
+    warning: if corpus binary is not on disk already, it will be saved to disk.
+    this means the corpus should never be modified - else, the binary will also contain unexpected modifications
     """
 
     # try loading transcripts from disk
     fn = params.corpus_name + '.spacy'
     bin_path = configs.Dirs.corpora / fn
-    if bin_path.exists() and params.punctuation == 'keep':
+    if bin_path.exists():
         doc_bin = DocBin().from_disk(bin_path)
         docs = list(doc_bin.get_docs(nlp.vocab))
     # load raw transcripts + process them
@@ -102,13 +107,14 @@ def prepare_data(params: Params,
         print(f'WARNING: Did not find binary file associated with {params.corpus_name}. Preprocessing corpus...')
         transcripts = load_transcripts(params)
         docs: List[Doc] = [doc for doc in nlp.pipe(transcripts)]
-        # only save to disk if we know that punctuation has not been modified
-        if params.punctuation == 'keep':
-            doc_bin = DocBin(docs=docs)
-            doc_bin.to_disk(bin_path)
+        # WARNING: only save to disk if we know that corpus has not been modified
+        doc_bin = DocBin(docs=docs)
+        doc_bin.to_disk(bin_path)
 
     # group docs by age
     ages = load_ages(params)
+    if len(ages) != len(docs):
+        raise RuntimeError(f'Num docs={len(docs)} and num ages={len(ages)}')
     age2docs = {}
     for age in SortedSet(ages):
         if age == EXCLUDED_AGE:
