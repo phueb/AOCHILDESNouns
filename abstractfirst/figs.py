@@ -1,9 +1,36 @@
 import numpy as np
 from matplotlib import pyplot as plt
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List, Dict
 from pathlib import Path
 
 from abstractfirst import configs
+
+
+def make_line_fig(label2y: Dict[str, List[float]],
+                  title: str,
+                  x_axis_label: str,
+                  y_axis_label: str,
+                  x_ticks: List[int],
+                  y_lims: Optional[List[float]] = None,
+                  ):
+    fig, ax = plt.subplots(1, figsize=(6, 4), dpi=163)
+    plt.title(title, fontsize=configs.Figs.title_font_size)
+    ax.set_ylabel(y_axis_label, fontsize=configs.Figs.ax_font_size)
+    ax.set_xlabel(x_axis_label, fontsize=configs.Figs.ax_font_size)
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.set_xticks(x_ticks)
+    ax.set_xticklabels(x_ticks, fontsize=configs.Figs.tick_font_size)
+    if y_lims:
+        ax.set_ylim(y_lims)
+
+    # plot
+    for label, y in label2y.items():
+        ax.plot(x_ticks, y, linewidth=2, label=label)
+
+    plt.legend()
+
+    return fig, ax
 
 
 def plot_heatmap(mat: np.ndarray,

@@ -31,3 +31,10 @@ class Data:
 
 class Conditions:
     directions = ['r']  # ['l', 'r', 'b']
+
+
+class Figs:
+    ax_font_size = 12
+    leg_font_size = 10
+    title_font_size = 8
+    tick_font_size = 8
