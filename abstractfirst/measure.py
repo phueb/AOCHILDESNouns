@@ -3,7 +3,7 @@ from typing import Dict
 from pyitlib import discrete_random_variable as drv
 from scipy import sparse
 from sklearn.metrics.cluster import adjusted_mutual_info_score
-import attr
+from sklearn.preprocessing import normalize
 
 from abstractfirst.co_occurrence import make_sparse_co_occurrence_mat, CoData
 from abstractfirst.params import Params
@@ -23,14 +23,22 @@ def measure_dvs(params: Params,
     res = {}
 
     co_mat_coo: sparse.coo_matrix = make_sparse_co_occurrence_mat(co_data, params)
+    co_mat_csr: sparse.csr_matrix = co_mat_coo.tocsr()
+
+    # type and token frequency
     res[f'x-tokens'] = co_mat_coo.sum().item() // 2 if params.direction == 'b' else co_mat_coo.sum().item()
     res[f'x-types '] = co_mat_coo.shape[0]
     res[f'y-types '] = co_mat_coo.shape[1]
 
+    # normalize columns
+    if params.normalize_cols:
+        co_mat_csr = normalize(co_mat_csr, axis=1, copy=False)
+        print(co_mat_csr.sum())
+
     # svd
     # don't use sparse svd: doesn't result in accurate reconstruction.
     # don't normalize before svd: otherwise relative differences between rows and columns are lost
-    s = np.linalg.svd(co_mat_coo.toarray(), compute_uv=False)
+    s = np.linalg.svd(co_mat_csr.toarray(), compute_uv=False)
     assert np.max(s) == s[0]
     res[f' s1/s1+s2'] = s[0] / (s[0] + s[1])
     res[f's1/sum(s)'] = s[0] / np.sum(s)

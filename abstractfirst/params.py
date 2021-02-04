@@ -17,8 +17,9 @@ class Conditions:
 
     # user-filled
     user = {
-        'punctuation': ['merge', 'remove'],  #, 'remove', 'merge'],
+        'punctuation': ['keep'],  #, 'remove', 'merge'],
         'lemmas': [True],
+        'normalize': [False, True],
     }
 
     ivs = {}
@@ -46,6 +47,7 @@ class Params:
     # user-filled conditions
     punctuation: bool = attr.ib(validator=attr.validators.instance_of(str))
     lemmas: str = attr.ib(validator=attr.validators.instance_of(bool))
+    normalize_cols: str = attr.ib(validator=attr.validators.instance_of(bool))
 
     # data (this should only rarely change, if ever)
     corpus_name = attr.ib(default='childes-20201026')

@@ -20,27 +20,6 @@ def load_transcripts(params: Params):
     corpus_path = configs.Dirs.corpora / f'{params.corpus_name}.txt'
     corpus_text = corpus_path.read_text(encoding='utf-8')
 
-    # if params.punctuation == 'keep':
-    #     print('Keeping punctuation as-is')
-    #
-    # elif params.punctuation == 'merge':
-    #     print('Merging punctuation into one symbol')
-    #     for symbol in configs.Data.punctuation:
-    #         corpus_text = corpus_text.replace(symbol, '[EOS]')
-    #
-    # elif params.punctuation == 'remove':
-    #     print('Removing punctuation')
-    #     for symbol in configs.Data.punctuation:
-    #         corpus_text = corpus_text.replace(symbol, '')
-    #
-    # else:
-    #     raise AttributeError('Invalid arg to punctuation')
-
-    # # remove duplicated whitespace
-    # corpus_text = corpus_text.strip()
-    # while '  ' in corpus_text:
-    #     corpus_text = corpus_text.replace('  ', ' ')
-
     transcripts: List[str] = [ti for ti in corpus_text.split('\n') if ti]
 
     return transcripts
@@ -51,11 +30,6 @@ def load_ages(params: Params,
     """convert ages into strings e.g. '0-900days' """
     ages_path = configs.Dirs.corpora / f'{params.corpus_name}_ages.txt'
     ages_text = ages_path.read_text(encoding='utf-8')
-
-    # remove duplicated whitespace
-    corpus_text = ages_text.strip()
-    while '  ' in corpus_text:
-        corpus_text = corpus_text.replace('  ', ' ')
 
     # to float
     ages = [float(ai) for ai in ages_text.split('\n') if ai]
