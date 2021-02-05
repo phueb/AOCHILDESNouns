@@ -1,7 +1,5 @@
 from typing import List, Tuple, Dict
 from spacy.tokens import Doc
-import numpy as np
-import itertools
 from scipy import sparse
 from sortedcontainers import SortedSet
 
@@ -132,6 +130,7 @@ def collect_left_and_right_co_occurrences(doc: Doc,
     row_ids_r = []
     col_ids_l = []
     col_ids_r = []
+    num_targets = 0  # just for reference - print this
     for n in range(len(doc) - 2):
 
         if n == 0:
@@ -172,19 +171,23 @@ def collect_left_and_right_co_occurrences(doc: Doc,
             if is_break:
                 break
 
-        # collect left co-occurrence
-        row_ids_l.append(cw2id.setdefault(cw, len(cw2id)))
-        col_ids_l.append(lw2id.setdefault(lw, len(lw2id)))
+        if max_sum is not None and len(row_ids_l) < max_sum:
+            # collect left co-occurrence
+            row_ids_l.append(cw2id.setdefault(cw, len(cw2id)))
+            col_ids_l.append(lw2id.setdefault(lw, len(lw2id)))
 
-        # collect right co-occurrence
-        row_ids_r.append(cw2id.setdefault(cw, len(cw2id)))
-        col_ids_r.append(rw2id.setdefault(rw, len(rw2id)))
+            # collect right co-occurrence
+            row_ids_r.append(cw2id.setdefault(cw, len(cw2id)))
+            col_ids_r.append(rw2id.setdefault(rw, len(rw2id)))
 
-        # stop collecting
-        if max_sum is not None and len(row_ids_l) >= max_sum:
-            break
+        # for reference - deciding max_sum
+        num_targets += 1
 
-    return CoData(row_ids_l, col_ids_l,
-                  row_ids_r, col_ids_r,
+    print(f'Num total targets={num_targets:,}. Collected {len(row_ids_l):,} co-occurrences')
+
+    return CoData(row_ids_l,
+                  col_ids_l,
+                  row_ids_r,
+                  col_ids_r,
                   lw2id, cw2id, rw2id,
                   )

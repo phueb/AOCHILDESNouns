@@ -52,5 +52,5 @@ class Params:
     # data (this should only rarely change, if ever)
     corpus_name = attr.ib(default='childes-20210205')
     num_days = attr.ib(default=1000)  # age range in each age bin - there are always two bins
-    targets_name = attr.ib(default='sem-no_numbers')
+    targets_name = attr.ib(default='sem-no_numbers_no_times')
     tags = attr.ib(default={'NN', 'NNS'})

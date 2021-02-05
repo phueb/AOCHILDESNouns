@@ -74,7 +74,7 @@ def measure_dvs(params: Params,
     projection1 = calc_projection(u, s, vt, 0)
     max_row_id = np.argmax(projection1.sum(axis=1))
     max_col_id = np.argmax(projection1.sum(axis=0))
-    print(f'Word with largest sum in first projection row="{row_words[max_row_id]}"')
-    print(f'Word with largest sum in first projection col="{col_words[max_col_id]}"')
+    print(f'Word with largest sum={np.max(projection1.sum(axis=1))} in first projection row="{row_words[max_row_id]}"')
+    print(f'Word with largest sum={np.max(projection1.sum(axis=0))} in first projection col="{col_words[max_col_id]}"')
 
     return res

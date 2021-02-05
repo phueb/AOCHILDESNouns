@@ -49,7 +49,6 @@ for params in Conditions.all():  # each param holds information about IVs in a s
                 # get co-occurrence data
                 # warning: do not call this function until attr.evolve(params) has been called
                 co_data = collect_left_and_right_co_occurrences(doc, targets, params)
-                print(f'Collected {len(co_data.row_ids_r):,} right and {len(co_data.row_ids_l):,} left co-occurrences')
 
                 # measure Dvs
                 data: dict = measure_dvs(params, co_data)  # a full set of dvs for a single condition
