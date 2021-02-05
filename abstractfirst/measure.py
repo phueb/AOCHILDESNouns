@@ -5,9 +5,10 @@ from scipy import sparse
 from sklearn.metrics.cluster import adjusted_mutual_info_score
 from sklearn.preprocessing import normalize
 
-from abstractfirst.co_occurrence import make_sparse_co_occurrence_mat, CoData
+from abstractfirst.co_occurrence import CoData
 from abstractfirst.params import Params
 from abstractfirst.reconstruct import plot_reconstructions
+from abstractfirst.util import calc_projection
 from abstractfirst import configs
 
 
@@ -22,7 +23,7 @@ def measure_dvs(params: Params,
 
     res = {}
 
-    co_mat_coo: sparse.coo_matrix = make_sparse_co_occurrence_mat(co_data, params)
+    co_mat_coo: sparse.coo_matrix = co_data.as_matrix(params.direction)
     co_mat_csr: sparse.csr_matrix = co_mat_coo.tocsr()
 
     # type and token frequency
@@ -38,7 +39,7 @@ def measure_dvs(params: Params,
     # svd
     # don't use sparse svd: doesn't result in accurate reconstruction.
     # don't normalize before svd: otherwise relative differences between rows and columns are lost
-    s = np.linalg.svd(co_mat_csr.toarray(), compute_uv=False)
+    u, s, vt = np.linalg.svd(co_mat_csr.toarray(), compute_uv=True)
     assert np.max(s) == s[0]
     res[f' s1/s1+s2'] = s[0] / (s[0] + s[1])
     res[f's1/sum(s)'] = s[0] / np.sum(s)
@@ -63,5 +64,17 @@ def measure_dvs(params: Params,
 
     if configs.Fig.max_projection > 0:
         plot_reconstructions(co_mat_coo, params, max_dim=configs.Fig.max_projection)
+
+    # which row or column is most active in projection on first singular dim?
+    row_words, col_words = co_data.get_words_ordered_by_id(params.direction)
+    if len(row_words) != co_mat_csr.shape[0]:
+        raise RuntimeError(f'Number of row words ({len(row_words)}) != Number of rows ({co_mat_csr.shape[0]})')
+    if len(col_words) != co_mat_csr.shape[1]:
+        raise RuntimeError(f'Number of column words ({len(col_words)}) != Number of columns ({co_mat_csr.shape[1]})')
+    projection1 = calc_projection(u, s, vt, 0)
+    max_row_id = np.argmax(projection1.sum(axis=1))
+    max_col_id = np.argmax(projection1.sum(axis=0))
+    print(f'Word with largest sum in first projection row="{row_words[max_row_id]}"')
+    print(f'Word with largest sum in first projection col="{col_words[max_col_id]}"')
 
     return res

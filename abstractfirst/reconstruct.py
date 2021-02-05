@@ -8,6 +8,7 @@ from typing import List, Optional
 from abstractfirst import configs
 from abstractfirst.figs import plot_heatmap
 from abstractfirst.params import Params
+from abstractfirst.util import calc_projection
 
 
 def make_path(age: int,
@@ -65,7 +66,7 @@ def plot_reconstructions(co_mat_coo: sparse.coo_matrix,
     projections = np.zeros(co_mat_normal_dense.shape, dtype=np.float)
     num_s = sum(s > 0)
     for dim_id in range(max_dim):
-        projection = s[dim_id] * U[:, dim_id].reshape(-1, 1) @ VT[dim_id, :].reshape(1, -1)
+        projection = calc_projection(U, s, VT, dim_id)
         projection_clustered, dg0, dg1 = cluster(projection, dg0, dg1)
         projections += projection_clustered
         if dim_id % plot_interval == 0:
@@ -76,6 +77,7 @@ def plot_reconstructions(co_mat_coo: sparse.coo_matrix,
                          vmax=np.max(co_mat_normal_dense),
                          figsize=fig_size,
                          )
+    # plot original
     plot_heatmap(cluster(co_mat_normal_dense, dg0, dg1)[0],
                  title=base_title + 'original',
                  save_path=make_path(params.age, params.direction) / f'dim{num_s:04}.png',

@@ -2,9 +2,19 @@ from typing import Tuple, Dict
 from spacy.tokens import Doc
 from sortedcontainers import SortedSet
 from collections import Counter
+import numpy as np
 
 from abstractfirst.params import Params
 from abstractfirst import configs
+
+
+def calc_projection(u: np.array,
+                    s: np.array,
+                    vt: np.array,
+                    dim_id: int,
+                    ) -> np.array:
+    res = s[dim_id] * u[:, dim_id].reshape(-1, 1) @ vt[dim_id, :].reshape(1, -1)
+    return res
 
 
 def make_targets(params: Params,

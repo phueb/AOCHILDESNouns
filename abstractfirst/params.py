@@ -19,7 +19,7 @@ class Conditions:
     user = {
         'punctuation': ['keep'],  #, 'remove', 'merge'],
         'lemmas': [True],
-        'normalize': [False, True],
+        'normalize_cols': [False, True],
     }
 
     ivs = {}
@@ -50,7 +50,7 @@ class Params:
     normalize_cols: str = attr.ib(validator=attr.validators.instance_of(bool))
 
     # data (this should only rarely change, if ever)
-    corpus_name = attr.ib(default='childes-20201026')
+    corpus_name = attr.ib(default='childes-20210205')
     num_days = attr.ib(default=1000)  # age range in each age bin - there are always two bins
-    targets_name = attr.ib(default='sem-all')
+    targets_name = attr.ib(default='sem-no_numbers')
     tags = attr.ib(default={'NN', 'NNS'})
