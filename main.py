@@ -7,7 +7,7 @@ import attr
 import pandas as pd
 
 from abstractfirst.co_occurrence import collect_left_and_right_co_occurrences
-from abstractfirst.util import make_targets
+from abstractfirst.targets import make_targets
 from abstractfirst import configs
 from abstractfirst.measure import measure_dvs
 from abstractfirst.pre_processing import prepare_data
