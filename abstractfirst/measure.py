@@ -66,6 +66,8 @@ def measure_dvs(params: Params,
         plot_reconstructions(co_mat_coo, params, max_dim=configs.Fig.max_projection)
 
     # which row or column is most active in projection on first singular dim?
+    # note: if lemmas=True, row words may include experimental targets
+    # because lemmas of control target plural nouns are singular nouns
     row_words, col_words = co_data.get_words_ordered_by_id(params.direction)
     if len(row_words) != co_mat_csr.shape[0]:
         raise RuntimeError(f'Number of row words ({len(row_words)}) != Number of rows ({co_mat_csr.shape[0]})')

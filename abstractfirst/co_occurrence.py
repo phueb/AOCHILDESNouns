@@ -189,5 +189,7 @@ def collect_left_and_right_co_occurrences(doc: Doc,
                   col_ids_l,
                   row_ids_r,
                   col_ids_r,
-                  lw2id, cw2id, rw2id,
+                  lw2id,
+                  cw2id,
+                  rw2id,
                   )
