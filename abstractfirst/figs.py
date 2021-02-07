@@ -11,6 +11,7 @@ def make_line_fig(label2y: Dict[str, List[float]],
                   x_axis_label: str,
                   y_axis_label: str,
                   x_ticks: List[int],
+                  x_tick_labels: Optional[List[str]] = None,
                   y_lims: Optional[List[float]] = None,
                   ):
     fig, ax = plt.subplots(1, figsize=(6, 4), dpi=163)
@@ -20,13 +21,10 @@ def make_line_fig(label2y: Dict[str, List[float]],
     ax.spines['right'].set_visible(False)
     ax.spines['top'].set_visible(False)
     ax.set_xticks(x_ticks)
-    ax.set_xticklabels(x_ticks, fontsize=configs.Figs.tick_font_size)
-    ax.set_yticks([0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0])
+    ax.set_xticklabels(x_tick_labels or x_ticks, fontsize=configs.Figs.tick_font_size)
     ax.yaxis.grid(True)
     if y_lims:
         ax.set_ylim(y_lims)
-
-    ax.axvspan(6, 10, alpha=0.2, color='red')
 
     # plot
     for label, y in label2y.items():
