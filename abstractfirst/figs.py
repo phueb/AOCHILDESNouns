@@ -22,7 +22,7 @@ def make_line_fig(label2y: Dict[str, List[float]],
     ax.spines['top'].set_visible(False)
     ax.set_xticks(x_ticks)
     ax.set_xticklabels(x_tick_labels or x_ticks, fontsize=configs.Figs.tick_font_size)
-    ax.yaxis.grid(True)
+    ax.yaxis.grid(False)
     if y_lims:
         ax.set_ylim(y_lims)
 
