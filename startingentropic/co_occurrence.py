@@ -4,8 +4,8 @@ from scipy import sparse
 from sortedcontainers import SortedSet
 
 
-from abstractfirst.params import Params
-from abstractfirst import configs
+from startingentropic.params import Params
+from startingentropic import configs
 
 
 class CoData:

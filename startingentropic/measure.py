@@ -5,11 +5,11 @@ from scipy import sparse
 from sklearn.metrics.cluster import adjusted_mutual_info_score
 from sklearn.preprocessing import normalize
 
-from abstractfirst.co_occurrence import CoData
-from abstractfirst.params import Params
-from abstractfirst.reconstruct import plot_reconstructions
-from abstractfirst.util import calc_projection
-from abstractfirst import configs
+from startingentropic.co_occurrence import CoData
+from startingentropic.params import Params
+from startingentropic.reconstruct import plot_reconstructions
+from startingentropic.util import calc_projection
+from startingentropic import configs
 
 
 def measure_dvs(params: Params,

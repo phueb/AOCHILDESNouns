@@ -3,7 +3,7 @@ from matplotlib import pyplot as plt
 from typing import Optional, Tuple, List, Dict
 from pathlib import Path
 
-from abstractfirst import configs
+from startingentropic import configs
 
 
 def make_line_fig(label2y: Dict[str, List[float]],

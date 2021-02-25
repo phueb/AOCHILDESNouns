@@ -1,10 +1,10 @@
-# AbstractFirst
+# StartingEntropic
 
 Research code for replicating experiments in an upcoming paper.
 
 ## Research Question
 
-Is the noun co-occurrence structure in speech to younger children less lexically specific (abstract) ? 
+Is the noun co-occurrence structure in speech to younger children less fragmented ? 
 
 One way to study the structure of data is to decompose it into linearly separable and orthogonal dimensions, 
 which can be done with SVD.
@@ -24,7 +24,7 @@ Clone the repository, then install requirements (preferably into a virtual Pytho
 pip install -r requirements.txt
 ```
 
-Optionally edit the conditions to replicate in `abstractfirst/params.py`, and then:
+Optionally edit the conditions to replicate in `startingentropic/params.py`, and then:
 
 ```bash
 python3 main.py

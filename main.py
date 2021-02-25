@@ -6,12 +6,12 @@ import shutil
 import attr
 import pandas as pd
 
-from abstractfirst.co_occurrence import collect_left_and_right_co_occurrences
-from abstractfirst.targets import make_targets
-from abstractfirst import configs
-from abstractfirst.measure import measure_dvs
-from abstractfirst.pre_processing import prepare_data
-from abstractfirst.params import Conditions
+from startingentropic.co_occurrence import collect_left_and_right_co_occurrences
+from startingentropic.targets import make_targets
+from startingentropic import configs
+from startingentropic.measure import measure_dvs
+from startingentropic.pre_processing import prepare_data
+from startingentropic.params import Conditions
 
 
 shutil.rmtree(configs.Dirs.images)
