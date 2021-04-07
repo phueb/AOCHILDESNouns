@@ -5,6 +5,6 @@ pandas~=1.2.1
 pyitlib~=0.2.2
 attrs~=20.3.0
 spacy~=3.0.0
-numpy~=1.20.0
+numpy~=1.18.1
 scipy~=1.6.0
 scikit-learn~=0.24.1
