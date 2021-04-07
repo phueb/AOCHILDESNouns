@@ -1,4 +1,4 @@
-# StartingEntropic
+# AOCHILDESNouns
 
 Research code for replicating experiments in an upcoming paper.
 
@@ -24,7 +24,7 @@ Clone the repository, then install requirements (preferably into a virtual Pytho
 pip install -r requirements.txt
 ```
 
-Optionally edit the conditions to replicate in `startingentropic/params.py`, and then:
+Optionally edit the conditions to replicate in `aochildesnouns/params.py`, and then:
 
 ```bash
 python3 main.py
