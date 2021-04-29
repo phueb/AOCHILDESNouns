@@ -5,8 +5,8 @@ from spacy.tokens import Doc, DocBin
 from sortedcontainers import SortedSet
 from spacy.tokens.doc import Doc
 
-from startingentropic import configs
-from startingentropic.params import Params
+from aochildesnouns import configs
+from aochildesnouns.params import Params
 
 spacy.prefer_gpu()
 nlp = spacy.load("en_core_web_sm", disable=["ner", "parser"])

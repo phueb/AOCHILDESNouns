@@ -9,6 +9,7 @@ class Dirs:
     targets = root / 'targets'
     images = root / 'images'
     results = root / 'results'
+    co_data = root / 'co_data'
 
 
 class Fig:
@@ -34,7 +35,7 @@ class Conditions:
 
 
 class Figs:
-    ax_font_size = 12
+    ax_font_size = 14
     leg_font_size = 10
-    title_font_size = 8
+    title_font_size = 16
     tick_font_size = 8

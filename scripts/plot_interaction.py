@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from startingentropic.figs import make_line_fig
-from startingentropic import configs
+from aochildesnouns.figs import make_line_fig
+from aochildesnouns import configs
 
 IV = 'normalize_cols'
 DV = 'nmi'  #'s1/sum(s)'

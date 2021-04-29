@@ -5,10 +5,10 @@ from sklearn.preprocessing import quantile_transform
 from pathlib import Path
 from typing import List, Optional
 
-from startingentropic import configs
-from startingentropic.figs import plot_heatmap
-from startingentropic.params import Params
-from startingentropic.util import calc_projection
+from aochildesnouns import configs
+from aochildesnouns.figs import plot_heatmap
+from aochildesnouns.params import Params
+from aochildesnouns.util import calc_projection
 
 
 def make_path(age: int,

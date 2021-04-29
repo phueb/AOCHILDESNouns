@@ -4,12 +4,13 @@ from pyitlib import discrete_random_variable as drv
 from scipy import sparse
 from sklearn.metrics.cluster import adjusted_mutual_info_score
 from sklearn.preprocessing import normalize
+import pickle
 
-from startingentropic.co_occurrence import CoData
-from startingentropic.params import Params
-from startingentropic.reconstruct import plot_reconstructions
-from startingentropic.util import calc_projection
-from startingentropic import configs
+from aochildesnouns.co_occurrence import CoData
+from aochildesnouns.params import Params
+from aochildesnouns.reconstruct import plot_reconstructions
+from aochildesnouns.util import calc_projection
+from aochildesnouns import configs
 
 
 def measure_dvs(params: Params,
@@ -25,6 +26,14 @@ def measure_dvs(params: Params,
 
     co_mat_coo: sparse.coo_matrix = co_data.as_matrix(params.direction)
     co_mat_csr: sparse.csr_matrix = co_mat_coo.tocsr()
+
+    # save for offline analysis
+    path_to_pkl = configs.Dirs.co_data / f'co_data_age={params.age}' \
+                                         f'_punct={params.punctuation}' \
+                                         f'_contr={params.targets_control}' \
+                                         f'_lemma={params.lemmas}.pkl'
+    with path_to_pkl.open('wb') as f:
+        pickle.dump(co_data, f)
 
     # type and token frequency
     res[f'x-tokens'] = co_mat_coo.sum().item() // 2 if params.direction == 'b' else co_mat_coo.sum().item()

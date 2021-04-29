@@ -6,15 +6,15 @@ import shutil
 import attr
 import pandas as pd
 
-from startingentropic.co_occurrence import collect_left_and_right_co_occurrences
-from startingentropic.targets import make_targets
-from startingentropic import configs
-from startingentropic.measure import measure_dvs
-from startingentropic.pre_processing import prepare_data
-from startingentropic.params import Conditions
+from aochildesnouns.co_occurrence import collect_left_and_right_co_occurrences
+from aochildesnouns.targets import make_targets
+from aochildesnouns import configs
+from aochildesnouns.measure import measure_dvs
+from aochildesnouns.pre_processing import prepare_data
+from aochildesnouns.params import Conditions
 
-
-shutil.rmtree(configs.Dirs.images)
+if configs.Dirs.images.exists():
+    shutil.rmtree(configs.Dirs.images)
 configs.Dirs.images.mkdir()
 
 # all dvs will be collected in data frames, which are concatenated at the end

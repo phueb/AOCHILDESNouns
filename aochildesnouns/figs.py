@@ -3,7 +3,7 @@ from matplotlib import pyplot as plt
 from typing import Optional, Tuple, List, Dict
 from pathlib import Path
 
-from startingentropic import configs
+from aochildesnouns import configs
 
 
 def make_line_fig(label2y: Dict[str, List[float]],
@@ -33,6 +33,48 @@ def make_line_fig(label2y: Dict[str, List[float]],
     plt.legend()
 
     return fig, ax
+
+
+def plot_heatmap_for_schematic(mat: np.array,
+                               title: str = '',
+                               x_label: str = 'Context Types',
+                               y_label: str = 'Noun Types',
+                               ):
+    fig, ax = plt.subplots(dpi=200, figsize=(4, 4))
+    plt.title(title, fontsize=configs.Figs.title_font_size)
+
+    orig = mat.copy()
+
+    # mat += np.random.random_integers(0, 1, mat.shape)
+    # mat -= np.random.random_integers(0, 1, mat.shape)
+
+    # mat += orig
+
+    # heatmap
+    print('Plotting heatmap...')
+    ax.pcolor(mat,
+              cmap=plt.get_cmap('Greys'),
+              shading='flat',
+              vmin=0,
+              vmax=1,
+              edgecolors='grey',
+              linewidths=2,
+              )
+
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.xaxis.set_ticklabels([])
+    ax.yaxis.set_ticklabels([])
+
+    # remove tick lines
+    lines = (ax.xaxis.get_ticklines() +
+             ax.yaxis.get_ticklines())
+    plt.setp(lines, visible=False)
+
+    ax.set_xlabel(x_label, fontsize=configs.Figs.ax_font_size)
+    ax.set_ylabel(y_label, fontsize=configs.Figs.ax_font_size)
+
+    plt.show()
 
 
 def plot_heatmap(mat: np.ndarray,

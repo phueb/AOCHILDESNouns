@@ -4,8 +4,8 @@ from typing import Dict, Tuple
 from sortedcontainers import SortedSet
 from spacy.tokens.doc import Doc
 
-from startingentropic import configs
-from startingentropic.params import Params
+from aochildesnouns import configs
+from aochildesnouns.params import Params
 
 
 def make_targets(params: Params,
