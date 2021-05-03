@@ -18,8 +18,10 @@ class Conditions:
     # user-filled
     user = {
         'punctuation': ['keep'],  #, 'remove', 'merge'],
-        'lemmas': [True],
-        'normalize_cols': [False, True],
+        'lemmas': [False],
+        'normalize_cols': [False],
+        'targets_name': ['nouns-sing_and_plural'],  # TODO does effect hold when including plurals?  # 'sem-no_numbers_no_times',
+        'tags': ['NN'],  # TODO test
     }
 
     ivs = {}

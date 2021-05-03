@@ -21,7 +21,7 @@ class Fig:
 
 class Data:
     make_last_bin_larger = True  # last age range occurs far fewer transcripts that first age bin: adjust?
-    max_sum = {False: 76_000,   # max num co-occurrences when targets_control is False
+    max_sum = {False: 110_000,   # max num co-occurrences when targets_control is False
                True: 102_000,    # max num co-occurrences when targets_control is True
                }
     exclude_exp_from_ctl_targets = True

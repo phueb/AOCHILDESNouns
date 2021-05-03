@@ -36,9 +36,9 @@ def measure_dvs(params: Params,
         pickle.dump(co_data, f)
 
     # type and token frequency
-    res[f'x-tokens'] = co_mat_coo.sum().item() // 2 if params.direction == 'b' else co_mat_coo.sum().item()
-    res[f'x-types '] = co_mat_coo.shape[0]
-    res[f'y-types '] = co_mat_coo.shape[1]
+    res['x-tokens'] = co_mat_coo.sum().item() // 2 if params.direction == 'b' else co_mat_coo.sum().item()
+    res['x-types '] = co_mat_coo.shape[0]
+    res['y-types '] = co_mat_coo.shape[1]
 
     # normalize columns
     if params.normalize_cols:
@@ -50,7 +50,6 @@ def measure_dvs(params: Params,
     # don't normalize before svd: otherwise relative differences between rows and columns are lost
     u, s, vt = np.linalg.svd(co_mat_csr.toarray(), compute_uv=True)
     assert np.max(s) == s[0]
-    res[f' s1/s1+s2'] = s[0] / (s[0] + s[1])
     res[f's1/sum(s)'] = s[0] / np.sum(s)
 
     # info theory analysis
@@ -64,12 +63,30 @@ def measure_dvs(params: Params,
     xs, ys = co_data.get_x_y(params.direction)
     xy = np.vstack((xs, ys))
     xy_je = drv.entropy_joint(xy)
-    res[f'nxy'] = drv.entropy_conditional(xs, ys).item() / xy_je
-    res[f'nyx'] = drv.entropy_conditional(ys, xs).item() / xy_je
-    res[f'nii'] = nii
-    res[f'nmi'] = drv.information_mutual_normalised(xs, ys, norm_factor='XY').item()
-    res[f'ami'] = adjusted_mutual_info_score(xs, ys, average_method="arithmetic")
-    res[f' je'] = xy_je
+
+    # compute entropy on permuted data for de-biasing estimates
+    bias_xy = np.mean([drv.entropy_conditional(np.random.permutation(xs), np.random.permutation(ys), base=2).item()
+                       for _ in range(20)])
+    bias_yx = np.mean([drv.entropy_conditional(np.random.permutation(ys), np.random.permutation(xs), base=2).item()
+                      for _ in range(20)])
+    print(f'bias_xy={bias_xy:.4f}')
+    print(f'bias_yx={bias_yx:.4f}')
+
+    res[' xy'] = drv.entropy_conditional(xs, ys).item()  # biased
+    res[' yx'] = drv.entropy_conditional(ys, xs).item()
+    res['dxy'] = bias_xy - drv.entropy_conditional(xs, ys).item()  # de-biased
+    res['dyx'] = bias_yx - drv.entropy_conditional(ys, xs).item()
+    res['nxy'] = drv.entropy_conditional(xs, ys).item() / xy_je  # biased + normalized
+    res['nyx'] = drv.entropy_conditional(ys, xs).item() / xy_je
+    res['nii'] = nii
+    res['nmi'] = drv.information_mutual_normalised(xs, ys, norm_factor='XY').item()
+    # res['ami'] = adjusted_mutual_info_score(xs, ys, average_method="arithmetic")
+    res[' je'] = xy_je
+
+    # round
+    for k, v in res.items():
+        if isinstance(v, float):
+            res[k] = round(v, 3)
 
     if configs.Fig.max_projection > 0:
         plot_reconstructions(co_mat_coo, params, max_dim=configs.Fig.max_projection)
