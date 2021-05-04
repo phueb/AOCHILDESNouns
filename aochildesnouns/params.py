@@ -17,11 +17,13 @@ class Conditions:
 
     # user-filled
     user = {
-        'punctuation': ['keep'],  #, 'remove', 'merge'],
-        'lemmas': [False],
-        'normalize_cols': [False],
-        'targets_name': ['nouns-sing_and_plural'],  # TODO does effect hold when including plurals?  # 'sem-no_numbers_no_times',
-        'tags': ['NN'],  # TODO test
+        'punctuation': ['keep', 'remove'],  # , 'merge'],
+        'lemmas': [False, True],
+        'normalize_cols': [False, True],
+        'targets_name': ['sem-no_numbers_no_times'],
+
+        # TODO to switch direction, use configs
+
     }
 
     ivs = {}

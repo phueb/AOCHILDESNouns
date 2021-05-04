@@ -37,8 +37,8 @@ def measure_dvs(params: Params,
 
     # type and token frequency
     res['x-tokens'] = co_mat_coo.sum().item() // 2 if params.direction == 'b' else co_mat_coo.sum().item()
-    res['x-types '] = co_mat_coo.shape[0]
-    res['y-types '] = co_mat_coo.shape[1]
+    res['x-types'] = co_mat_coo.shape[0]
+    res['y-types'] = co_mat_coo.shape[1]
 
     # normalize columns
     if params.normalize_cols:
@@ -51,6 +51,7 @@ def measure_dvs(params: Params,
     u, s, vt = np.linalg.svd(co_mat_csr.toarray(), compute_uv=True)
     assert np.max(s) == s[0]
     res[f's1/sum(s)'] = s[0] / np.sum(s)
+    res[f'frag'] = 1 - (s[0] / np.sum(s))
 
     # info theory analysis
     if params.direction == 'b':
@@ -62,26 +63,28 @@ def measure_dvs(params: Params,
         nii = np.nan  # need 3 rvs to compute interaction information
     xs, ys = co_data.get_x_y(params.direction)
     xy = np.vstack((xs, ys))
-    xy_je = drv.entropy_joint(xy)
+    # xy_je = drv.entropy_joint(xy)
 
     # compute entropy on permuted data for de-biasing estimates
-    bias_xy = np.mean([drv.entropy_conditional(np.random.permutation(xs), np.random.permutation(ys), base=2).item()
-                       for _ in range(20)])
-    bias_yx = np.mean([drv.entropy_conditional(np.random.permutation(ys), np.random.permutation(xs), base=2).item()
-                      for _ in range(20)])
-    print(f'bias_xy={bias_xy:.4f}')
-    print(f'bias_yx={bias_yx:.4f}')
+    # bias_xy = np.mean([drv.entropy_conditional(np.random.permutation(xs), np.random.permutation(ys), base=2).item()
+    #                    for _ in range(10)])
+    # bias_yx = np.mean([drv.entropy_conditional(np.random.permutation(ys), np.random.permutation(xs), base=2).item()
+    #                   for _ in range(10)])
+    # print(f'bias_xy={bias_xy:.4f}')
+    # print(f'bias_yx={bias_yx:.4f}')
 
-    res[' xy'] = drv.entropy_conditional(xs, ys).item()  # biased
-    res[' yx'] = drv.entropy_conditional(ys, xs).item()
-    res['dxy'] = bias_xy - drv.entropy_conditional(xs, ys).item()  # de-biased
-    res['dyx'] = bias_yx - drv.entropy_conditional(ys, xs).item()
-    res['nxy'] = drv.entropy_conditional(xs, ys).item() / xy_je  # biased + normalized
-    res['nyx'] = drv.entropy_conditional(ys, xs).item() / xy_je
-    res['nii'] = nii
-    res['nmi'] = drv.information_mutual_normalised(xs, ys, norm_factor='XY').item()
+    # xy_ce = drv.entropy_conditional(xs, ys).item()
+    # yx_ce = drv.entropy_conditional(ys, xs).item()
+    # res[' xy'] = xy_ce  # biased
+    # res[' yx'] = yx_ce
+    # res['dxy'] = bias_xy - xy_ce  # de-biased
+    # res['dyx'] = bias_yx - yx_ce
+    # res['nxy'] = xy_ce / xy_je  # biased + normalized
+    # res['nyx'] = yx_ce / xy_je
+    # res['nii'] = nii
+    # res['nmi'] = drv.information_mutual_normalised(xs, ys, norm_factor='XY').item()
     # res['ami'] = adjusted_mutual_info_score(xs, ys, average_method="arithmetic")
-    res[' je'] = xy_je
+    # res[' je'] = xy_je
 
     # round
     for k, v in res.items():

@@ -20,10 +20,14 @@ class Fig:
 
 
 class Data:
-    make_last_bin_larger = True  # last age range occurs far fewer transcripts that first age bin: adjust?
-    max_sum = {False: 110_000,   # max num co-occurrences when targets_control is False
-               True: 102_000,    # max num co-occurrences when targets_control is True
+    make_last_bin_larger = True  # last age range has far fewer transcripts than first age bin: adjust?
+
+    # this is invariant to lemmatisation, direction, normalization, ... everything but age, direction, ctl vs exp
+    max_sum = {False: 77_677,   # max num co-occurrences when targets_control is False
+               True: 104_394,    # max num co-occurrences when targets_control is True
                }
+
+
     exclude_exp_from_ctl_targets = True
 
     punctuation = {'.', '!', '?'}
@@ -31,7 +35,7 @@ class Data:
 
 
 class Conditions:
-    directions = ['r']  # ['l', 'r', 'b']
+    directions = ['l', 'r']  #, 'b']  # TODO condition 'b' does not work
 
 
 class Figs:
