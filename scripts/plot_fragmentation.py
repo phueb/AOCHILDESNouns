@@ -2,20 +2,40 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 import pandas as pd
 from itertools import product
+from pathlib import Path
+import numpy as np
 
-from aochildesnouns import configs
-
-df = pd.read_csv(configs.Dirs.results / 'results.csv')
+df = pd.read_csv(Path(__file__).parent.parent / 'results' / 'results.csv')
 
 FIG_SIZE = (6, 8)
 NUM_ROWS, NUM_COLS = 8, 2  # num rows are for all factor combinations except age, word list, and normalization
 WIDTH = 0.1
 X_TICK_LABELS = ['nouns', 'non-nouns']
-Y_LIMS = [0.5, 1.0]
+Y_LIMS = [0.6, 1.01]
 
-# add empty axis to make space for legend
-fig, ax_mat = plt.subplots(NUM_ROWS + 1, NUM_COLS, figsize=FIG_SIZE, dpi=configs.Fig.dpi)
+# add empty row axis to make space for legend.
+# add empty col axis to make space for labels for conditions
+fig, ax_mat = plt.subplots(NUM_ROWS + 1, NUM_COLS + 1,
+                           figsize=FIG_SIZE,
+                           dpi=192,
+                           constrained_layout=True)
 plt.suptitle('Fragmentation', fontsize=16)
+
+f2f = {
+    'direction': 'neighbor',
+    'lemmas': 'lemmatization',
+    'punctuation': 'punctuation',
+}
+
+l2l = {
+    'r': 'right',
+    'l': 'left',
+    'lemmas': 'lemmatization',
+    'keep': 'intact',
+    'remove': 'removed',
+    False: 'False',
+    True: 'True',
+}
 
 num_age_groups = 2
 
@@ -32,6 +52,11 @@ factor_levels = [
 ]
 factor_combinations = product(*factor_levels)
 
+differences1 = []
+differences2 = []
+differences3 = []
+differences4 = []
+
 for row_id, ax_row in enumerate(ax_mat):
 
     if row_id == NUM_ROWS:  # make last axis empty for legend
@@ -43,7 +68,13 @@ for row_id, ax_row in enumerate(ax_mat):
     levels = next(factor_combinations)
     print(levels)
 
-    for ax, ax_title in zip(ax_row, ['raw frequency', 'normalized']):
+    ax_row[0].axis('off')
+    ax_row[0].text(x=0.0,
+                   y=0.0,
+                   s='\n'.join([f'{f2f[f]}={l2l[l]}' for f, l in zip(factors, levels)]),
+                   )
+
+    for ax, ax_title in zip(ax_row[1:], ['raw frequency', 'normalized']):
 
         normalize_cols = True if ax_title == 'normalized' else False
 
@@ -57,7 +88,14 @@ for row_id, ax_row in enumerate(ax_mat):
         y = df_ax['frag'].values
         assert len(y) == 4
         print(y)
-        print()
+
+        # collect stats
+        if ax_title == 'raw frequency':
+            differences1.append(round(abs(y[0] - y[1]), 3))
+            differences2.append(round(abs(y[2] - y[3]), 3))
+        else:
+            differences3.append(round(abs(y[0] - y[1]), 3))
+            differences4.append(round(abs(y[2] - y[3]), 3))
 
         ax.spines['right'].set_visible(False)
         ax.spines['top'].set_visible(False)
@@ -65,8 +103,9 @@ for row_id, ax_row in enumerate(ax_mat):
         if row_id == 0:
             ax.set_title(ax_title)
 
-        ax.set_yticks([0.5, 0.75, 1.0])
-        ax.set_yticklabels([0.5, 0.75, 1.0], fontsize=6)
+        y_ticks = [0.6, 0.7, 0.8, 0.9, 1.0]
+        ax.set_yticks(y_ticks)
+        ax.set_yticklabels(y_ticks, fontsize=6)
         ax.set_ylim(Y_LIMS)
 
         if row_id == NUM_ROWS - 1:
@@ -98,6 +137,22 @@ fig.legend(handles=legend_elements,
            bbox_to_anchor=(0.5, 0.08),  # distance from bottom-left
            loc='upper center',
            frameon=False)
-# plt.tight_layout()
-plt.subplots_adjust(hspace=-0.4)
+
+# TODO this script must be run in terminal so that subplots are close to each other
+
+# fig.set_constrained_layout_pads(h_pad=0, hspace=500, wspace=330)
 plt.show()
+
+
+print(differences1)
+print(np.mean(differences1))
+print(np.std(differences1))
+print()
+print(differences2)
+print(np.mean(differences2))
+print(np.std(differences2))
+print()
+
+
+print(np.mean(differences3))
+print(np.mean(differences4))
