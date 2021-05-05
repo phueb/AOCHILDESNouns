@@ -19,7 +19,7 @@ class Conditions:
     user = {
         'punctuation': ['keep', 'remove'],  # , 'merge'],
         'lemmas': [False, True],
-        'normalize_cols': [False, True],
+        'normalize_cols': [False],
         'targets_name': ['sem-no_numbers_no_times'],
 
         # TODO to switch direction, use configs

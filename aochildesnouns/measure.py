@@ -63,24 +63,24 @@ def measure_dvs(params: Params,
         nii = np.nan  # need 3 rvs to compute interaction information
     xs, ys = co_data.get_x_y(params.direction)
     xy = np.vstack((xs, ys))
-    # xy_je = drv.entropy_joint(xy)
+    xy_je = drv.entropy_joint(xy)
 
     # compute entropy on permuted data for de-biasing estimates
-    # bias_xy = np.mean([drv.entropy_conditional(np.random.permutation(xs), np.random.permutation(ys), base=2).item()
-    #                    for _ in range(10)])
-    # bias_yx = np.mean([drv.entropy_conditional(np.random.permutation(ys), np.random.permutation(xs), base=2).item()
-    #                   for _ in range(10)])
-    # print(f'bias_xy={bias_xy:.4f}')
-    # print(f'bias_yx={bias_yx:.4f}')
+    bias_xy = np.mean([drv.entropy_conditional(np.random.permutation(xs), np.random.permutation(ys), base=2).item()
+                       for _ in range(10)])
+    bias_yx = np.mean([drv.entropy_conditional(np.random.permutation(ys), np.random.permutation(xs), base=2).item()
+                      for _ in range(10)])
+    print(f'bias_xy={bias_xy:.4f}')
+    print(f'bias_yx={bias_yx:.4f}')
 
-    # xy_ce = drv.entropy_conditional(xs, ys).item()
-    # yx_ce = drv.entropy_conditional(ys, xs).item()
-    # res[' xy'] = xy_ce  # biased
-    # res[' yx'] = yx_ce
-    # res['dxy'] = bias_xy - xy_ce  # de-biased
-    # res['dyx'] = bias_yx - yx_ce
-    # res['nxy'] = xy_ce / xy_je  # biased + normalized
-    # res['nyx'] = yx_ce / xy_je
+    xy_ce = drv.entropy_conditional(xs, ys).item()
+    yx_ce = drv.entropy_conditional(ys, xs).item()
+    res[' xy'] = xy_ce  # biased
+    res[' yx'] = yx_ce
+    res['dxy'] = bias_xy - xy_ce  # de-biased
+    res['dyx'] = bias_yx - yx_ce
+    res['nxy'] = xy_ce / xy_je  # biased + normalized
+    res['nyx'] = yx_ce / xy_je
     # res['nii'] = nii
     # res['nmi'] = drv.information_mutual_normalised(xs, ys, norm_factor='XY').item()
     # res['ami'] = adjusted_mutual_info_score(xs, ys, average_method="arithmetic")
