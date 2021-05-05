@@ -5,13 +5,13 @@ from aochildesnouns.figs import make_line_fig
 from aochildesnouns import configs
 
 IV = 'normalize_cols'
-DV = 'nmi'  #'s1/sum(s)'
-YLIMS = [0.0, 0.3]
+DV = 's1/sum(s)'
+YLIMS = [0.0, 1.0]
 
 dv2label = {
     's1/sum(s)': 'Proportion of Variance\nExplained by s1',
-    'nxy': 'Normalized Entropy of noun-types\nconditioned on context-types',
-    'nyx': 'Normalized Entropy of context-types\nconditioned on noun-types',
+    'dxy': 'De-biased Entropy of noun-types\nconditioned on context-types',
+    'dyx': 'De-biased Entropy of context-types\nconditioned on noun-types',
     'nmi': 'Normalized Mutual Information of\ncontext-types and noun-types',
 }
 

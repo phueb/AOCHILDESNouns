@@ -12,10 +12,10 @@ from pyitlib import discrete_random_variable as drv
 import numpy as np
 
 
-N = 144_000
-# SHAPES = [(1784, 2645), (1531, 2945)]
-# SHAPES = [(1784, 2645), (1531, 2645)]
-SHAPES = [(1784, 2645), (1784, 2945)]
+N = 100_000
+SHAPES = [(650, 2000), (700, 2000)]
+SHAPES = [(650, 2000), (650, 2500)]
+
 
 print('joint entropy')
 for num_x, num_y in SHAPES:
