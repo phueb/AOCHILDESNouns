@@ -11,8 +11,8 @@ FIG_SIZE = (6, 8)
 NUM_ROWS, NUM_COLS = 8, 2  # num rows are for all factor combinations except age, word list, and normalization
 WIDTH = 0.1
 X_TICK_LABELS = ['H(X|Y)', 'H(Y|X)']
-Y_LIMS1 = [3, 7]
-Y_LIMS2 = [0.0, 1.2]
+Y_LIMS1 = None # TODO [3, 7]
+Y_LIMS2 = None # TODO [0.0, 1.2]
 
 # add empty row axis to make space for legend.
 # add empty col axis to make space for labels for conditions
@@ -75,30 +75,31 @@ for row_id, ax_row in enumerate(ax_mat):
                    s='\n'.join([f'{f2f[f]}={l2l[l]}' for f, l in zip(factors, levels)]),
                    )
 
-    for ax, ax_title in zip(ax_row[1:], ['raw', 'de-biased']):
+    for ax, ax_title in zip(ax_row[1:], ['noun', 'non-noun']):
 
-        if ax_title == 'raw':
-            col_name_prefix = ' '
+        if ax_title == 'noun':
+            targets_control = False
             y_lims = Y_LIMS1
         else:
-            col_name_prefix = 'd'  # debiased
+            targets_control = True
             y_lims = Y_LIMS2
 
-        # get biased measures
+        # get de-biased measures always
         cond = (df[factors[0]] == levels[0]) & \
                (df[factors[1]] == levels[1]) & \
                (df[factors[2]] == levels[2]) &\
-               (df['targets_control'] == False)
+               (df['normalize_cols'] == False) &\
+               (df['targets_control'] == targets_control)
 
         df_ax = df.where(cond).dropna()
-        y1 = df_ax[col_name_prefix + 'xy'].values
-        y2 = df_ax[col_name_prefix + 'yx'].values
+        y1 = df_ax['dxy'].values
+        y2 = df_ax['dyx'].values
         assert len(y1) == 2
         assert len(y2) == 2
-        print(y1, y2)
+        print(targets_control, y1, y2)
 
         # collect stats
-        if ax_title == 'raw':
+        if ax_title == 'noun':
             differences1.append(round(abs(y1[0] - y1[1]), 3))
             differences2.append(round(abs(y2[0] - y2[1]), 3))
         else:
@@ -160,16 +161,22 @@ fig.legend(handles=legend_elements,
 # fig.set_constrained_layout_pads(h_pad=0, hspace=500, wspace=330)
 plt.show()
 
-
 print(differences1)
 print(np.mean(differences1))
 print(np.std(differences1))
 print()
+
 print(differences2)
 print(np.mean(differences2))
 print(np.std(differences2))
 print()
 
-
+print(differences3)
 print(np.mean(differences3))
+print(np.std(differences3))
+print()
+
+print(differences4)
 print(np.mean(differences4))
+print(np.std(differences4))
+print()
