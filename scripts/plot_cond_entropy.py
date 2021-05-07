@@ -27,14 +27,14 @@ fig, ax_mat = plt.subplots(NUM_ROWS + 1, NUM_COLS + 1,
 plt.suptitle('Conditional Entropy', fontsize=16)
 
 f2f = {
-    'direction': 'neighbor',
+    'direction': 'direction',
     'lemmas': 'lemmatization',
     'punctuation': 'punctuation',
 }
 
 l2l = {
-    'r': 'right',
-    'l': 'left',
+    'r': 'forward',
+    'l': 'backward',
     'lemmas': 'lemmatization',
     'keep': 'intact',
     'remove': 'removed',
