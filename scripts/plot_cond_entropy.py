@@ -5,14 +5,18 @@ from itertools import product
 from pathlib import Path
 import numpy as np
 
-df = pd.read_csv(Path(__file__).parent.parent / 'results' / 'results.csv')
+df = pd.read_csv(Path(__file__).parent.parent / 'results' / 'results.csv',
+                 dtype={
+                     'normalize_cols': bool,
+                     'targets_ctl': bool,
+                        })
 
 FIG_SIZE = (6, 8)
 NUM_ROWS, NUM_COLS = 8, 2  # num rows are for all factor combinations except age, word list, and normalization
 WIDTH = 0.1
 X_TICK_LABELS = ['H(X|Y)', 'H(Y|X)']
-Y_LIMS1 = None # TODO [3, 7]
-Y_LIMS2 = None # TODO [0.0, 1.2]
+Y_LIMS1 = [0.0, 1.5]
+Y_LIMS2 = [1.0, 2.0]
 
 # add empty row axis to make space for legend.
 # add empty col axis to make space for labels for conditions
