@@ -15,8 +15,8 @@ FIG_SIZE = (6, 8)
 NUM_ROWS, NUM_COLS = 8, 2  # num rows are for all factor combinations except age, word list, and normalization
 WIDTH = 0.1
 X_TICK_LABELS = ['H(X|Y)', 'H(Y|X)']
-Y_LIMS1 = [0.0, 1.5]
-Y_LIMS2 = [1.0, 2.0]
+Y_LIMS1 = [0.3, 0.6]
+Y_LIMS2 = [0.3, 0.6]
 
 # add empty row axis to make space for legend.
 # add empty col axis to make space for labels for conditions
@@ -24,7 +24,7 @@ fig, ax_mat = plt.subplots(NUM_ROWS + 1, NUM_COLS + 1,
                            figsize=FIG_SIZE,
                            dpi=192,
                            constrained_layout=True)
-plt.suptitle('Conditional Entropy', fontsize=16)
+plt.suptitle('Normalized Conditional Entropy', fontsize=16)
 
 f2f = {
     'direction': 'direction',
@@ -96,19 +96,19 @@ for row_id, ax_row in enumerate(ax_mat):
                (df['targets_control'] == targets_control)
 
         df_ax = df.where(cond).dropna()
-        y1 = df_ax['dxy'].values
-        y2 = df_ax['dyx'].values
+        y1 = df_ax['xy/joint'].values
+        y2 = df_ax['yx/joint'].values
         assert len(y1) == 2
         assert len(y2) == 2
         print(targets_control, y1, y2)
 
         # collect stats
         if ax_title == 'noun':
-            differences1.append(round(abs(y1[0] - y1[1]), 3))
-            differences2.append(round(abs(y2[0] - y2[1]), 3))
+            differences1.append(round(y1[0] - y1[1], 3))
+            differences2.append(round(y2[0] - y2[1], 3))
         else:
-            differences3.append(round(abs(y1[0] - y1[1]), 3))
-            differences4.append(round(abs(y2[0] - y2[1]), 3))
+            differences3.append(round(y1[0] - y1[1], 3))
+            differences4.append(round(y2[0] - y2[1], 3))
 
         ax.spines['right'].set_visible(False)
         ax.spines['top'].set_visible(False)
