@@ -27,7 +27,6 @@ class Data:
                True: 104_394,    # max num co-occurrences when targets_control is True
                }
 
-
     exclude_exp_from_ctl_targets = True
 
     punctuation = {'.', '!', '?'}
@@ -35,7 +34,7 @@ class Data:
 
 
 class Conditions:
-    directions = ['l', 'r']  #, 'b']  # TODO condition 'b' does not work
+    directions = ['b']  # 'l' for 'left', 'r' for 'right', 'b' for 'both'
 
 
 class Figs:

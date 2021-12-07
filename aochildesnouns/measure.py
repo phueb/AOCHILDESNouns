@@ -58,9 +58,11 @@ def measure_dvs(params: Params,
         xs, ys, zs = co_data.get_x_y_z()
         xyz = np.vstack((xs, ys, zs))
         xyz_je = drv.entropy_joint(xyz)
-        nii = drv.information_interaction(xyz).item() / xyz_je
+        ii = drv.information_interaction(xyz).item()
+        nii = ii / xyz_je
     else:
-        nii = np.nan  # need 3 rvs to compute interaction information
+        ii = np.nan  # need 3 rvs to compute interaction information
+        nii = np.nan
     xs, ys = co_data.get_x_y(params.direction)
     xy = np.vstack((xs, ys))
     xy_je = drv.entropy_joint(xy)
@@ -86,10 +88,11 @@ def measure_dvs(params: Params,
     res['xy/joint'] = xy_ce / xy_je
     res['yx/joint'] = yx_ce / xy_je
 
-    # res['nii'] = nii
+    res['ii'] = ii
+    res['ii/joint'] = nii
     # res['nmi'] = drv.information_mutual_normalised(xs, ys, norm_factor='XY').item()
     # res['ami'] = adjusted_mutual_info_score(xs, ys, average_method="arithmetic")
-    # res[' je'] = xy_je
+    res['je'] = xy_je
 
     # round
     for k, v in res.items():

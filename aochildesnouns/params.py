@@ -17,12 +17,12 @@ class Conditions:
 
     # user-filled
     user = {
-        'punctuation': ['keep', 'remove'],  # , 'merge'],
-        'lemmas': [False, True],
-        'normalize_cols': [False, True],
+        'punctuation': ['keep'],  # , 'remove'],  # , 'merge'],
+        'lemmas': [False],  # , True],
+        'normalize_cols': [False],  # , True],
         'targets_name': ['sem-no_numbers_no_times'],
 
-        # TODO to switch direction, use configs
+        # to specify direction ('left', 'right', or 'both'), see configs.py
 
     }
 

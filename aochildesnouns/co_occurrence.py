@@ -30,8 +30,10 @@ class CoData:
         self.row_ids_r = row_ids_r
         self.col_ids_r = col_ids_r
 
+        # when direction = 'b', rows are left as-is, and columns for 'l' and 'r' are concatenated
         self.row_ids_b = row_ids_l + row_ids_r
-        self.col_ids_b = col_ids_l + [i + len(col_ids_l) for i in col_ids_r]
+        id_offset = max(col_ids_l) + 1
+        self.col_ids_b = col_ids_l + [i + id_offset for i in col_ids_r]
 
         self.lw2id = lw2id
         self.cw2id = cw2id
@@ -52,9 +54,9 @@ class CoData:
             col_ids = self.col_ids_r
             assert max(self.col_ids_r) + 1 == len(set(self.col_ids_r))  # check that col ids are consecutive
         elif direction == 'b':
-            data = [1] * len(self.col_ids_l + self.col_ids_r)
-            row_ids = self.row_ids_l + self.row_ids_r
-            col_ids = self.col_ids_l + self.row_ids_r
+            data = [1] * len(self.col_ids_b)
+            row_ids = self.row_ids_b
+            col_ids = self.col_ids_b
         else:
             raise AttributeError('Invalid arg')
 
