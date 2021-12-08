@@ -34,7 +34,7 @@ class Data:
 
 
 class Conditions:
-    directions = ['b']  # 'l' for 'left', 'r' for 'right', 'b' for 'both'
+    directions = ['l']  # 'l' for 'left', 'r' for 'right', 'b' for 'both'
 
 
 class Figs:

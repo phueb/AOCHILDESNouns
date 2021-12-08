@@ -3,6 +3,7 @@ from typing import Dict
 from pyitlib import discrete_random_variable as drv
 from scipy import sparse
 from sklearn.metrics.cluster import adjusted_mutual_info_score
+import pandas as pd
 from sklearn.preprocessing import normalize
 import pickle
 
@@ -111,9 +112,29 @@ def measure_dvs(params: Params,
     if len(col_words) != co_mat_csr.shape[1]:
         raise RuntimeError(f'Number of column words ({len(col_words)}) != Number of columns ({co_mat_csr.shape[1]})')
     projection1 = calc_projection(u, s, vt, 0)
-    max_row_id = np.argmax(projection1.sum(axis=1))
-    max_col_id = np.argmax(projection1.sum(axis=0))
+    max_row_id = np.argmax(projection1.sum(axis=1)).item()
+    max_col_id = np.argmax(projection1.sum(axis=0)).item()
     print(f'Word with largest sum={np.max(projection1.sum(axis=1))} in first projection row="{row_words[max_row_id]}"')
     print(f'Word with largest sum={np.max(projection1.sum(axis=0))} in first projection col="{col_words[max_col_id]}"')
+
+    # find "entropy-maximizing contexts" (so-called, but has no direct relation to entropy)
+    top_k = 10
+    p1_sum0 = projection1.sum(axis=0)
+    idx = np.argpartition(p1_sum0, -top_k)[-top_k:]  # Indices not sorted
+    idx_sorted = idx[np.argsort(p1_sum0[idx])][::-1]  # Indices sorted by value from largest to smallest
+    print('Entropy-maximizing contexts:')
+    df = pd.DataFrame({'loading': [p1_sum0[i] for i in idx_sorted],
+                       'word': [col_words[i] for i in idx_sorted],
+                       'frequency': [co_mat_csr[:, i].sum().item() for i in idx_sorted]})
+    print(df.to_latex(index=False))
+
+    # find most fragmenting contexts
+    idx = np.argpartition(p1_sum0, top_k)[:top_k]  # Indices not sorted
+    idx_sorted = idx[np.argsort(p1_sum0[idx])]  # Indices sorted by value from smallest to largest
+    print('Fragmenting contexts:')
+    df = pd.DataFrame({'Loading': [p1_sum0[i] for i in idx_sorted],
+                       'Left-context': [col_words[i] for i in idx_sorted],
+                       'Frequency': [co_mat_csr[:, i].sum().item() for i in idx_sorted]})
+    print(df.to_latex(index=False))
 
     return res
