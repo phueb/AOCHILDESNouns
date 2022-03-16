@@ -1,6 +1,8 @@
 # AOCHILDESNouns
 
-Research code for replicating experiments in an upcoming paper.
+Research code for replicating corpus analyses in the following publication:
+
+[Using lexical context to discover the noun category: Younger children have it easier](https://doi.org/10.1016/bs.plm.2021.08.002)
 
 ## Research Question
 
