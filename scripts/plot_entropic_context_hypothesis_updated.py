@@ -56,11 +56,11 @@ def compute_nce(prop_, vocab):
     num_entropic_observations = int(N * prop_)
     num_remaining_observations = N - num_entropic_observations
 
-    # get non-entropic observations
+    # get non-entropic observations (pseudo-Zipfian probability)
     x = np.random.choice(vocab.x, size=num_remaining_observations, p=vocab.p_x).tolist()
     y = np.random.choice(vocab.y, size=num_remaining_observations, p=vocab.p_y).tolist()
 
-    # get entropic observations
+    # get entropic observations (uniform probability)
     x += np.random.choice(vocab.x, size=num_entropic_observations, p=vocab.p_x).tolist()
     y += np.random.choice(vocab.y[:x_tick], size=num_entropic_observations, p=None).tolist()
 
