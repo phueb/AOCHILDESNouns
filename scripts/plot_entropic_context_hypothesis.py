@@ -1,87 +1,90 @@
 
 """
-there is never bias in these simulations because i never specify a non-random joint distribution.
-all dat is randomly generated from marginal distributions.
-this means predictions are for de-biased estimates of AO-CHILDES data always
+computed conditional entropy H(X|Y) of simulated co-occurrence matrices for age group 1 and 2
+while accounting for differences in their shapes.
+
+there are more columns in age group 2, which reduces estimate of H(X|Y) due to chance alone.
 """
 import matplotlib.pyplot as plt
 from pyitlib import discrete_random_variable as drv
 import numpy as np
 
 
-N = 80_000
-NUM_ROWS_AGE1 = 600
-NUM_COLS_AGE1 = 2000  # age group 1
-FRACTIONS = [4, 8, 16]
+N = 80_000  # number of total co-occurrences
+CO_MAT_SHAPE_1 = (600, 2000)
+CO_MAT_SHAPE_2 = (630, 2600)
+PROPORTIONS = [0.1, 0.5]  # proportion of contexts that are entropy-maximizing
+NUM_REPEAT = 2
 
-x_ticks = np.arange(2, 2000, 50)
+x_ticks = np.arange(2, 2000, 50)  # 2, 2000, 50
 
 
-def compute_ce(num_add_rows: int = 0,
-               num_add_cols: int = 0,
-               ):
+class Vocab:
+    """
+    a vocabulary where word frequency distributed as power-law
+    """
+    def __init__(self, num_rows, num_cols):
+        self.x = np.arange(num_rows)
+        self.y = np.arange(num_cols)
 
-    vx = np.arange(NUM_ROWS_AGE1 + num_add_rows)
-    vy = np.arange(NUM_COLS_AGE1 + num_add_cols)
-    px = np.array([1 / (i + 1) for i in range(NUM_ROWS_AGE1 + num_add_rows)])
-    px = px / px.sum()
-    py = np.array([1 / (i + 1) for i in range(NUM_COLS_AGE1 + num_add_cols)])
-    py = py / py.sum()
+        p_x = np.array([1 / (i + 1) for i in range(num_rows)])
+        p_y = np.array([1 / (i + 1) for i in range(num_cols)])
+
+        self.p_x = p_x / p_x.sum()
+        self.p_y = p_y / p_y.sum()
+
+
+def compute_nce(prop_, vocab):
+    """
+    compute normalized conditional entropy, given a vocab, and the proportion of contexts that are entropy-maximizing
+
+    normalization does not really have a purpose here - it does not de-bias due to shape differences
+
+    """
+
+    num_entropic_observations = int(N * prop_)
+    num_remaining_observations = N - num_entropic_observations
 
     # get non-entropic observations
-    x_ = np.random.choice(vx, size=N, p=px)
-    y_ = np.random.choice(vy, size=N, p=py)
+    x = np.random.choice(vocab.x, size=num_remaining_observations, p=vocab.p_x).tolist()
+    y = np.random.choice(vocab.y, size=num_remaining_observations, p=vocab.p_y).tolist()
+
+    # get entropic observations
+    x += np.random.choice(vocab.x, size=num_entropic_observations, p=vocab.p_x).tolist()
+    y += np.random.choice(vocab.y[:x_tick], size=num_entropic_observations, p=None).tolist()
 
     # compute
-    xy_ = np.vstack((x_, y_))
-    res = drv.entropy_conditional(x_, y_) / drv.entropy_joint(xy_)
+    xy = np.vstack((x, y))
+    res = drv.entropy_conditional(x, y) / drv.entropy_joint(xy)
 
     return res
 
 
-# simulating rare but highly entropic contexts
+vocab1 = Vocab(*CO_MAT_SHAPE_1)
+vocab2 = Vocab(*CO_MAT_SHAPE_2)
 
-vocab_x = np.arange(NUM_ROWS_AGE1)
-vocab_y = np.arange(NUM_COLS_AGE1)
-p_x = np.array([1 / (i + 1) for i in range(NUM_ROWS_AGE1)])
-p_x = p_x / p_x.sum()
-p_y = np.array([1 / (i + 1) for i in range(NUM_COLS_AGE1)])
-p_y = p_y / p_y.sum()
+prop2xy_ces_age1 = {f: [] for f in PROPORTIONS}
+prop2xy_ces_age2 = {f: [] for f in PROPORTIONS}
+for prop in prop2xy_ces_age1:
 
-
-fraction2xy_ces_age1 = {f: [] for f in FRACTIONS}
-for fraction in fraction2xy_ces_age1:
     for x_tick in x_ticks:
-        num_entropic_observations = N // fraction
-        num_remaining_observations = N - num_entropic_observations
 
-        xy_ces = []
-        for _ in range(10):
-            # get non-entropic observations corresponding to age group 2 shape
-            x = np.random.choice(vocab_x, size=num_remaining_observations, p=p_x).tolist()
-            y = np.random.choice(vocab_y, size=num_remaining_observations, p=p_y).tolist()
-
-            # get entropic observations
-            x += np.random.choice(vocab_x, size=num_entropic_observations, p=p_x).tolist()
-            y += np.random.choice(vocab_y[:x_tick], size=num_entropic_observations, p=None).tolist()
-
-            # compute
-            xy = np.vstack((x, y))
-            xy_ces_i = drv.entropy_conditional(x, y) / drv.entropy_joint(xy)
-
+        # compute multiple times
+        xy_ces1 = []
+        xy_ces2 = []
+        for _ in range(NUM_REPEAT):
+            xy_ces1_i = compute_nce(prop, vocab1)
+            xy_ces2_i = compute_nce(prop, vocab2)
             # collect
-            xy_ces.append(xy_ces_i)
+            xy_ces1.append(xy_ces1_i)
+            xy_ces2.append(xy_ces2_i)
 
-        fraction2xy_ces_age1[fraction].append(np.mean(xy_ces))
+        prop2xy_ces_age1[prop].append(np.mean(xy_ces1))
+        prop2xy_ces_age2[prop].append(np.mean(xy_ces2))
 
-        print(f'x_tick={x_tick:>6} fraction={fraction:>6} ce={np.mean(xy_ces)}')
-
-
-xy_ce_age1 = np.mean([compute_ce(num_add_rows=0, num_add_cols=0) for _ in range(10)])
-xy_ce_age2 = np.mean([compute_ce(num_add_rows=+30, num_add_cols=+600) for _ in range(10)])
-
-print(xy_ce_age1)
-print(xy_ce_age2)
+        print(f'x_tick={x_tick:>6} prop={prop:>6} age group1 ce={np.mean(xy_ces1)}')
+        print(f'x_tick={x_tick:>6} prop={prop:>6} age group2 ce={np.mean(xy_ces2)}')
+        print()
 
 
 # fig
@@ -94,15 +97,22 @@ x_tick_labels = np.arange(0, x_ticks[-1], 200)
 ax.set_xticks(x_tick_labels)
 ax.set_xticklabels(x_tick_labels)
 ax.yaxis.grid(False)
-# plot
+# plot age group1
 ls = iter(['--', '-.', ':'])
-ax.axhline(y=xy_ce_age2, linestyle='-', color='C1', label='simulated age group 2')
-ax.axhline(y=xy_ce_age1, linestyle='-', color='C0', label='simulated age group 1 with fraction=inf')
-for fraction, xy_ce_age1 in fraction2xy_ces_age1.items():
+for prop, xy_ce_age1 in prop2xy_ces_age1.items():
     ax.plot(x_ticks,
             xy_ce_age1,
             color='C0',
-            label=f'simulated age group 1 with fraction={fraction}',
+            label=f'simulated age group 1 with proportion={prop}',
             linestyle=next(ls))
+# plot age group1
+ls = iter(['--', '-.', ':'])
+for prop, xy_ce_age2 in prop2xy_ces_age2.items():
+    ax.plot(x_ticks,
+            xy_ce_age2,
+            color='C1',
+            label=f'simulated age group 2 with proportion={prop}',
+            linestyle=next(ls))
+
 plt.legend(frameon=False)
 plt.show()
