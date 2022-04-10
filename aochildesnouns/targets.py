@@ -10,13 +10,18 @@ from aochildesnouns.params import Params
 
 def make_targets(params: Params,
                  age2doc: Dict[str, Doc],
-                 verbose: bool = False,
+                 verbose: bool = True,
                  ) -> Tuple[SortedSet, SortedSet]:
 
     # load experimental targets - but not all may occur in corpus
     p = configs.Dirs.targets / f'{params.targets_name}.txt'
     targets_exp_ = p.read_text().split('\n')
     assert targets_exp_[-1]
+
+    # load all nouns
+    p = configs.Dirs.targets / 'nouns-sing_and_plural.txt'
+    nouns = p.read_text().split('\n')
+    assert nouns[-1]
 
     # count targets
     w2f = Counter()
@@ -35,11 +40,13 @@ def make_targets(params: Params,
             while True:
                 target_ctl = vocab[n - offset]  # targets should be slightly more frequent so that params.max_sum works
                 offset += 1
-                if target_ctl in targets_exp_ and configs.Data.exclude_exp_from_ctl_targets:
+                if target_ctl in targets_exp_:
                     continue
                 if target_ctl in targets_ctl:
                     continue
                 if target_ctl in {'.', '?', '!'}:
+                    continue
+                if target_ctl in nouns:
                     continue
                 break
 

@@ -28,8 +28,6 @@ class Data:
                True: 81_000,    # max num co-occurrences when targets_control is True
                }
 
-    exclude_exp_from_ctl_targets = True
-
     punctuation = {'.', '!', '?'}
     eos = '[EOS]'
 

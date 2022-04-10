@@ -122,19 +122,23 @@ def measure_dvs(params: Params,
     p1_sum0 = projection1.sum(axis=0)
     idx = np.argpartition(p1_sum0, -top_k)[-top_k:]  # Indices not sorted
     idx_sorted = idx[np.argsort(p1_sum0[idx])][::-1]  # Indices sorted by value from largest to smallest
-    print('Entropy-maximizing contexts:')
     df = pd.DataFrame({'loading': [p1_sum0[i] for i in idx_sorted],
                        'word': [col_words[i] for i in idx_sorted],
                        'frequency': [co_mat_csr[:, i].sum().item() for i in idx_sorted]})
-    print(df.to_latex(index=False))
+    # print('Entropy-maximizing contexts:')
+    # print(df.to_latex(index=False))
+    total_freq_of_entropy_max_contexts = co_mat_csr[:, idx_sorted].sum().item() / co_mat_csr.sum().item()
+    print(f'prop. of total frequency that are top-10 entropy-max contexts = {total_freq_of_entropy_max_contexts:,}')
 
     # find most fragmenting contexts
     idx = np.argpartition(p1_sum0, top_k)[:top_k]  # Indices not sorted
     idx_sorted = idx[np.argsort(p1_sum0[idx])]  # Indices sorted by value from smallest to largest
-    print('Fragmenting contexts:')
     df = pd.DataFrame({'Loading': [p1_sum0[i] for i in idx_sorted],
                        'Left-context': [col_words[i] for i in idx_sorted],
                        'Frequency': [co_mat_csr[:, i].sum().item() for i in idx_sorted]})
-    print(df.to_latex(index=False))
+    # print('Fragmenting contexts:')
+    # print(df.to_latex(index=False))
+    total_freq_of_entropy_max_contexts = co_mat_csr[:, idx_sorted].sum().item() / co_mat_csr.sum().item()
+    print(f'prop. of total frequency that are top-10 fragmenting contexts = {total_freq_of_entropy_max_contexts:,}')
 
     return res
