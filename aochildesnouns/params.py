@@ -20,7 +20,7 @@ class Conditions:
         'punctuation': ['keep'],  # , 'remove'],  # , 'merge'],
         'lemmas': [False],  # , True],
         'normalize_cols': [False],  # , True],
-        'targets_name': ['sem-no_numbers_no_times'],
+        'targets_name': ['sem-balanced'],  # sem-balanced are probes that occur in both age groups
 
         # to specify direction ('left', 'right', or 'both'), see configs.py
 

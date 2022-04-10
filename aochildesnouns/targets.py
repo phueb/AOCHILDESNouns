@@ -10,7 +10,7 @@ from aochildesnouns.params import Params
 
 def make_targets(params: Params,
                  age2doc: Dict[str, Doc],
-                 verbose: bool = True,
+                 verbose: bool = False,
                  ) -> Tuple[SortedSet, SortedSet]:
 
     # load experimental targets - but not all may occur in corpus
