@@ -1,9 +1,12 @@
-import numpy as np
 from typing import List, Dict, Tuple
 import spacy
 from spacy.tokens import Doc, DocBin
 from sortedcontainers import SortedSet
 from spacy.tokens.doc import Doc
+
+from aochildes.params import AOChildesParams
+from aochildes.pipeline import Pipeline
+from aochildes.helpers import Transcript
 
 from aochildesnouns import configs
 from aochildesnouns.params import Params
@@ -15,24 +18,11 @@ nlp = spacy.load("en_core_web_sm", disable=["ner", "parser"])
 EXCLUDED_AGE = 'EXCLUDED'
 
 
-def load_transcripts(params: Params):
-
-    corpus_path = configs.Dirs.corpora / f'{params.corpus_name}.txt'
-    corpus_text = corpus_path.read_text(encoding='utf-8')
-
-    transcripts: List[str] = [ti for ti in corpus_text.split('\n') if ti]
-
-    return transcripts
-
-
-def load_ages(params: Params,
-              ) -> List[str]:
+def format_ages(ages: List[float],
+                params: Params,
+                ) -> List[str]:
     """convert ages into strings e.g. '0-900days' """
-    ages_path = configs.Dirs.corpora / f'{params.corpus_name}_ages.txt'
-    ages_text = ages_path.read_text(encoding='utf-8')
 
-    # to float
-    ages = [float(ai) for ai in ages_text.split('\n') if ai]
     min_age = min(ages)
     max_age = max(ages)
 
@@ -62,6 +52,7 @@ def load_ages(params: Params,
 
 def prepare_data(params: Params,
                  verbose: bool = True,
+                 load_binary: bool = True,
                  ) -> Dict[str, Doc]:
     """
     return a single spacy doc for each age.
@@ -70,23 +61,27 @@ def prepare_data(params: Params,
     this means the corpus should never be modified - else, the binary will also contain unexpected modifications
     """
 
-    # try loading transcripts from disk
-    fn = params.corpus_name + '.spacy'
+    # load transcripts
+    aochildes_params = AOChildesParams()
+    pipeline = Pipeline(aochildes_params)
+    transcripts: List[Transcript] = pipeline.load_age_ordered_transcripts()
+
+    # try loading binary transcripts from disk
+    fn = 'aochildes.spacy'  # TODO the same binary file will be loaded even after a change in AOCHILDESParams was made
     bin_path = configs.Dirs.corpora / fn
-    if bin_path.exists():
+    if bin_path.exists() and load_binary:
         doc_bin = DocBin().from_disk(bin_path)
         docs = list(doc_bin.get_docs(nlp.vocab))
     # load raw transcripts + process them
     else:
-        print(f'WARNING: Did not find binary file associated with {params.corpus_name}. Preprocessing corpus...')
-        transcripts = load_transcripts(params)
-        docs: List[Doc] = [doc for doc in nlp.pipe(transcripts)]
+        print(f'WARNING: Did not find binary file. Preprocessing corpus...')
+        docs: List[Doc] = [doc for doc in nlp.pipe((t.text for t in transcripts))]
         # WARNING: only save to disk if we know that corpus has not been modified
         doc_bin = DocBin(docs=docs)
         doc_bin.to_disk(bin_path)
 
     # group docs by age
-    ages = load_ages(params)
+    ages = format_ages([t.age for t in transcripts], params)
     if len(ages) != len(docs):
         raise RuntimeError(f'Num docs={len(docs)} and num ages={len(ages)}')
     age2docs = {}

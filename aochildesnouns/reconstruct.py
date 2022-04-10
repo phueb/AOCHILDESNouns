@@ -14,7 +14,7 @@ from aochildesnouns.util import calc_projection
 def make_path(age: int,
               direction: str,
               ) -> Path:
-    res = configs.Dirs.images / f'age_{age}' / direction
+    res = configs.Dirs.tmp / f'age_{age}' / direction
     if not res.is_dir():
         res.mkdir(parents=True)
     return res

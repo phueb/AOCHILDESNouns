@@ -13,9 +13,10 @@ from aochildesnouns.measure import measure_dvs
 from aochildesnouns.pre_processing import prepare_data
 from aochildesnouns.params import Conditions
 
-if configs.Dirs.images.exists():
-    shutil.rmtree(configs.Dirs.images)
-configs.Dirs.images.mkdir()
+# clear temporary directory
+if configs.Dirs.tmp.exists():
+    shutil.rmtree(configs.Dirs.tmp)
+configs.Dirs.tmp.mkdir()
 
 # all dvs will be collected in data frames, which are concatenated at the end
 df_rows = []

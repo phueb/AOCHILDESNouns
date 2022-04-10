@@ -8,6 +8,7 @@ class Dirs:
     corpora = root / 'corpora'
     targets = root / 'targets'
     images = root / 'images'
+    tmp = root / 'tmp'
     results = root / 'results'
     co_data = root / 'co_data'
 
