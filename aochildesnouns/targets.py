@@ -39,6 +39,8 @@ def make_targets(params: Params,
                     continue
                 if target_ctl in targets_ctl:
                     continue
+                if target_ctl in {'.', '?', '!'}:
+                    continue
                 break
 
             targets_exp.add(v)

@@ -24,8 +24,8 @@ class Data:
     make_last_bin_larger = True  # last age range has far fewer transcripts than first age bin: adjust?
 
     # this is invariant to lemmatisation, direction, normalization, ... everything but age, direction, ctl vs exp
-    max_sum = {False: 77_677,   # max num co-occurrences when targets_control is False
-               True: 104_394,    # max num co-occurrences when targets_control is True
+    max_sum = {False: 81_000,   # max num co-occurrences when targets_control is False
+               True: 81_000,    # max num co-occurrences when targets_control is True
                }
 
     exclude_exp_from_ctl_targets = True
