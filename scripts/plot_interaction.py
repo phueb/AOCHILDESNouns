@@ -10,8 +10,8 @@ YLIMS = [0.0, 1.0]
 
 dv2label = {
     's1/sum(s)': 'Proportion of Variance\nExplained by s1',
-    'dxy': 'De-biased Entropy of noun-types\nconditioned on context-types',
-    'dyx': 'De-biased Entropy of context-types\nconditioned on noun-types',
+    'xy': 'Normalized Entropy of noun-types\nconditioned on context-types',
+    'yx': 'Normalized Entropy of context-types\nconditioned on noun-types',
     'nmi': 'Normalized Mutual Information of\ncontext-types and noun-types',
 }
 
