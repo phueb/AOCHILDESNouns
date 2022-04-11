@@ -9,13 +9,11 @@ from collections import Counter
 import numpy as np
 from spacy.tokens.doc import Doc
 from spacy.tokens.token import Token
-from sklearn.feature_selection import mutual_info_classif, chi2
+from sklearn.feature_selection import chi2
 
 from aochildesnouns.targets import make_targets
 from aochildesnouns.pre_processing import prepare_data
 from aochildesnouns.params import Conditions
-
-USE_FREQ = True  # use counts and chi-square, else use proportion and mutual-info
 
 
 def get_target_contexts(targets: SortedSet,
@@ -126,10 +124,6 @@ def make_target_vectors(target2contexts: Dict[str, Tuple[str]],
     # this assertion fails when only those context types are included that are shared by exp and ctl targets.
     # some targets only occur with those infrequent, non-shared contexts, and so do not have any counts in the matrix
 
-    # row-wise normalization
-    if not USE_FREQ:
-        res = res / res.sum(1)[:, np.newaxis]
-
     return res
 
 
@@ -164,8 +158,8 @@ def feature_selection(params,
     contexts_shared.intersection_update(context_ctl2f.keys())
 
     # make features
-    target_exp_rep_mat = make_target_vectors(target_exp2contexts, contexts_shared, max_sum)
-    target_ctl_rep_mat = make_target_vectors(target_ctl2contexts, contexts_shared, max_sum)
+    target_exp_rep_mat = make_target_vectors(target_exp2contexts, contexts_shared, max_sum).sum(0, keepdims=True)
+    target_ctl_rep_mat = make_target_vectors(target_ctl2contexts, contexts_shared, max_sum).sum(0, keepdims=True)
     print('shape of exp target features={}'.format(target_exp_rep_mat.shape))
     print('shape of ctl target features={}'.format(target_ctl_rep_mat.shape))
 
@@ -176,31 +170,29 @@ def feature_selection(params,
         np.ones(len(target_ctl_rep_mat), dtype=np.int) * 0
     ))
 
-    if USE_FREQ:
-        res, p_values = chi2(X, y)  # also returns p values
-        method = 'chi2'
-    else:
-        res = mutual_info_classif(X, y, discrete_features=False)  # mutual info for each column in X
-        p_values = [np.nan] * len(res)
-        method = 'mutual-info'
+    res, p_values = chi2(X, y)  # also returns p values
+
+    # note: large chi2 values do not differentiate between features that diagnose exp vs. ctl or vice versa.
+    # lfeatures with large chi2 are simply useful for making the distinction
 
     # print most diagnostic contexts
     print('----------------|most diagnostic|------------------------------------------------')
-    for i in np.argsort(res)[::-1][:10]:
+    for i in np.argsort(res)[::-1][:20]:
         c = contexts_shared[i]
         print(f'context={" ".join(c):<32} '
-              f'{method}={res[i]:6.6f} '
-              f'p-val={p_values[i]:6.6f} '
+              f'chi2={int(res[i]):>12,} '
+              f'p-val={p_values[i]:.6f} '
               f'f-exp={context_exp2f[c]:>6,} '
-              f'f-ctl={context_ctl2f[c]:>6,} ')
-    print('----------------|least diagnostic|-----------------------------------------------')
-    for i in np.argsort(res)[::-1][-10:]:
-        c = contexts_shared[i]
-        print(f'context={" ".join(c):<32} '
-              f'{method}={res[i]:6.6f} '
-              f'p-val={p_values[i]:6.6f} '
-              f'f-exp={context_exp2f[c]:>6,} '
-              f'f-ctl={context_ctl2f[c]:>6,} ')
+              f'f-ctl={context_ctl2f[c]:>6,} '
+              f'{"diagnostic of EXP" if context_exp2f[c] > context_ctl2f[c] else ""}')
+    # print('----------------|least diagnostic|-----------------------------------------------')
+    # for i in np.argsort(res)[::-1][-10:]:
+    #     c = contexts_shared[i]
+    #     print(f'context={" ".join(c):<32} '
+    #           f'chi2={int(res[i]):>12,} '
+    #           f'p-val={p_values[i]:.6f} '
+    #           f'f-exp={context_exp2f[c]:>6,} '
+    #           f'f-ctl={context_ctl2f[c]:>6,} ')
 
 
 for params in Conditions.all():
@@ -210,7 +202,6 @@ for params in Conditions.all():
 
     params = attr.evolve(params,
                          age='combined',
-                         targets_control=True,
                          direction='l'
                          )
     print(params)
@@ -224,7 +215,6 @@ for params in Conditions.all():
 
         params = attr.evolve(params,
                              age=age,
-                             targets_control=True,
                              direction='l'
                              )
         print(params)
