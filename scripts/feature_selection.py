@@ -15,6 +15,8 @@ from aochildesnouns.targets import make_targets
 from aochildesnouns.pre_processing import prepare_data
 from aochildesnouns.params import Conditions
 
+CONTEXT_SIZE = 1
+
 
 def get_target_contexts(targets: SortedSet,
                         doc: Doc,
@@ -143,14 +145,14 @@ def feature_selection(params,
     target_exp2contexts, context_exp2f = get_target_contexts(targets_exp,
                                                              doc,
                                                              direction=params.direction,
-                                                             context_size=2,
+                                                             context_size=CONTEXT_SIZE,
                                                              preserve_order=True,
                                                              )
     # get control target contexts
     target_ctl2contexts, context_ctl2f = get_target_contexts(targets_ctl,
                                                              doc,
                                                              direction=params.direction,
-                                                             context_size=2,
+                                                             context_size=CONTEXT_SIZE,
                                                              preserve_order=True,
                                                              )
     # make sure that the same contexts are in both feature matrices (an in the same order)
